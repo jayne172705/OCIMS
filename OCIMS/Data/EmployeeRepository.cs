@@ -67,7 +67,7 @@ namespace OCIMS.Data
             {
                 System.Windows.MessageBox.Show(
                     "Database error: " + ex.Message,
-                    "OCIMS",
+                    "eSureHi",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
             }
@@ -124,7 +124,7 @@ namespace OCIMS.Data
             {
                 System.Windows.MessageBox.Show(
                     "Error saving: " + ex.Message,
-                    "OCIMS",
+                    "eSureHi",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
                 return false;
@@ -165,7 +165,7 @@ namespace OCIMS.Data
             {
                 System.Windows.MessageBox.Show(
                     "Error updating: " + ex.Message,
-                    "OCIMS",
+                    "eSureHi",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
                 return false;
@@ -193,7 +193,7 @@ namespace OCIMS.Data
             {
                 System.Windows.MessageBox.Show(
                     "Error deleting: " + ex.Message,
-                    "OCIMS",
+                    "eSureHi",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
                 return false;

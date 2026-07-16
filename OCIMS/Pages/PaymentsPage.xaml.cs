@@ -182,7 +182,7 @@ namespace OCIMS.Pages
                 FontSize = 12
             };
 
-            doc.Blocks.Add(new Paragraph(new Run("OCIMS — Payments Report"))
+            doc.Blocks.Add(new Paragraph(new Run("eSureHi — Payments Report"))
             {
                 FontSize = 18,
                 FontWeight = FontWeights.Bold,
@@ -277,7 +277,7 @@ namespace OCIMS.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Export error: " + ex.Message, "OCIMS",
+                MessageBox.Show("Export error: " + ex.Message, "eSureHi",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

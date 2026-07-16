@@ -84,7 +84,7 @@ namespace OCIMS
             {
                 IsSaved = true;
                 MessageBox.Show("✔ Document '" + doc.DocTitle + "' saved successfully!",
-                    "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "eSureHi — Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
         }

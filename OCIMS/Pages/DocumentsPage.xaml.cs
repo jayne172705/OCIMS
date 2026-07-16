@@ -128,7 +128,7 @@ namespace OCIMS.Pages
             if (string.IsNullOrEmpty(doc.FilePath) || !System.IO.File.Exists(doc.FilePath))
             {
                 MessageBox.Show("File not found or no file attached.",
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -136,7 +136,7 @@ namespace OCIMS.Pages
             if (BlockedExtensions.Any(b => string.Equals(b, ext, StringComparison.OrdinalIgnoreCase)))
             {
                 MessageBox.Show("Cannot open executable files from here.",
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -150,7 +150,7 @@ namespace OCIMS.Pages
             catch (Exception ex)
             {
                 MessageBox.Show("Could not open the file: " + ex.Message,
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -165,7 +165,7 @@ namespace OCIMS.Pages
             {
                 if (_repo.Delete(doc.DocumentId))
                 {
-                    MessageBox.Show("✔ Document deleted.", "OCIMS",
+                    MessageBox.Show("✔ Document deleted.", "eSureHi",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadDocuments();
                 }
@@ -190,7 +190,7 @@ namespace OCIMS.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Export error: " + ex.Message, "OCIMS",
+                MessageBox.Show("Export error: " + ex.Message, "eSureHi",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

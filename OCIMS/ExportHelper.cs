@@ -53,7 +53,7 @@ namespace OCIMS
             if (!safe) return;
 
             var answer = MessageBox.Show("Export complete!\n\n" + path + "\n\nOpen the file now?",
-                "OCIMS", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                "eSureHi", MessageBoxButton.YesNo, MessageBoxImage.Information);
             if (answer != MessageBoxResult.Yes) return;
 
             try
@@ -65,7 +65,7 @@ namespace OCIMS
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not open the file: " + ex.Message, "OCIMS",
+                MessageBox.Show("Could not open the file: " + ex.Message, "eSureHi",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

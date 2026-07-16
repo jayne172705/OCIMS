@@ -52,7 +52,7 @@ namespace OCIMS.Pages
             else
             {
                 MessageBox.Show("Please select an employee first.",
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -61,12 +61,12 @@ namespace OCIMS.Pages
             if (EmployeeGrid.SelectedItem is OCIMS.Models.Employee emp)
             {
                 MessageBox.Show($"Edit '{emp.FullName}' — Coming Soon!",
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
                 MessageBox.Show("Please select an employee first.",
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

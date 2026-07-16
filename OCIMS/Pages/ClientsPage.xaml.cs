@@ -127,7 +127,7 @@ namespace OCIMS.Pages
                 {
                     MessageBox.Show(
                         "✔ Client '" + emp.FullName + "' deleted successfully.",
-                        "OCIMS", MessageBoxButton.OK, MessageBoxImage.Information);
+                        "eSureHi", MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadClients();
                 }
             }
@@ -157,7 +157,7 @@ namespace OCIMS.Pages
             catch (Exception ex)
             {
                 MessageBox.Show("Export error: " + ex.Message,
-                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "eSureHi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

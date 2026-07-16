@@ -76,7 +76,7 @@ namespace OCIMS
 
                 MessageBox.Show(
                     "✔ Client '" + newClient.FullName + "' saved successfully!",
-                    "OCIMS — Success",
+                    "eSureHi — Success",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
 

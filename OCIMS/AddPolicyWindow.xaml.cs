@@ -58,7 +58,7 @@ namespace OCIMS
             {
                 IsSaved = true;
                 MessageBox.Show("✔ Policy '" + policy.PolicyName + "' saved successfully!",
-                    "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "eSureHi — Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
         }

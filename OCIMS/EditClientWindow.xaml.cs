@@ -65,7 +65,7 @@ namespace OCIMS
                 IsSaved = true;
                 MessageBox.Show(
                     "✔ Client '" + _client.FullName + "' updated successfully!",
-                    "OCIMS — Success",
+                    "eSureHi — Success",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
                 this.Close();

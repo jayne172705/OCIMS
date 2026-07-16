@@ -104,7 +104,7 @@ namespace OCIMS.Pages
             var c = GetRow(sender);
             if (c == null) return;
             if (c.ClaimStatus == "Approved")
-            { MessageBox.Show("This claim is already approved.", "OCIMS", MessageBoxButton.OK, MessageBoxImage.Information); return; }
+            { MessageBox.Show("This claim is already approved.", "eSureHi", MessageBoxButton.OK, MessageBoxImage.Information); return; }
 
             var r = MessageBox.Show("Approve claim '" + c.ClaimNo + "' for " + c.ClientName + "?",
                 "Confirm Approve", MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -123,7 +123,7 @@ namespace OCIMS.Pages
             var c = GetRow(sender);
             if (c == null) return;
             if (c.ClaimStatus == "Rejected")
-            { MessageBox.Show("This claim is already rejected.", "OCIMS", MessageBoxButton.OK, MessageBoxImage.Information); return; }
+            { MessageBox.Show("This claim is already rejected.", "eSureHi", MessageBoxButton.OK, MessageBoxImage.Information); return; }
 
             var r = MessageBox.Show("Reject claim '" + c.ClaimNo + "'?",
                 "Confirm Reject", MessageBoxButton.YesNo, MessageBoxImage.Warning);
@@ -166,7 +166,7 @@ namespace OCIMS.Pages
                 FontSize = 12
             };
 
-            doc.Blocks.Add(new Paragraph(new Run("OCIMS — Claims Report"))
+            doc.Blocks.Add(new Paragraph(new Run("eSureHi — Claims Report"))
             {
                 FontSize = 18,
                 FontWeight = FontWeights.Bold,
@@ -265,7 +265,7 @@ namespace OCIMS.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Export error: " + ex.Message, "OCIMS", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Export error: " + ex.Message, "eSureHi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -307,7 +307,7 @@ namespace OCIMS.Pages
 
         private void ShowToast(string message)
         {
-            MessageBox.Show(message, "OCIMS", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(message, "eSureHi", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private Claim GetRow(object sender)

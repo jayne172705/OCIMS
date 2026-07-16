@@ -94,7 +94,7 @@ namespace OCIMS.Pages
             {
                 if (_repo.Delete(p.PolicyId))
                 {
-                    MessageBox.Show("✔ Policy deleted.", "OCIMS",
+                    MessageBox.Show("✔ Policy deleted.", "eSureHi",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadPolicies();
                 }
@@ -117,7 +117,7 @@ namespace OCIMS.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Export error: " + ex.Message, "OCIMS",
+                MessageBox.Show("Export error: " + ex.Message, "eSureHi",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

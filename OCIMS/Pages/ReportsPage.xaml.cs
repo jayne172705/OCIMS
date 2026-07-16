@@ -153,7 +153,7 @@ namespace OCIMS.Pages
             MessageBox.Show(
                 "Payments are stored in memory per session.\n\n" +
                 "To export payments, go to the Payments page and use the Export button there.",
-                "OCIMS — Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                "eSureHi — Info", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // ── PRINT CLIENTS ────────────────────────────────────
@@ -197,7 +197,7 @@ namespace OCIMS.Pages
         {
             MessageBox.Show(
                 "To print payments, go to the Payments page and use the Print button there.",
-                "OCIMS — Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                "eSureHi — Info", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // ── PRINT HELPER ─────────────────────────────────────
@@ -215,7 +215,7 @@ namespace OCIMS.Pages
                 FontSize = 12
             };
 
-            doc.Blocks.Add(new Paragraph(new Run("OCIMS — " + title))
+            doc.Blocks.Add(new Paragraph(new Run("eSureHi — " + title))
             {
                 FontSize = 18,
                 FontWeight = FontWeights.Bold,
@@ -285,13 +285,13 @@ namespace OCIMS.Pages
 
         private void Success(string msg)
         {
-            MessageBox.Show("✔ " + msg, "OCIMS — Success",
+            MessageBox.Show("✔ " + msg, "eSureHi — Success",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void Error(string msg)
         {
-            MessageBox.Show("Error: " + msg, "OCIMS",
+            MessageBox.Show("Error: " + msg, "eSureHi",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

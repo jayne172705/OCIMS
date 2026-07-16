@@ -58,7 +58,7 @@ namespace OCIMS
             IsSaved = true;
             MessageBox.Show(
                 "✔ Payment saved successfully!",
-                "OCIMS — Success",
+                "eSureHi — Success",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             this.Close();

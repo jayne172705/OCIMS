@@ -21,7 +21,7 @@ namespace OCIMS
                     "Could not connect to the OCIMS database. The app will still open, " +
                     "but saving and loading data will not work until MySQL is running.\n\n" +
                     "Details: " + ex.Message,
-                    "OCIMS — Database Unavailable",
+                    "eSureHi — Database Unavailable",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

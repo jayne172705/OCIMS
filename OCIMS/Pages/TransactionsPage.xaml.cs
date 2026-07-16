@@ -126,7 +126,7 @@ namespace OCIMS.Pages
             var tx = GetRow(sender);
             if (tx == null) return;
             if (tx.Status == "Completed")
-            { MessageBox.Show("This transaction is already completed.", "OCIMS", MessageBoxButton.OK, MessageBoxImage.Information); return; }
+            { MessageBox.Show("This transaction is already completed.", "eSureHi", MessageBoxButton.OK, MessageBoxImage.Information); return; }
 
             var r = MessageBox.Show(
                 "Mark transaction '" + tx.TransactionNo + "' as Completed?",
@@ -135,7 +135,7 @@ namespace OCIMS.Pages
             {
                 if (_repo.UpdateStatus(tx.TransactionId, "Completed"))
                 {
-                    MessageBox.Show("✔ Transaction marked as completed.", "OCIMS",
+                    MessageBox.Show("✔ Transaction marked as completed.", "eSureHi",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadTransactions();
                 }
@@ -153,7 +153,7 @@ namespace OCIMS.Pages
             {
                 if (_repo.Delete(tx.TransactionId))
                 {
-                    MessageBox.Show("✔ Transaction deleted.", "OCIMS",
+                    MessageBox.Show("✔ Transaction deleted.", "eSureHi",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadTransactions();
                 }
@@ -178,7 +178,7 @@ namespace OCIMS.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Export error: " + ex.Message, "OCIMS",
+                MessageBox.Show("Export error: " + ex.Message, "eSureHi",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

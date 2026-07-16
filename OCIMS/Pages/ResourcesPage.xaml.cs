@@ -70,7 +70,7 @@ namespace OCIMS.Pages
                 {
                     ReloadFunds();
                     MessageBox.Show("✔ Fund source '" + dlg.NewFund.FundName + "' added successfully!",
-                        "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        "eSureHi — Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }
@@ -103,7 +103,7 @@ namespace OCIMS.Pages
                 if (_repo.Update(fund))
                 {
                     MessageBox.Show("✔ Fund source updated successfully!",
-                        "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        "eSureHi — Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 ReloadFunds();
             }
@@ -121,7 +121,7 @@ namespace OCIMS.Pages
                 if (_repo.Delete(fund.FundId))
                 {
                     ReloadFunds();
-                    MessageBox.Show("✔ Fund source deleted.", "OCIMS",
+                    MessageBox.Show("✔ Fund source deleted.", "eSureHi",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -143,7 +143,7 @@ namespace OCIMS.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Export error: " + ex.Message, "OCIMS",
+                MessageBox.Show("Export error: " + ex.Message, "eSureHi",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

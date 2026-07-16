@@ -70,7 +70,7 @@ namespace OCIMS.Data
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show("DB Error: " + ex.Message, "OCIMS",
+                System.Windows.MessageBox.Show("DB Error: " + ex.Message, "eSureHi",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             return list;
@@ -177,7 +177,7 @@ namespace OCIMS.Data
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show("Error saving: " + ex.Message, "OCIMS",
+                System.Windows.MessageBox.Show("Error saving: " + ex.Message, "eSureHi",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return false;
             }

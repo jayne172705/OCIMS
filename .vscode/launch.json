@@ -2,20 +2,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch OCIMS (.NET Framework)",
-            "type": "clr",
+            "name": "Launch eSureHi",
+            "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}\\OCIMS\\bin\\Debug\\OCIMS.exe",
-            "cwd": "${workspaceFolder}\\OCIMS\\bin\\Debug",
+            "program": "${workspaceFolder}\\OCIMS\\bin\\Debug\\net8.0-windows\\eSureHi.exe",
+            "cwd": "${workspaceFolder}\\OCIMS\\bin\\Debug\\net8.0-windows",
             "console": "internalConsole",
             "stopAtEntry": false
         },
         {
-            "name": "Attach to OCIMS",
-            "type": "clr",
+            "name": "Attach to eSureHi",
+            "type": "coreclr",
             "request": "attach",
-            "processName": "OCIMS.exe"
+            "processName": "eSureHi.exe"
         }
     ]
 }

@@ -3,11 +3,11 @@
     "tasks": [
         {
             "label": "build",
-            "type": "shell",
-            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "type": "process",
+            "command": "dotnet",
             "args": [
-                "${workspaceFolder}\\OCIMS.sln",
-                "-p:Configuration=Debug",
+                "build",
+                "${workspaceFolder}\\eSureHi.sln",
                 "-v:minimal",
                 "-nologo"
             ],
