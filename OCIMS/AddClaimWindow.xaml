@@ -105,6 +105,13 @@
                 <TextBlock Text="Enter the Client ID (e.g. CLT-260319235109)"
                            FontSize="10" Foreground="#7A8FA6" Margin="0,0,0,14"/>
 
+                <!-- Policy -->
+                <TextBlock Text="Policy *" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="CmbPolicy" Style="{StaticResource ComboStyle}"
+                          DisplayMemberPath="PolicyName"
+                          SelectedValuePath="PolicyId"
+                          Margin="0,0,0,14"/>
+
                 <!-- Amount -->
                 <TextBlock Text="Amount Claimed (₱) *" Style="{StaticResource FieldLabel}"/>
                 <TextBox x:Name="TxtAmount" Style="{StaticResource InputStyle}" Margin="0,0,0,14"/>

@@ -11,6 +11,7 @@
         public string ClaimStatus { get; set; } = "Pending";
         public string Description { get; set; }
         public int EmpId { get; set; }
+        public int PolicyId { get; set; }
 
         public string AmountDisplay
         {

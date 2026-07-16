@@ -173,7 +173,7 @@ namespace OCIMS.Pages
                 if (dlg.ShowDialog() != true) return;
                 var data = TxGrid.ItemsSource as List<DocumentTransaction>;
                 if (data == null) return;
-                if (dlg.FileName.EndsWith(".xlsx")) ExportExcel(dlg.FileName, data);
+                if (ExportHelper.IsXlsx(dlg.FileName)) ExportExcel(dlg.FileName, data);
                 else ExportCsv(dlg.FileName, data);
             }
             catch (Exception ex)
@@ -207,23 +207,18 @@ namespace OCIMS.Pages
             }
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
-            MessageBox.Show("✔ Exported " + (row - 2) + " transactions!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportCsv(string path, List<DocumentTransaction> data)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("TX NO,TYPE,SUBJECT,SENDER,RECEIVER,DATE,PRIORITY,STATUS");
+            sb.AppendLine(ExportHelper.CsvLine("TX NO", "TYPE", "SUBJECT", "SENDER", "RECEIVER", "DATE", "PRIORITY", "STATUS"));
             foreach (var t in data)
-                sb.AppendLine("\"" + t.TransactionNo + "\",\"" + t.TransactionType + "\",\"" + t.Subject + "\",\"" +
-                              t.SenderName + "\",\"" + t.ReceiverName + "\",\"" + t.TransactionDate + "\",\"" +
-                              t.Priority + "\",\"" + t.Status + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(t.TransactionNo, t.TransactionType, t.Subject,
+                    t.SenderName, t.ReceiverName, t.TransactionDate, t.Priority, t.Status));
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
-            MessageBox.Show("✔ CSV exported!\n\n" + path, "Export Success",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private DocumentTransaction GetRow(object sender)

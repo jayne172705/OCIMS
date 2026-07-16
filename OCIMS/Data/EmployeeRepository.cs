@@ -37,6 +37,7 @@ namespace OCIMS.Data
                         {
                             var emp = new Employee
                             {
+                                EmpId = Convert.ToInt32(reader["emp_id"]),
                                 EmployeeNo = reader["employee_no"].ToString(),
                                 FirstName = reader["first_name"].ToString(),
                                 MiddleName = reader["middle_name"].ToString(),
@@ -52,8 +53,10 @@ namespace OCIMS.Data
                                 Position = reader["position_title"].ToString(),
                                 EmploymentType = reader["employment_type"].ToString(),
                                 EmploymentStatus = reader["employment_status"].ToString(),
-                                DateHired = Convert.ToDateTime(reader["date_hired"]),
-                                DateOfBirth = Convert.ToDateTime(reader["date_of_birth"])
+                                DateHired = reader["date_hired"] == DBNull.Value
+                                    ? DateTime.MinValue : Convert.ToDateTime(reader["date_hired"]),
+                                DateOfBirth = reader["date_of_birth"] == DBNull.Value
+                                    ? DateTime.MinValue : Convert.ToDateTime(reader["date_of_birth"])
                             };
                             list.Add(emp);
                         }
@@ -112,6 +115,7 @@ namespace OCIMS.Data
                         cmd.Parameters.AddWithValue("@emptype", emp.EmploymentType ?? "Regular");
                         cmd.Parameters.AddWithValue("@deptid", deptId);
                         cmd.ExecuteNonQuery();
+                        emp.EmpId = (int)cmd.LastInsertedId;
                         return true;
                     }
                 }
@@ -217,21 +221,28 @@ namespace OCIMS.Data
         }
 
         // ── HELPER ───────────────────────────────────────────
+        // Looks up the department by name, creating it if it doesn't exist,
+        // so employees are never silently reassigned to an unrelated department.
         private int GetDeptId(MySqlConnection conn, string deptName)
         {
-            try
+            if (string.IsNullOrWhiteSpace(deptName)) deptName = "General";
+
+            string sql = "SELECT dept_id FROM departments WHERE dept_name=@name LIMIT 1";
+            using (var cmd = new MySqlCommand(sql, conn))
             {
-                string sql = "SELECT dept_id FROM departments WHERE dept_name=@name LIMIT 1";
-                using (var cmd = new MySqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@name", deptName ?? "");
-                    var result = cmd.ExecuteScalar();
-                    if (result != null)
-                        return Convert.ToInt32(result);
-                }
+                cmd.Parameters.AddWithValue("@name", deptName);
+                var result = cmd.ExecuteScalar();
+                if (result != null && result != DBNull.Value)
+                    return Convert.ToInt32(result);
             }
-            catch { }
-            return 1;
+
+            using (var insert = new MySqlCommand(
+                "INSERT INTO departments (dept_name) VALUES (@name)", conn))
+            {
+                insert.Parameters.AddWithValue("@name", deptName);
+                insert.ExecuteNonQuery();
+                return (int)insert.LastInsertedId;
+            }
         }
     }
 }

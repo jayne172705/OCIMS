@@ -260,7 +260,7 @@ namespace OCIMS.Pages
                 if (dlg.ShowDialog() != true) return;
                 var data = ClaimsGrid.ItemsSource as List<Claim>;
                 if (data == null) return;
-                if (dlg.FileName.EndsWith(".xlsx")) ExportExcel(dlg.FileName, data);
+                if (ExportHelper.IsXlsx(dlg.FileName)) ExportExcel(dlg.FileName, data);
                 else ExportCsv(dlg.FileName, data);
             }
             catch (Exception ex)
@@ -291,20 +291,18 @@ namespace OCIMS.Pages
             }
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
-            ShowToast("✔ Exported " + (row - 2) + " claims!");
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportCsv(string path, List<Claim> data)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("CLAIM NO,CLIENT NAME,TYPE,DATE FILED,AMOUNT,STATUS");
+            sb.AppendLine(ExportHelper.CsvLine("CLAIM NO", "CLIENT NAME", "TYPE", "DATE FILED", "AMOUNT", "STATUS"));
             foreach (var c in data)
-                sb.AppendLine("\"" + c.ClaimNo + "\",\"" + c.ClientName + "\",\"" + c.ClaimType + "\",\"" +
-                              c.ClaimDate + "\",\"" + c.AmountDisplay + "\",\"" + c.ClaimStatus + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(c.ClaimNo, c.ClientName, c.ClaimType,
+                    c.ClaimDate, c.AmountDisplay, c.ClaimStatus));
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
-            ShowToast("✔ CSV exported!");
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ShowToast(string message)

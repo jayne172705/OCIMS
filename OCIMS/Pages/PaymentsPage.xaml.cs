@@ -5,12 +5,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using OCIMS.Data;
 using OCIMS.Models;
 
 namespace OCIMS.Pages
 {
     public partial class PaymentsPage : Page
     {
+        private readonly PaymentRepository _repo = new PaymentRepository();
         private List<Payment> _allPayments = new List<Payment>();
         private string _statusFilter = "All";
         private bool _isLoaded = false;
@@ -18,12 +20,13 @@ namespace OCIMS.Pages
         public PaymentsPage()
         {
             InitializeComponent();
-            this.Loaded += PageLoaded;
+            _isLoaded = true;
+            ReloadPayments();
         }
 
-        private void PageLoaded(object sender, RoutedEventArgs e)
+        private void ReloadPayments()
         {
-            _isLoaded = true;
+            _allPayments = _repo.GetAll();
             LoadPayments();
         }
 
@@ -64,7 +67,7 @@ namespace OCIMS.Pages
                 filtered = filtered.Where(p =>
                 {
                     DateTime dt;
-                    return DateTime.TryParse(p.PaymentDate, out dt) && dt.Date >= from;
+                    return AppFormats.TryParseDisplayDate(p.PaymentDate, out dt) && dt.Date >= from;
                 });
             }
 
@@ -74,7 +77,7 @@ namespace OCIMS.Pages
                 filtered = filtered.Where(p =>
                 {
                     DateTime dt;
-                    return DateTime.TryParse(p.PaymentDate, out dt) && dt.Date <= to;
+                    return AppFormats.TryParseDisplayDate(p.PaymentDate, out dt) && dt.Date <= to;
                 });
             }
 
@@ -131,8 +134,7 @@ namespace OCIMS.Pages
             dlg.ShowDialog();
             if (dlg.IsSaved && dlg.NewPayment != null)
             {
-                _allPayments.Add(dlg.NewPayment);
-                LoadPayments();
+                ReloadPayments();
             }
         }
 
@@ -159,8 +161,11 @@ namespace OCIMS.Pages
                 "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (r == MessageBoxResult.Yes)
             {
-                _allPayments.Remove(p);
-                LoadPayments();
+                if (_repo.Delete(p.PaymentId))
+                {
+                    _allPayments.Remove(p);
+                    LoadPayments();
+                }
             }
         }
 
@@ -186,12 +191,13 @@ namespace OCIMS.Pages
             });
 
             string dateRange = "";
-            if (DpFrom != null && DpFrom.SelectedDate.HasValue ||
-                DpTo != null && DpTo.SelectedDate.HasValue)
+            bool hasFrom = DpFrom != null && DpFrom.SelectedDate.HasValue;
+            bool hasTo = DpTo != null && DpTo.SelectedDate.HasValue;
+            if (hasFrom || hasTo)
                 dateRange = "   |   Date Range: " +
-                    (DpFrom.SelectedDate.HasValue ? DpFrom.SelectedDate.Value.ToString("MMM dd, yyyy") : "Any") +
+                    (hasFrom ? AppFormats.ToDisplayDate(DpFrom.SelectedDate.Value) : "Any") +
                     " — " +
-                    (DpTo.SelectedDate.HasValue ? DpTo.SelectedDate.Value.ToString("MMM dd, yyyy") : "Any");
+                    (hasTo ? AppFormats.ToDisplayDate(DpTo.SelectedDate.Value) : "Any");
 
             doc.Blocks.Add(new Paragraph(new Run(
                 "Status: " + _statusFilter + dateRange +
@@ -266,7 +272,7 @@ namespace OCIMS.Pages
                 if (dlg.ShowDialog() != true) return;
                 var data = PaymentsGrid.ItemsSource as List<Payment>;
                 if (data == null) return;
-                if (dlg.FileName.EndsWith(".xlsx")) ExportExcel(dlg.FileName, data);
+                if (ExportHelper.IsXlsx(dlg.FileName)) ExportExcel(dlg.FileName, data);
                 else ExportCsv(dlg.FileName, data);
             }
             catch (Exception ex)
@@ -298,22 +304,18 @@ namespace OCIMS.Pages
             }
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
-            MessageBox.Show("✔ Exported " + (row - 2) + " payments!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportCsv(string path, List<Payment> data)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("PAYMENT NO,CLIENT NAME,AMOUNT,DATE,METHOD,STATUS");
+            sb.AppendLine(ExportHelper.CsvLine("PAYMENT NO", "CLIENT NAME", "AMOUNT", "DATE", "METHOD", "STATUS"));
             foreach (var p in data)
-                sb.AppendLine("\"" + p.PaymentNo + "\",\"" + p.ClientName + "\",\"" + p.AmountDisplay + "\",\"" +
-                              p.PaymentDate + "\",\"" + p.PaymentMode + "\",\"" + p.PaymentStatus + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(p.PaymentNo, p.ClientName, p.AmountDisplay,
+                    p.PaymentDate, p.PaymentMode, p.PaymentStatus));
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
-            MessageBox.Show("✔ CSV exported!\n\n" + path, "Export Success",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private TableCell MakeCell(string text)

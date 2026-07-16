@@ -1,15 +1,17 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using OCIMS.Models;
 
 namespace OCIMS
 {
     public partial class AddFundWindow : Window
     {
         public bool IsSaved { get; private set; } = false;
-        public Pages.FundSource NewFund { get; private set; }
+        public FundSource NewFund { get; private set; }
 
-        private Pages.FundSource _editFund = null;
+        private FundSource _editFund = null;
         private bool _isEdit = false;
 
         // Add mode
@@ -20,7 +22,7 @@ namespace OCIMS
         }
 
         // Edit mode
-        public AddFundWindow(Pages.FundSource fund)
+        public AddFundWindow(FundSource fund)
         {
             InitializeComponent();
             _editFund = fund;
@@ -30,7 +32,7 @@ namespace OCIMS
             SaveBtn.Content = "Save Changes";
 
             TxtFundName.Text = fund.FundName;
-            TxtAmount.Text = fund.Amount.ToString();
+            TxtAmount.Text = fund.Amount.ToString(CultureInfo.InvariantCulture);
             TxtSource.Text = fund.Source;
             TxtNotes.Text = fund.Notes ?? "";
 
@@ -42,11 +44,9 @@ namespace OCIMS
                 if (item.Content.ToString() == fund.FundStatus)
                 { CmbStatus.SelectedItem = item; break; }
 
-            if (!string.IsNullOrEmpty(fund.DateReceived))
-            {
-                try { DpDate.SelectedDate = DateTime.Parse(fund.DateReceived); }
-                catch { DpDate.SelectedDate = DateTime.Today; }
-            }
+            DateTime received;
+            if (AppFormats.TryParseDisplayDate(fund.DateReceived, out received))
+                DpDate.SelectedDate = received;
         }
 
         private void SaveBtn_Click(object sender, RoutedEventArgs e)
@@ -61,8 +61,8 @@ namespace OCIMS
             { ShowError("Please enter the amount."); return; }
 
             decimal amount;
-            if (!decimal.TryParse(TxtAmount.Text.Replace(",", ""), out amount))
-            { ShowError("Amount must be a valid number."); return; }
+            if (!AppFormats.TryParseAmount(TxtAmount.Text, out amount))
+            { ShowError("Amount must be a valid number greater than zero."); return; }
 
             if (string.IsNullOrWhiteSpace(TxtSource.Text))
             { ShowError("Please enter the source/donor."); return; }
@@ -72,11 +72,10 @@ namespace OCIMS
 
             string fundType = (CmbFundType.SelectedItem as ComboBoxItem)?.Content?.ToString();
             string fundStatus = (CmbStatus.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Active";
-            string dateStr = DpDate.SelectedDate.Value.ToString("MMM dd, yyyy");
+            string dateStr = AppFormats.ToDisplayDate(DpDate.SelectedDate.Value);
 
             if (_isEdit && _editFund != null)
             {
-                // Update existing
                 _editFund.FundName = TxtFundName.Text.Trim();
                 _editFund.FundType = fundType;
                 _editFund.Amount = amount;
@@ -84,14 +83,10 @@ namespace OCIMS
                 _editFund.DateReceived = dateStr;
                 _editFund.FundStatus = fundStatus;
                 _editFund.Notes = TxtNotes.Text.Trim();
-                IsSaved = true;
-                MessageBox.Show("✔ Fund source updated successfully!",
-                    "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                // New fund
-                NewFund = new Pages.FundSource
+                NewFund = new FundSource
                 {
                     FundName = TxtFundName.Text.Trim(),
                     FundType = fundType,
@@ -101,11 +96,9 @@ namespace OCIMS
                     FundStatus = fundStatus,
                     Notes = TxtNotes.Text.Trim()
                 };
-                IsSaved = true;
-                MessageBox.Show("✔ Fund source '" + NewFund.FundName + "' added successfully!",
-                    "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
+            IsSaved = true;
             this.Close();
         }
 

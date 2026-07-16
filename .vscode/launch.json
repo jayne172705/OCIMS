@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch OCIMS (.NET Framework)",
+            "type": "clr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}\\OCIMS\\bin\\Debug\\OCIMS.exe",
+            "cwd": "${workspaceFolder}\\OCIMS\\bin\\Debug",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Attach to OCIMS",
+            "type": "clr",
+            "request": "attach",
+            "processName": "OCIMS.exe"
+        }
+    ]
+}

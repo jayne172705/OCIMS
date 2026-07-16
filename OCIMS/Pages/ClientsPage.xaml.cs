@@ -149,7 +149,7 @@ namespace OCIMS.Pages
 
                 string path = saveDialog.FileName;
 
-                if (path.EndsWith(".xlsx"))
+                if (ExportHelper.IsXlsx(path))
                     ExportToExcel(path);
                 else
                     ExportToCsv(path);
@@ -200,36 +200,28 @@ namespace OCIMS.Pages
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
 
-            MessageBox.Show(
-                "✔ Exported " + (row - 2) + " clients to Excel!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportToCsv(string path)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("CLIENT ID,FULL NAME,EMAIL,PHONE,ADDRESS,STATUS");
+            sb.AppendLine(ExportHelper.CsvLine("CLIENT ID", "FULL NAME", "EMAIL", "PHONE", "ADDRESS", "STATUS"));
 
             foreach (var emp in _allClients)
             {
-                sb.AppendLine(
-                    "\"" + emp.EmployeeNo + "\"," +
-                    "\"" + emp.FullName + "\"," +
-                    "\"" + emp.Email + "\"," +
-                    "\"" + emp.PhoneMobile + "\"," +
-                    "\"" + (emp.Address ?? "") + "\"," +
-                    "\"" + emp.EmploymentStatus + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(
+                    emp.EmployeeNo,
+                    emp.FullName,
+                    emp.Email,
+                    emp.PhoneMobile,
+                    emp.Address ?? "",
+                    emp.EmploymentStatus));
             }
 
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
 
-            MessageBox.Show(
-                "✔ Exported " + _allClients.Count + " clients to CSV!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         // ── HELPER ───────────────────────────────────────────

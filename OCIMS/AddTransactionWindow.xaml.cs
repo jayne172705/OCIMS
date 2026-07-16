@@ -75,8 +75,14 @@ namespace OCIMS
             { ShowError("Please select a receiver."); return; }
 
             // Check duplicate TX No
-            if (_repo.TxNoExists(TxtTxNo.Text.Trim()))
-            { ShowError("Transaction No. already exists. Please restart."); return; }
+            string txNo = TxtTxNo.Text.Trim();
+            if (_repo.TxNoExists(txNo))
+            {
+                txNo = "TX-" + DateTime.Now.ToString("yyMMddHHmmss") + "-" + new Random().Next(100, 1000);
+                if (_repo.TxNoExists(txNo))
+                { ShowError("Transaction No. already exists. Please change it and try again."); return; }
+                TxtTxNo.Text = txNo;
+            }
 
             string priority = "Normal";
             if (CmbPriority.SelectedItem != null)
@@ -87,11 +93,11 @@ namespace OCIMS
 
             string dueDate = "";
             if (DpDueDate.SelectedDate.HasValue)
-                dueDate = DpDueDate.SelectedDate.Value.ToString("MMM dd, yyyy");
+                dueDate = AppFormats.ToDisplayDate(DpDueDate.SelectedDate.Value);
 
             var tx = new DocumentTransaction
             {
-                TransactionNo = TxtTxNo.Text.Trim(),
+                TransactionNo = txNo,
                 TransactionType = (CmbType.SelectedItem as ComboBoxItem).Content.ToString(),
                 Subject = TxtSubject.Text.Trim(),
                 Description = TxtDescription.Text.Trim(),

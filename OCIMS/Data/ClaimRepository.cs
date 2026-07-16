@@ -21,7 +21,7 @@ namespace OCIMS.Data
                                c.claim_type, c.claim_date,
                                c.amount_claimed, c.claim_status,
                                IFNULL(c.incident_description,'') AS description,
-                               c.emp_id
+                               c.emp_id, c.policy_id
                         FROM claims c
                         JOIN employees e ON e.emp_id = c.emp_id
                         ORDER BY c.claim_date DESC";
@@ -37,11 +37,12 @@ namespace OCIMS.Data
                                 ClaimNo = r["claim_no"].ToString(),
                                 ClientName = r["client_name"].ToString(),
                                 ClaimType = r["claim_type"].ToString(),
-                                ClaimDate = Convert.ToDateTime(r["claim_date"]).ToString("MMM dd, yyyy"),
+                                ClaimDate = AppFormats.ToDisplayDate(Convert.ToDateTime(r["claim_date"])),
                                 Amount = Convert.ToDecimal(r["amount_claimed"]),
                                 ClaimStatus = r["claim_status"].ToString(),
                                 Description = r["description"].ToString(),
-                                EmpId = Convert.ToInt32(r["emp_id"])
+                                EmpId = Convert.ToInt32(r["emp_id"]),
+                                PolicyId = r["policy_id"] == DBNull.Value ? 0 : Convert.ToInt32(r["policy_id"])
                             };
                             list.Add(c);
                         }
@@ -69,16 +70,21 @@ namespace OCIMS.Data
                              claim_date, amount_claimed, claim_status,
                              incident_description, submitted_date)
                         VALUES
-                            (@claimno, @empid, 1, @type,
+                            (@claimno, @empid, @policyid, @type,
                              @date, @amount, 'Pending',
                              @desc, NOW())";
 
                     using (var cmd = new MySqlCommand(sql, conn))
                     {
+                        DateTime claimDate;
+                        if (!AppFormats.TryParseDisplayDate(c.ClaimDate, out claimDate))
+                            claimDate = DateTime.Today;
+
                         cmd.Parameters.AddWithValue("@claimno", c.ClaimNo);
                         cmd.Parameters.AddWithValue("@empid", c.EmpId);
+                        cmd.Parameters.AddWithValue("@policyid", c.PolicyId > 0 ? (object)c.PolicyId : DBNull.Value);
                         cmd.Parameters.AddWithValue("@type", c.ClaimType);
-                        cmd.Parameters.AddWithValue("@date", DateTime.Today);
+                        cmd.Parameters.AddWithValue("@date", claimDate);
                         cmd.Parameters.AddWithValue("@amount", c.Amount);
                         cmd.Parameters.AddWithValue("@desc", c.Description ?? "");
                         cmd.ExecuteNonQuery();

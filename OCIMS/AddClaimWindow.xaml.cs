@@ -17,6 +17,7 @@ namespace OCIMS
             InitializeComponent();
             // Auto-generate claim no
             TxtClaimNo.Text = "CLM-" + DateTime.Now.ToString("yyMMddHHmmss");
+            CmbPolicy.ItemsSource = new PolicyRepository().GetAll();
         }
 
         private void SaveBtn_Click(object sender, RoutedEventArgs e)
@@ -30,26 +31,40 @@ namespace OCIMS
             if (string.IsNullOrWhiteSpace(TxtClientId.Text))
             { ShowError("Please enter the client ID."); return; }
 
+            if (CmbPolicy.SelectedValue == null)
+            { ShowError("Please select a policy."); return; }
+
             if (string.IsNullOrWhiteSpace(TxtAmount.Text))
             { ShowError("Please enter the amount claimed."); return; }
 
             decimal amount;
-            if (!decimal.TryParse(TxtAmount.Text.Replace(",", ""), out amount))
-            { ShowError("Amount must be a valid number."); return; }
+            if (!AppFormats.TryParseAmount(TxtAmount.Text, out amount))
+            { ShowError("Amount must be a valid positive number (e.g. 5000 or 5,000.00)."); return; }
 
-            if (_claimRepo.ClaimNoExists(TxtClaimNo.Text.Trim()))
-            { ShowError("Claim No. already exists."); return; }
+            string claimNo = TxtClaimNo.Text.Trim();
+            if (_claimRepo.ClaimNoExists(claimNo))
+            {
+                claimNo = "CLM-" + DateTime.Now.ToString("yyMMddHHmmss") + "-" + new Random().Next(100, 1000);
+                if (_claimRepo.ClaimNoExists(claimNo))
+                { ShowError("Claim No. already exists. Please change it and try again."); return; }
+                TxtClaimNo.Text = claimNo;
+            }
 
             // Get emp_id from client ID
-            int empId = GetEmpId(TxtClientId.Text.Trim());
+            string lookupError;
+            int empId = GetEmpId(TxtClientId.Text.Trim(), out lookupError);
+            if (lookupError != null)
+            { ShowError("Cannot reach the database: " + lookupError); return; }
             if (empId == 0)
             { ShowError("Client ID '" + TxtClientId.Text.Trim() + "' not found."); return; }
 
             var claim = new Claim
             {
-                ClaimNo = TxtClaimNo.Text.Trim(),
+                ClaimNo = claimNo,
                 EmpId = empId,
+                PolicyId = (int)CmbPolicy.SelectedValue,
                 ClaimType = (CmbType.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+                ClaimDate = AppFormats.ToDisplayDate(DateTime.Today),
                 Amount = amount,
                 ClaimStatus = "Pending",
                 Description = TxtDescription.Text.Trim()
@@ -64,8 +79,9 @@ namespace OCIMS
             }
         }
 
-        private int GetEmpId(string empNo)
+        private int GetEmpId(string empNo, out string error)
         {
+            error = null;
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
@@ -80,7 +96,7 @@ namespace OCIMS
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { error = ex.Message; }
             return 0;
         }
 

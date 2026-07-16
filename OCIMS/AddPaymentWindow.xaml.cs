@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using OCIMS.Data;
 using OCIMS.Models;
 
 namespace OCIMS
@@ -9,6 +10,8 @@ namespace OCIMS
     {
         public bool IsSaved { get; private set; } = false;
         public Payment NewPayment { get; private set; }
+
+        private readonly PaymentRepository _repo = new PaymentRepository();
 
         public AddPaymentWindow()
         {
@@ -25,8 +28,8 @@ namespace OCIMS
             { ShowError("Please enter the amount."); return; }
 
             decimal amount;
-            if (!decimal.TryParse(TxtAmount.Text.Replace(",", ""), out amount))
-            { ShowError("Amount must be a valid number."); return; }
+            if (!AppFormats.TryParseAmount(TxtAmount.Text, out amount))
+            { ShowError("Amount must be a valid number greater than zero."); return; }
 
             if (CmbMethod.SelectedItem == null)
             { ShowError("Please select a payment method."); return; }
@@ -34,17 +37,24 @@ namespace OCIMS
             if (DpDate.SelectedDate == null)
             { ShowError("Please select a payment date."); return; }
 
-            NewPayment = new Payment
+            string paymentNo = GeneratePaymentNo();
+            if (paymentNo == null)
+            { ShowError("Could not generate a unique payment number. Please try again."); return; }
+
+            var payment = new Payment
             {
-                PaymentNo = "PAY-" + DateTime.Now.ToString("yyMMddHHmmss"),
+                PaymentNo = paymentNo,
                 ClientName = TxtClientName.Text.Trim(),
                 Amount = amount,
-                PaymentDate = DpDate.SelectedDate.Value.ToString("MMM dd, yyyy"),
+                PaymentDate = AppFormats.ToDisplayDate(DpDate.SelectedDate.Value),
                 PaymentMode = (CmbMethod.SelectedItem as ComboBoxItem)?.Content?.ToString(),
                 PaymentStatus = "Paid",
                 Notes = TxtNotes.Text.Trim()
             };
 
+            if (!_repo.Save(payment)) return;
+
+            NewPayment = payment;
             IsSaved = true;
             MessageBox.Show(
                 "✔ Payment saved successfully!",
@@ -52,6 +62,20 @@ namespace OCIMS
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             this.Close();
+        }
+
+        private string GeneratePaymentNo()
+        {
+            string paymentNo = "PAY-" + DateTime.Now.ToString("yyMMddHHmmss");
+            if (!_repo.PaymentNoExists(paymentNo)) return paymentNo;
+
+            var rnd = new Random();
+            for (int i = 0; i < 5; i++)
+            {
+                string candidate = paymentNo + "-" + rnd.Next(100, 1000);
+                if (!_repo.PaymentNoExists(candidate)) return candidate;
+            }
+            return null;
         }
 
         private void CancelBtn_Click(object sender, RoutedEventArgs e)

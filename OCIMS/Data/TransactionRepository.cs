@@ -24,7 +24,7 @@ namespace OCIMS.Data
                                t.subject,
                                IFNULL(t.description,'')    AS description,
                                t.transaction_date,
-                               IFNULL(t.due_date,'')        AS due_date,
+                               t.due_date,
                                t.priority, t.status,
                                IFNULL(t.remarks,'')         AS remarks,
                                IFNULL(d.doc_title,'—')     AS doc_title
@@ -56,13 +56,12 @@ namespace OCIMS.Data
 
                             var txDate = reader["transaction_date"];
                             if (txDate != DBNull.Value)
-                                tx.TransactionDate = Convert.ToDateTime(txDate).ToString("MMM dd, yyyy");
+                                tx.TransactionDate = AppFormats.ToDisplayDate(Convert.ToDateTime(txDate));
 
                             var dueDate = reader["due_date"];
-                            if (dueDate != DBNull.Value && !string.IsNullOrEmpty(dueDate.ToString()))
-                                tx.DueDate = Convert.ToDateTime(dueDate).ToString("MMM dd, yyyy");
-                            else
-                                tx.DueDate = "—";
+                            tx.DueDate = dueDate == DBNull.Value
+                                ? "—"
+                                : AppFormats.ToDisplayDate(Convert.ToDateTime(dueDate));
 
                             list.Add(tx);
                         }
@@ -162,10 +161,13 @@ namespace OCIMS.Data
                         cmd.Parameters.AddWithValue("@receiver", receiverId > 0 ? (object)receiverId : DBNull.Value);
                         cmd.Parameters.AddWithValue("@subject", tx.Subject);
                         cmd.Parameters.AddWithValue("@desc", tx.Description ?? "");
-                        cmd.Parameters.AddWithValue("@txdate", DateTime.Today);
-                        cmd.Parameters.AddWithValue("@duedate", string.IsNullOrEmpty(tx.DueDate) || tx.DueDate == "—"
-                                                                    ? (object)DBNull.Value
-                                                                    : DateTime.Parse(tx.DueDate));
+                        DateTime txDate, dueDate;
+                        cmd.Parameters.AddWithValue("@txdate", AppFormats.TryParseDisplayDate(tx.TransactionDate, out txDate)
+                                                                    ? txDate
+                                                                    : DateTime.Today);
+                        cmd.Parameters.AddWithValue("@duedate", AppFormats.TryParseDisplayDate(tx.DueDate, out dueDate)
+                                                                    ? (object)dueDate
+                                                                    : DBNull.Value);
                         cmd.Parameters.AddWithValue("@priority", tx.Priority ?? "Normal");
                         cmd.Parameters.AddWithValue("@remarks", tx.Remarks ?? "");
                         cmd.ExecuteNonQuery();

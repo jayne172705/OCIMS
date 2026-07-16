@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -12,35 +13,24 @@ namespace OCIMS.Pages
         {
             InitializeComponent();
             LoadCalendar();
-            LoadRecentClients();
-            LoadStats();
+            LoadClientData();
         }
 
-        private void LoadStats()
+        private void LoadClientData()
         {
             try
             {
-                var repo = new EmployeeRepository();
-                var all = repo.GetAll();
+                var all = new EmployeeRepository().GetAll();
                 TxtTotalClients.Text = all.Count.ToString();
+                RecentClientsList.ItemsSource = all
+                    .OrderByDescending(c => c.EmpId)
+                    .Take(5)
+                    .ToList();
             }
             catch
             {
                 TxtTotalClients.Text = "0";
             }
-        }
-
-        private void LoadRecentClients()
-        {
-            try
-            {
-                var repo = new EmployeeRepository();
-                var list = repo.GetAll();
-                if (list.Count > 5)
-                    list = list.GetRange(0, 5);
-                RecentClientsList.ItemsSource = list;
-            }
-            catch { }
         }
 
         private void LoadCalendar()

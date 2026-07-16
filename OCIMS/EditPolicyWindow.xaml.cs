@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using OCIMS.Data;
@@ -19,7 +20,7 @@ namespace OCIMS
 
             TxtPolicyName.Text = policy.PolicyName;
             TxtProvider.Text = policy.Provider;
-            TxtCoverage.Text = policy.CoverageAmount.ToString();
+            TxtCoverage.Text = policy.CoverageAmount.ToString("0.##", CultureInfo.InvariantCulture);
             TxtDescription.Text = policy.Description;
 
             // Set combo selections
@@ -38,18 +39,30 @@ namespace OCIMS
             { ShowError("Please enter the policy name."); return; }
 
             decimal coverage;
-            if (!decimal.TryParse(TxtCoverage.Text.Replace(",", ""), out coverage))
-            { ShowError("Coverage amount must be a valid number."); return; }
+            if (!AppFormats.TryParseAmount(TxtCoverage.Text, out coverage))
+            { ShowError("Coverage amount must be a valid positive number (e.g. 250000 or 250,000.00)."); return; }
 
-            _policy.PolicyName = TxtPolicyName.Text.Trim();
-            _policy.PolicyType = (CmbType.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _policy.PolicyType;
-            _policy.PolicyStatus = (CmbStatus.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _policy.PolicyStatus;
-            _policy.Provider = TxtProvider.Text.Trim();
-            _policy.CoverageAmount = coverage;
-            _policy.Description = TxtDescription.Text.Trim();
-
-            if (_repo.Update(_policy))
+            var updated = new Policy
             {
+                PolicyId = _policy.PolicyId,
+                PolicyNo = _policy.PolicyNo,
+                PolicyName = TxtPolicyName.Text.Trim(),
+                PolicyType = (CmbType.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _policy.PolicyType,
+                PolicyStatus = (CmbStatus.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _policy.PolicyStatus,
+                Provider = TxtProvider.Text.Trim(),
+                CoverageAmount = coverage,
+                Description = TxtDescription.Text.Trim(),
+                ExpiryDate = _policy.ExpiryDate
+            };
+
+            if (_repo.Update(updated))
+            {
+                _policy.PolicyName = updated.PolicyName;
+                _policy.PolicyType = updated.PolicyType;
+                _policy.PolicyStatus = updated.PolicyStatus;
+                _policy.Provider = updated.Provider;
+                _policy.CoverageAmount = updated.CoverageAmount;
+                _policy.Description = updated.Description;
                 IsSaved = true;
                 MessageBox.Show("✔ Policy '" + _policy.PolicyName + "' updated successfully!",
                     "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);

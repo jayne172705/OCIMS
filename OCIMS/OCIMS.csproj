@@ -14,11 +14,12 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -200,12 +201,18 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AppFormats.cs" />
     <Compile Include="DatabaseHelper.cs" />
     <Compile Include="Data\ClaimRepository.cs" />
     <Compile Include="Data\DocumentRepository.cs" />
     <Compile Include="Data\EmployeeRepository.cs" />
+    <Compile Include="Data\FundRepository.cs" />
+    <Compile Include="Data\PaymentRepository.cs" />
     <Compile Include="Data\PolicyRepository.cs" />
     <Compile Include="Data\TransactionRepository.cs" />
+    <EmbeddedResource Include="Data\schema.sql" />
+    <Compile Include="ExportHelper.cs" />
+    <Compile Include="PasswordHasher.cs" />
     <Compile Include="EditClientWindow.xaml.cs">
       <DependentUpon>EditClientWindow.xaml</DependentUpon>
     </Compile>
@@ -265,6 +272,7 @@
     <Compile Include="Models\Claim.cs" />
     <Compile Include="Models\Document.cs" />
     <Compile Include="Models\Employee.cs" />
+    <Compile Include="Models\FundSource.cs" />
     <Compile Include="Models\Payment.cs" />
     <Compile Include="Models\Policy.cs" />
     <Compile Include="Models\TransactionModels.cs" />

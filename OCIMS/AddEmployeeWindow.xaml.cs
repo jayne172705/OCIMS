@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using OCIMS.Models;
 using OCIMS.Data;
 
@@ -31,15 +31,21 @@ namespace OCIMS
             string firstName = fullName;
             string lastName = "";
 
-            int spaceIndex = fullName.IndexOf(' ');
+            int spaceIndex = fullName.LastIndexOf(' ');
             if (spaceIndex > 0)
             {
-                firstName = fullName.Substring(0, spaceIndex);
+                firstName = fullName.Substring(0, spaceIndex).Trim();
                 lastName = fullName.Substring(spaceIndex + 1);
             }
 
             // Generate employee no
             string empNo = "CLT-" + System.DateTime.Now.ToString("yyMMddHHmmss");
+            if (_repo.EmployeeNoExists(empNo))
+            {
+                empNo = empNo + "-" + new System.Random().Next(100, 1000);
+                if (_repo.EmployeeNoExists(empNo))
+                { ShowError("Could not generate a unique client number. Please try again."); return; }
+            }
 
             // Build client object
             var newClient = new Employee

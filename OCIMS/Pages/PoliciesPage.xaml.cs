@@ -112,7 +112,7 @@ namespace OCIMS.Pages
                     FileName = "Policies_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 };
                 if (dlg.ShowDialog() != true) return;
-                if (dlg.FileName.EndsWith(".xlsx")) ExportExcel(dlg.FileName);
+                if (ExportHelper.IsXlsx(dlg.FileName)) ExportExcel(dlg.FileName);
                 else ExportCsv(dlg.FileName);
             }
             catch (Exception ex)
@@ -146,22 +146,18 @@ namespace OCIMS.Pages
             }
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
-            MessageBox.Show("✔ Exported " + (row - 2) + " policies!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportCsv(string path)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("POLICY NO,POLICY NAME,TYPE,PROVIDER,COVERAGE,EXPIRY DATE,STATUS");
+            sb.AppendLine(ExportHelper.CsvLine("POLICY NO", "POLICY NAME", "TYPE", "PROVIDER", "COVERAGE", "EXPIRY DATE", "STATUS"));
             foreach (var p in _allPolicies)
-                sb.AppendLine("\"" + p.PolicyNo + "\",\"" + p.PolicyName + "\",\"" + p.PolicyType + "\",\"" +
-                              p.Provider + "\",\"" + p.CoverageDisplay + "\",\"" + p.ExpiryDate + "\",\"" + p.PolicyStatus + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(p.PolicyNo, p.PolicyName, p.PolicyType,
+                    p.Provider, p.CoverageDisplay, p.ExpiryDate, p.PolicyStatus));
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
-            MessageBox.Show("✔ Exported " + _allPolicies.Count + " policies!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private Policy GetRow(object sender)

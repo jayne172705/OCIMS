@@ -37,23 +37,31 @@ namespace OCIMS
             string fullName = TxtFullName.Text.Trim();
             string firstName = fullName;
             string lastName = "";
-            int spaceIndex = fullName.IndexOf(' ');
+            int spaceIndex = fullName.LastIndexOf(' ');
             if (spaceIndex > 0)
             {
-                firstName = fullName.Substring(0, spaceIndex);
+                firstName = fullName.Substring(0, spaceIndex).Trim();
                 lastName = fullName.Substring(spaceIndex + 1);
             }
 
-            // Update client object
-            _client.FirstName = firstName;
-            _client.LastName = lastName;
-            _client.Email = TxtEmail.Text.Trim();
-            _client.PhoneMobile = TxtPhone.Text.Trim();
-            _client.Address = TxtAddress.Text.Trim();
+            var updated = new Employee
+            {
+                EmployeeNo = _client.EmployeeNo,
+                FirstName = firstName,
+                LastName = lastName,
+                Email = TxtEmail.Text.Trim(),
+                PhoneMobile = TxtPhone.Text.Trim(),
+                Address = TxtAddress.Text.Trim()
+            };
 
-            bool saved = _repo.Update(_client);
+            bool saved = _repo.Update(updated);
             if (saved)
             {
+                _client.FirstName = updated.FirstName;
+                _client.LastName = updated.LastName;
+                _client.Email = updated.Email;
+                _client.PhoneMobile = updated.PhoneMobile;
+                _client.Address = updated.Address;
                 IsSaved = true;
                 MessageBox.Show(
                     "✔ Client '" + _client.FullName + "' updated successfully!",

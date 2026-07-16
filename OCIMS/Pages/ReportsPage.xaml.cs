@@ -71,8 +71,7 @@ namespace OCIMS.Pages
                 }
                 ws.Columns().AdjustToContents();
                 wb.SaveAs(dlg.FileName);
-                Success("Clients report exported! " + dlg.FileName);
-                System.Diagnostics.Process.Start(dlg.FileName);
+                ExportHelper.OfferOpen(dlg.FileName);
             }
             catch (Exception ex) { Error(ex.Message); }
         }
@@ -108,8 +107,7 @@ namespace OCIMS.Pages
                 }
                 ws.Columns().AdjustToContents();
                 wb.SaveAs(dlg.FileName);
-                Success("Policies report exported! " + dlg.FileName);
-                System.Diagnostics.Process.Start(dlg.FileName);
+                ExportHelper.OfferOpen(dlg.FileName);
             }
             catch (Exception ex) { Error(ex.Message); }
         }
@@ -144,8 +142,7 @@ namespace OCIMS.Pages
                 }
                 ws.Columns().AdjustToContents();
                 wb.SaveAs(dlg.FileName);
-                Success("Claims report exported! " + dlg.FileName);
-                System.Diagnostics.Process.Start(dlg.FileName);
+                ExportHelper.OfferOpen(dlg.FileName);
             }
             catch (Exception ex) { Error(ex.Message); }
         }

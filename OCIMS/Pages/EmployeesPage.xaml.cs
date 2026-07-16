@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using OCIMS.Data;
 
 namespace OCIMS.Pages
 {
@@ -9,8 +10,18 @@ namespace OCIMS.Pages
         {
             InitializeComponent();
 
+            LoadEmployees();
+
             // Bind sa shared EmployeeStore — auto mag-refresh
             EmployeeGrid.ItemsSource = EmployeeStore.Employees;
+        }
+
+        private void LoadEmployees()
+        {
+            var list = new EmployeeRepository().GetAll();
+            EmployeeStore.Employees.Clear();
+            foreach (var emp in list)
+                EmployeeStore.Employees.Add(emp);
         }
 
         private void AddEmployee_Click(object sender, RoutedEventArgs e)

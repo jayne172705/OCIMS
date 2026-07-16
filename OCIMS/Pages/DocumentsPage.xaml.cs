@@ -117,15 +117,41 @@ namespace OCIMS.Pages
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private static readonly string[] BlockedExtensions =
+            { ".exe", ".bat", ".cmd", ".com", ".scr", ".ps1", ".vbs", ".js", ".lnk", ".msi" };
+
         private void OpenDoc_Click(object sender, RoutedEventArgs e)
         {
             var doc = GetRow(sender);
             if (doc == null) return;
-            if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))
-                System.Diagnostics.Process.Start(doc.FilePath);
-            else
+
+            if (string.IsNullOrEmpty(doc.FilePath) || !System.IO.File.Exists(doc.FilePath))
+            {
                 MessageBox.Show("File not found or no file attached.",
                     "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string ext = System.IO.Path.GetExtension(doc.FilePath);
+            if (BlockedExtensions.Any(b => string.Equals(b, ext, StringComparison.OrdinalIgnoreCase)))
+            {
+                MessageBox.Show("Cannot open executable files from here.",
+                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(doc.FilePath)
+                {
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not open the file: " + ex.Message,
+                    "OCIMS", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void DeleteDoc_Click(object sender, RoutedEventArgs e)
@@ -159,7 +185,7 @@ namespace OCIMS.Pages
                 if (dlg.ShowDialog() != true) return;
                 var data = DocsGrid.ItemsSource as List<Document>;
                 if (data == null) return;
-                if (dlg.FileName.EndsWith(".xlsx")) ExportExcel(dlg.FileName, data);
+                if (ExportHelper.IsXlsx(dlg.FileName)) ExportExcel(dlg.FileName, data);
                 else ExportCsv(dlg.FileName, data);
             }
             catch (Exception ex)
@@ -191,22 +217,18 @@ namespace OCIMS.Pages
             }
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
-            MessageBox.Show("✔ Exported " + (row - 2) + " documents!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportCsv(string path, List<Document> data)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("TITLE,TYPE,CLIENT,CLIENT ID,FILE NAME,DATE UPLOADED");
+            sb.AppendLine(ExportHelper.CsvLine("TITLE", "TYPE", "CLIENT", "CLIENT ID", "FILE NAME", "DATE UPLOADED"));
             foreach (var d in data)
-                sb.AppendLine("\"" + d.DocTitle + "\",\"" + d.DocTypeName + "\",\"" + d.ClientName + "\",\"" +
-                              d.ClientId + "\",\"" + (d.FileName ?? "") + "\",\"" + d.DateUploaded + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(d.DocTitle, d.DocTypeName, d.ClientName,
+                    d.ClientId, d.FileName ?? "", d.DateUploaded));
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
-            MessageBox.Show("✔ CSV exported!\n\n" + path, "Export Success",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private Document GetRow(object sender)

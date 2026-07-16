@@ -19,7 +19,7 @@ namespace OCIMS.Data
                         SELECT policy_id, policy_code, policy_name, policy_type,
                                IFNULL(provider_name,'') AS provider_name,
                                coverage_amount,
-                               IFNULL(expiry_date,'') AS expiry_date,
+                               expiry_date,
                                policy_status,
                                IFNULL(description,'') AS description
                         FROM insurance_policies
@@ -43,10 +43,9 @@ namespace OCIMS.Data
                             };
 
                             var expiry = r["expiry_date"];
-                            if (expiry != DBNull.Value && !string.IsNullOrEmpty(expiry.ToString()))
-                                p.ExpiryDate = Convert.ToDateTime(expiry).ToString("MMM dd, yyyy");
-                            else
-                                p.ExpiryDate = "—";
+                            p.ExpiryDate = expiry == DBNull.Value
+                                ? "—"
+                                : AppFormats.ToDisplayDate(Convert.ToDateTime(expiry));
 
                             list.Add(p);
                         }
@@ -85,10 +84,11 @@ namespace OCIMS.Data
                         cmd.Parameters.AddWithValue("@type", p.PolicyType);
                         cmd.Parameters.AddWithValue("@provider", p.Provider ?? "");
                         cmd.Parameters.AddWithValue("@coverage", p.CoverageAmount);
+                        DateTime expiryDate;
                         cmd.Parameters.AddWithValue("@effective", DateTime.Today);
-                        cmd.Parameters.AddWithValue("@expiry", p.ExpiryDate == "—" || string.IsNullOrEmpty(p.ExpiryDate)
-                                                                    ? (object)DBNull.Value
-                                                                    : DateTime.Parse(p.ExpiryDate));
+                        cmd.Parameters.AddWithValue("@expiry", AppFormats.TryParseDisplayDate(p.ExpiryDate, out expiryDate)
+                                                                    ? (object)expiryDate
+                                                                    : DBNull.Value);
                         cmd.Parameters.AddWithValue("@desc", p.Description ?? "");
                         cmd.ExecuteNonQuery();
                         return true;
@@ -116,12 +116,17 @@ namespace OCIMS.Data
                             policy_type    = @type,
                             provider_name  = @provider,
                             coverage_amount= @coverage,
+                            expiry_date    = @expiry,
                             policy_status  = @status,
                             description    = @desc
                         WHERE policy_id = @id";
 
                     using (var cmd = new MySqlCommand(sql, conn))
                     {
+                        DateTime expiryDate;
+                        cmd.Parameters.AddWithValue("@expiry", AppFormats.TryParseDisplayDate(p.ExpiryDate, out expiryDate)
+                                                                    ? (object)expiryDate
+                                                                    : DBNull.Value);
                         cmd.Parameters.AddWithValue("@name", p.PolicyName);
                         cmd.Parameters.AddWithValue("@type", p.PolicyType);
                         cmd.Parameters.AddWithValue("@provider", p.Provider ?? "");

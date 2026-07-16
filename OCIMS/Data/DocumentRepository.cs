@@ -50,7 +50,7 @@ namespace OCIMS.Data
                                 FilePath = r["file_path"].ToString(),
                                 FileSize = r["file_size"].ToString(),
                                 Remarks = r["remarks"].ToString(),
-                                DateUploaded = Convert.ToDateTime(r["created_at"]).ToString("MMM dd, yyyy")
+                                DateUploaded = AppFormats.ToDisplayDate(Convert.ToDateTime(r["created_at"]))
                             });
                         }
                     }
@@ -104,7 +104,13 @@ namespace OCIMS.Data
 
                     // Get emp_id from employee_no
                     int empId = GetEmpId(conn, doc.ClientId);
-                    if (empId == 0) return false;
+                    if (empId == 0)
+                    {
+                        System.Windows.MessageBox.Show(
+                            "Client ID '" + doc.ClientId + "' was not found. Please check the Client ID and try again.",
+                            "OCIMS", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                        return false;
+                    }
 
                     string sql = @"
                         INSERT INTO documents

@@ -19,10 +19,11 @@ namespace OCIMS
 
         private string GetInitials(string fullName)
         {
-            if (string.IsNullOrEmpty(fullName)) return "AD";
-            var parts = fullName.Split(' ');
+            if (string.IsNullOrWhiteSpace(fullName)) return "AD";
+            var parts = fullName.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length >= 2)
-                return ("" + parts[0][0] + parts[1][0]).ToUpper();
+                return ("" + parts[0][0] + parts[parts.Length - 1][0]).ToUpper();
+            fullName = fullName.Trim();
             return fullName.Length >= 2
                 ? fullName.Substring(0, 2).ToUpper()
                 : fullName.ToUpper();

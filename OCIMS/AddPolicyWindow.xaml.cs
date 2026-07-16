@@ -31,8 +31,11 @@ namespace OCIMS
             { ShowError("Please enter the coverage amount."); return; }
 
             decimal coverage;
-            if (!decimal.TryParse(TxtCoverage.Text.Replace(",", ""), out coverage))
-            { ShowError("Coverage amount must be a valid number."); return; }
+            if (!AppFormats.TryParseAmount(TxtCoverage.Text, out coverage))
+            { ShowError("Coverage amount must be a valid positive number (e.g. 250000 or 250,000.00)."); return; }
+
+            if (DpExpiry.SelectedDate.HasValue && DpExpiry.SelectedDate.Value.Date <= DateTime.Today)
+            { ShowError("Expiry date must be in the future."); return; }
 
             if (_repo.PolicyNoExists(TxtPolicyNo.Text.Trim()))
             { ShowError("Policy No. '" + TxtPolicyNo.Text.Trim() + "' already exists."); return; }
@@ -47,7 +50,7 @@ namespace OCIMS
                 PolicyStatus = "Active",
                 Description = TxtDescription.Text.Trim(),
                 ExpiryDate = DpExpiry.SelectedDate.HasValue
-                                 ? DpExpiry.SelectedDate.Value.ToString("MMM dd, yyyy")
+                                 ? AppFormats.ToDisplayDate(DpExpiry.SelectedDate.Value)
                                  : "—"
             };
 

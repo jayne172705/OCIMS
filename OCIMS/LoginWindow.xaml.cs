@@ -1,4 +1,3 @@
-﻿using System.Collections.Generic;
 using System.Windows;
 using MySql.Data.MySqlClient;
 
@@ -15,14 +14,6 @@ namespace OCIMS
     public partial class LoginWindow : Window
     {
         public static UserAccount CurrentUser { get; private set; }
-
-        // In-memory fallback
-        private static List<UserAccount> _localUsers = new List<UserAccount>
-        {
-            new UserAccount { UserId=1, Username="admin", FullName="HR Admin", Role="HR Admin" }
-        };
-        private static List<(string Username, string Password)> _localPasswords =
-            new List<(string, string)> { ("admin", "admin123") };
 
         public LoginWindow()
         {
@@ -58,8 +49,14 @@ namespace OCIMS
                 return;
             }
 
-            UserAccount user = LoginFromDatabase(username, password);
-            if (user == null) user = LoginFromMemory(username, password);
+            string dbError;
+            UserAccount user = LoginFromDatabase(username, password, out dbError);
+
+            if (dbError != null)
+            {
+                ShowLoginError("Cannot reach the database. Please check that MySQL is running.\n(" + dbError + ")");
+                return;
+            }
 
             if (user != null)
             {
@@ -74,35 +71,38 @@ namespace OCIMS
             }
         }
 
-        private UserAccount LoginFromDatabase(string username, string password)
+        private UserAccount LoginFromDatabase(string username, string password, out string dbError)
         {
+            dbError = null;
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
                     string sql = @"
-                        SELECT u.user_id, u.username, u.role,
+                        SELECT u.user_id, u.username, u.role, u.password_hash,
                                IFNULL(CONCAT(e.first_name,' ',e.last_name), u.username) AS full_name
                         FROM system_users u
                         LEFT JOIN employees e ON e.emp_id = u.emp_id
-                        WHERE u.username     = @user
-                          AND u.password_hash = @pass
-                          AND u.is_active    = 1
+                        WHERE u.username  = @user
+                          AND u.is_active = 1
                         LIMIT 1";
 
                     using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@user", username);
-                        cmd.Parameters.AddWithValue("@pass", password);
+
+                        int uid = 0;
+                        string storedHash = null;
+                        UserAccount user = null;
 
                         using (var r = cmd.ExecuteReader())
                         {
                             if (r.Read())
                             {
-                                int uid = System.Convert.ToInt32(r["user_id"]);
-                                UpdateLastLogin(uid);
-                                return new UserAccount
+                                uid = System.Convert.ToInt32(r["user_id"]);
+                                storedHash = r["password_hash"].ToString();
+                                user = new UserAccount
                                 {
                                     UserId = uid,
                                     Username = r["username"].ToString(),
@@ -111,42 +111,53 @@ namespace OCIMS
                                 };
                             }
                         }
+
+                        if (user == null || !PasswordHasher.Verify(password, storedHash))
+                            return null;
+
+                        // Upgrade legacy plaintext rows to bcrypt on successful login.
+                        if (!PasswordHasher.IsHashed(storedHash))
+                            UpdatePasswordHash(conn, uid, PasswordHasher.Hash(password));
+
+                        UpdateLastLogin(conn, uid);
+                        return user;
                     }
                 }
             }
-            catch { }
-            return null;
+            catch (MySqlException ex)
+            {
+                dbError = ex.Message;
+                return null;
+            }
         }
 
-        private void UpdateLastLogin(int userId)
+        private void UpdatePasswordHash(MySqlConnection conn, int userId, string hash)
         {
             try
             {
-                using (var conn = DatabaseHelper.GetConnection())
+                using (var cmd = new MySqlCommand(
+                    "UPDATE system_users SET password_hash=@hash WHERE user_id=@id", conn))
                 {
-                    conn.Open();
-                    string sql = "UPDATE system_users SET last_login=NOW() WHERE user_id=@id";
-                    using (var cmd = new MySqlCommand(sql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@id", userId);
-                        cmd.ExecuteNonQuery();
-                    }
+                    cmd.Parameters.AddWithValue("@hash", hash);
+                    cmd.Parameters.AddWithValue("@id", userId);
+                    cmd.ExecuteNonQuery();
                 }
             }
             catch { }
         }
 
-        private UserAccount LoginFromMemory(string username, string password)
+        private void UpdateLastLogin(MySqlConnection conn, int userId)
         {
-            foreach (var cred in _localPasswords)
+            try
             {
-                if (cred.Username == username && cred.Password == password)
+                using (var cmd = new MySqlCommand(
+                    "UPDATE system_users SET last_login=NOW() WHERE user_id=@id", conn))
                 {
-                    foreach (var u in _localUsers)
-                        if (u.Username == username) return u;
+                    cmd.Parameters.AddWithValue("@id", userId);
+                    cmd.ExecuteNonQuery();
                 }
             }
-            return null;
+            catch { }
         }
 
         // ── SIGN UP ───────────────────────────────────────────
@@ -163,34 +174,21 @@ namespace OCIMS
             if (string.IsNullOrEmpty(username) || username.Length < 4)
             { ShowSignupError("Username must be at least 4 characters."); return; }
 
-            if (username == "admin")
-            { ShowSignupError("That username is not allowed."); return; }
-
             if (string.IsNullOrEmpty(password) || password.Length < 6)
             { ShowSignupError("Password must be at least 6 characters."); return; }
 
             if (password != confirm)
             { ShowSignupError("Passwords do not match."); return; }
 
-            if (UsernameExistsInDb(username))
+            string dbError;
+            if (UsernameExistsInDb(username, out dbError))
             { ShowSignupError("Username '" + username + "' is already taken."); return; }
 
-            foreach (var u in _localUsers)
-                if (u.Username == username)
-                { ShowSignupError("Username '" + username + "' is already taken."); return; }
+            if (dbError != null)
+            { ShowSignupError("Cannot reach the database. Please check that MySQL is running."); return; }
 
-            // Save to MySQL
-            SaveUserToDatabase(username, password, fullName);
-
-            // Save to memory fallback
-            _localUsers.Add(new UserAccount
-            {
-                UserId = _localUsers.Count + 1,
-                Username = username,
-                FullName = fullName,
-                Role = "Employee"
-            });
-            _localPasswords.Add((username, password));
+            if (!SaveUserToDatabase(username, password, out dbError))
+            { ShowSignupError("Could not create the account: " + dbError); return; }
 
             SignupError.Visibility = Visibility.Collapsed;
             SignupSuccess.Text = "✔ Account created! You can now sign in as '" + username + "'.";
@@ -213,8 +211,9 @@ namespace OCIMS
             timer.Start();
         }
 
-        private bool SaveUserToDatabase(string username, string password, string fullName)
+        private bool SaveUserToDatabase(string username, string password, out string error)
         {
+            error = null;
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
@@ -226,17 +225,22 @@ namespace OCIMS
                     using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@user", username);
-                        cmd.Parameters.AddWithValue("@pass", password);
+                        cmd.Parameters.AddWithValue("@pass", PasswordHasher.Hash(password));
                         cmd.ExecuteNonQuery();
                         return true;
                     }
                 }
             }
-            catch { return false; }
+            catch (System.Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
         }
 
-        private bool UsernameExistsInDb(string username)
+        private bool UsernameExistsInDb(string username, out string dbError)
         {
+            dbError = null;
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
@@ -250,7 +254,11 @@ namespace OCIMS
                     }
                 }
             }
-            catch { return false; }
+            catch (System.Exception ex)
+            {
+                dbError = ex.Message;
+                return false;
+            }
         }
 
         private void ShowLoginError(string message)

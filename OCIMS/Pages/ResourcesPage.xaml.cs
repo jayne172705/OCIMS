@@ -1,76 +1,27 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using OCIMS.Data;
+using OCIMS.Models;
 
 namespace OCIMS.Pages
 {
-    public class FundSource
-    {
-        public int FundId { get; set; }
-        public string FundName { get; set; }
-        public string FundType { get; set; }
-        public decimal Amount { get; set; }
-        public string Source { get; set; }
-        public string DateReceived { get; set; }
-        public string FundStatus { get; set; } = "Active";
-        public string Notes { get; set; }
-
-        public string AmountDisplay
-        {
-            get { return "₱" + Amount.ToString("N2"); }
-        }
-
-        public string Icon
-        {
-            get
-            {
-                if (FundType == "Government") return "🏛";
-                if (FundType == "Donation") return "🤝";
-                if (FundType == "Grant") return "📜";
-                if (FundType == "Budget") return "💼";
-                if (FundType == "Premium") return "💰";
-                return "💵";
-            }
-        }
-
-        public string StatusBg
-        {
-            get
-            {
-                if (FundStatus == "Active") return "#E6F9F0";
-                if (FundStatus == "Depleted") return "#FDEAEA";
-                if (FundStatus == "On Hold") return "#FEF5E7";
-                return "#F0F4F8";
-            }
-        }
-
-        public string StatusFg
-        {
-            get
-            {
-                if (FundStatus == "Active") return "#1A8A4A";
-                if (FundStatus == "Depleted") return "#C0392B";
-                if (FundStatus == "On Hold") return "#D68910";
-                return "#7A8FA6";
-            }
-        }
-    }
-
     public partial class ResourcesPage : Page
     {
+        private readonly FundRepository _repo = new FundRepository();
         private List<FundSource> _allFunds = new List<FundSource>();
-        private int _nextId = 1;
 
         public ResourcesPage()
         {
             InitializeComponent();
-            this.Loaded += PageLoaded;
+            ReloadFunds();
         }
 
-        private void PageLoaded(object sender, RoutedEventArgs e)
+        private void ReloadFunds()
         {
+            _allFunds = _repo.GetAll();
             LoadFunds();
         }
 
@@ -115,9 +66,12 @@ namespace OCIMS.Pages
             dlg.ShowDialog();
             if (dlg.IsSaved && dlg.NewFund != null)
             {
-                dlg.NewFund.FundId = _nextId++;
-                _allFunds.Add(dlg.NewFund);
-                LoadFunds();
+                if (_repo.Save(dlg.NewFund))
+                {
+                    ReloadFunds();
+                    MessageBox.Show("✔ Fund source '" + dlg.NewFund.FundName + "' added successfully!",
+                        "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
 
@@ -144,7 +98,15 @@ namespace OCIMS.Pages
             var dlg = new AddFundWindow(fund);
             dlg.Owner = Window.GetWindow(this);
             dlg.ShowDialog();
-            if (dlg.IsSaved) LoadFunds();
+            if (dlg.IsSaved)
+            {
+                if (_repo.Update(fund))
+                {
+                    MessageBox.Show("✔ Fund source updated successfully!",
+                        "OCIMS — Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                ReloadFunds();
+            }
         }
 
         private void DeleteFund_Click(object sender, RoutedEventArgs e)
@@ -156,10 +118,12 @@ namespace OCIMS.Pages
                 "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (r == MessageBoxResult.Yes)
             {
-                _allFunds.Remove(fund);
-                LoadFunds();
-                MessageBox.Show("✔ Fund source deleted.", "OCIMS",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                if (_repo.Delete(fund.FundId))
+                {
+                    ReloadFunds();
+                    MessageBox.Show("✔ Fund source deleted.", "OCIMS",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
 
@@ -174,7 +138,7 @@ namespace OCIMS.Pages
                     FileName = "FundSources_" + DateTime.Now.ToString("yyyyMMdd_HHmmss")
                 };
                 if (dlg.ShowDialog() != true) return;
-                if (dlg.FileName.EndsWith(".xlsx")) ExportExcel(dlg.FileName);
+                if (ExportHelper.IsXlsx(dlg.FileName)) ExportExcel(dlg.FileName);
                 else ExportCsv(dlg.FileName);
             }
             catch (Exception ex)
@@ -206,22 +170,18 @@ namespace OCIMS.Pages
             }
             ws.Columns().AdjustToContents();
             wb.SaveAs(path);
-            MessageBox.Show("✔ Exported " + (row - 2) + " fund sources!\n\n" + path,
-                "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private void ExportCsv(string path)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("FUND NAME,TYPE,AMOUNT,SOURCE/DONOR,DATE RECEIVED,STATUS");
+            sb.AppendLine(ExportHelper.CsvLine("FUND NAME", "TYPE", "AMOUNT", "SOURCE/DONOR", "DATE RECEIVED", "STATUS"));
             foreach (var f in _allFunds)
-                sb.AppendLine("\"" + f.FundName + "\",\"" + f.FundType + "\",\"" + f.AmountDisplay + "\",\"" +
-                              f.Source + "\",\"" + f.DateReceived + "\",\"" + f.FundStatus + "\"");
+                sb.AppendLine(ExportHelper.CsvLine(f.FundName, f.FundType, f.AmountDisplay,
+                    f.Source, f.DateReceived, f.FundStatus));
             System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
-            MessageBox.Show("✔ Exported!\n\n" + path, "Export Success",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            System.Diagnostics.Process.Start(path);
+            ExportHelper.OfferOpen(path);
         }
 
         private FundSource GetRow(object sender)
