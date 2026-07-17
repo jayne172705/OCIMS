@@ -1,21 +1,18 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch eSureHi",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}\\OCIMS\\bin\\Debug\\net8.0-windows\\eSureHi.exe",
-            "cwd": "${workspaceFolder}\\OCIMS\\bin\\Debug\\net8.0-windows",
-            "console": "internalConsole",
-            "stopAtEntry": false
-        },
-        {
-            "name": "Attach to eSureHi",
-            "type": "coreclr",
-            "request": "attach",
-            "processName": "eSureHi.exe"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run eSureHi",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/OCIMS/bin/Debug/net8.0-windows/eSureHi.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/OCIMS",
+      "stopAtEntry": false,
+      "console": "externalTerminal",
+      "justMyCode": false,
+      "requireExactSource": false
+    }
+  ]
 }

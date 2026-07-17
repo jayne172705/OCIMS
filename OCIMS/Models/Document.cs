@@ -1,39 +1,54 @@
-﻿namespace OCIMS.Models
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace eSureHi.Models
 {
+    [Table("documents")]
     public class Document
     {
+        [Key]
+        [Column("document_id")]
         public int DocumentId { get; set; }
+
+        [Column("emp_id")]
         public int EmpId { get; set; }
-        public string ClientName { get; set; }
-        public string ClientId { get; set; }
-        public int DocTypeId { get; set; }
-        public string DocTypeName { get; set; }
-        public string DocTitle { get; set; }
-        public string FileName { get; set; }
-        public string FilePath { get; set; }
-        public string FileSize { get; set; }
-        public string Remarks { get; set; }
-        public string DateUploaded { get; set; }
 
-        public string Icon
-        {
-            get
-            {
-                if (FileName == null) return "📄";
-                string ext = System.IO.Path.GetExtension(FileName).ToUpper();
-                if (ext == ".PDF") return "📕";
-                if (ext == ".DOC" || ext == ".DOCX") return "📘";
-                if (ext == ".XLS" || ext == ".XLSX") return "📗";
-                if (ext == ".PNG" || ext == ".JPG" || ext == ".JPEG") return "🖼";
-                return "📄";
-            }
-        }
-    }
-
-    public class DocumentType
-    {
+        [Column("doc_type_id")]
         public int DocTypeId { get; set; }
-        public string TypeName { get; set; }
-        public string Description { get; set; }
+
+        [Column("doc_title")]
+        public string DocTitle { get; set; } = string.Empty;
+
+        [Column("file_name")]
+        public string FileName { get; set; } = string.Empty;
+
+        [Column("file_path")]
+        public string FilePath { get; set; } = string.Empty;
+
+        [Column("file_size")]
+        public string? FileSize { get; set; }
+
+        [Column("remarks")]
+        public string? Remarks { get; set; }
+
+        [Column("uploaded_by")]
+        public int? UploadedBy { get; set; }
+
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        // Navigation
+        [ForeignKey("EmpId")]
+        public Employee? Employee { get; set; }
+
+        [ForeignKey("DocTypeId")]
+        public DocumentType? DocumentType { get; set; }
     }
 }

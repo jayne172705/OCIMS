@@ -1,0 +1,129 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.BeneficiaryPortalView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:BeneficiaryPortalViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="AccountHeart" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0"/>
+                    <TextBlock Text="My Claim Portal" FontSize="20" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Command="{Binding SubmitClaimCommand}"
+                            Background="{StaticResource PrimaryBrush}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="36"
+                            Padding="14,0"
+                            Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FilePlus" Width="16" Height="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="Submit Claim"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding BackToDashboardCommand}"
+                            Background="#D32F2F"
+                            Foreground="White"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="36"
+                            Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="Exit" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="22">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <materialDesign:Card Background="White" Margin="0,0,0,14">
+                    <StackPanel Margin="18">
+                        <TextBlock Text="{Binding DisplayName}" FontSize="20" FontWeight="Bold" Foreground="#0F172A"/>
+                        <TextBlock Text="{Binding Beneficiary.Relationship}" FontSize="12" Foreground="#64748B" Margin="0,4,0,12"/>
+                        <TextBlock Text="Email" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,4,0,10"/>
+                        <Button Command="{Binding SaveEmailCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="{StaticResource PrimaryBarush}"
+                                BorderBrush="{StaticResource PrimaryBrush}">
+                            <TextBlock Text="Save Email"/>
+                        </Button>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Background="White">
+                    <StackPanel Margin="18">
+                        <TextBlock Text="Change Password" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <TextBox Text="{Binding CurrentPassword, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Current password"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,10"/>
+                        <TextBox Text="{Binding NewPassword, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="New password"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,10"/>
+                        <Button Command="{Binding ChangePasswordCommand}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Style="{StaticResource MaterialDesignRaisedButton}">
+                            <TextBlock Text="Update Password"/>
+                        </Button>
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+
+            <materialDesign:Card Grid.Column="2" Background="White">
+                <Grid Margin="18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <TextBlock Text="My Insurance Claims" FontSize="17" FontWeight="SemiBold"/>
+                        <Button Command="{Binding RefreshCommand}"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="32">
+                            <TextBlock Text="Refresh"/>
+                        </Button>
+                    </Grid>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Claims}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Margin="0,14,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Claim No" Binding="{Binding ClaimNo}" Width="150"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding ClaimType}" Width="120"/>
+                            <DataGridTextColumn Header="Policy" Binding="{Binding Policy.PolicyName}" Width="*"/>
+                            <DataGridTextColumn Header="Amount" Binding="{Binding AmountClaimed, StringFormat=₱{0:N2}}" Width="120"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding ClaimStatus}" Width="140"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding ClaimDate, StringFormat={}{0:MMM dd, yyyy}}" Width="130"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

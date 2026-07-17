@@ -1,0 +1,219 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.ManageDepartmentsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Manage Departments"
+        Width="660" Height="620"
+        MinWidth="600" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="48" ResizeBorderThickness="5"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Title Bar ── -->
+        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="20,0">
+                    <materialDesign:PackIcon Kind="OfficeBuildingCog"
+                                             Width="20" Height="20"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="Manage Departments"
+                               FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Command="{Binding CloseCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}" Width="48" Height="44"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ── Content ── -->
+        <Grid Grid.Row="1" Margin="16,12,16,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="230"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: List -->
+            <Border Grid.Column="0"
+                    BorderBrush="#DDE4EF" BorderThickness="1"
+                    CornerRadius="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Padding="12,10"
+                            BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Active Departments"
+                                   FontSize="13" FontWeight="SemiBold"/>
+                    </Border>
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Departments}"
+                             SelectedItem="{Binding Selected}"
+                             BorderThickness="0" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="4,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36"
+                                            CornerRadius="4" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="{Binding DeptCode}"
+                                                   FontSize="9" FontWeight="Bold"
+                                                   Foreground="{StaticResource PrimaryBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   TextAlignment="Center"
+                                                   Margin="2"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DeptName}"
+                                                   FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding Description}"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Right: Actions -->
+            <StackPanel Grid.Column="2">
+
+                <!-- Add New -->
+                <TextBlock Text="Add New Department"
+                           FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                <TextBox Text="{Binding NewName,
+                             UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Department Name *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,8" FontSize="13"/>
+
+                <TextBox Text="{Binding NewCode,
+                             UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Code (e.g. HR, FIN) *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,8" FontSize="13"/>
+
+                <TextBox Text="{Binding NewDescription,
+                             UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Description (optional)"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         TextWrapping="Wrap" AcceptsReturn="True"
+                         Height="60" VerticalContentAlignment="Top"
+                         FontSize="12" Margin="0,0,0,8"/>
+
+                <Button Command="{Binding AddCommand}"
+                        Background="{StaticResource PrimaryBrush}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        HorizontalAlignment="Stretch"
+                        Height="36" Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                 Margin="0,0,6,0"
+                                                 VerticalAlignment="Center"/>
+                        <TextBlock Text="Add Department"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Separator Background="#1C3A5E" Margin="0,0,0,16"/>
+
+                <!-- Edit Selected -->
+                <TextBlock Text="Edit Selected"
+                           FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                <TextBox Text="{Binding EditName,
+                             UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Department Name"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         IsEnabled="{Binding HasSelection}"
+                         Margin="0,0,0,8" FontSize="13"/>
+
+                <TextBox Text="{Binding EditCode,
+                             UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Code"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         IsEnabled="{Binding HasSelection}"
+                         Margin="0,0,0,8" FontSize="13"/>
+
+                <Button Command="{Binding SaveEditCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="{StaticResource PrimaryBrush}"
+                        BorderBrush="{StaticResource PrimaryBrush}"
+                        HorizontalAlignment="Stretch"
+                        Height="34" Margin="0,0,0,8">
+                    <TextBlock Text="Save Changes" FontSize="12"/>
+                </Button>
+
+                <Button Command="{Binding DeactivateCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="{StaticResource ErrorBrush}"
+                        BorderBrush="{StaticResource ErrorBrush}"
+                        HorizontalAlignment="Stretch"
+                        Height="34">
+                    <TextBlock Text="Deactivate" FontSize="12"/>
+                </Button>
+
+                <!-- Messages -->
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{StaticResource SuccessBrush}"
+                           FontSize="11" Margin="0,8,0,0"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding StatusMessage,
+                               Converter={StaticResource StringToVisibilityConverter}}"/>
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="11" Margin="0,4,0,0"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding ErrorMessage,
+                               Converter={StaticResource StringToVisibilityConverter}}"/>
+
+            </StackPanel>
+        </Grid>
+
+        <!-- ── Footer ── -->
+        <Border Grid.Row="2"
+                BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True" Padding="16,12">
+            <Button Content="Close"
+                    Command="{Binding CloseCommand}"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Width="90"/>
+        </Border>
+    </Grid>
+</Window>

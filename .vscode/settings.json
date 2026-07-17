@@ -1,0 +1,31 @@
+{
+  "dotnet.defaultSolution": "eSureHi.sln",
+  "omnisharp.defaultLaunchSolution": "eSureHi.sln",
+  "omnisharp.useModernNet": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.vs": true,
+    "**/bin": true,
+    "**/obj": true,
+    "**/*-check": true,
+    "**/*-audit": true,
+    "**/build.log": true,
+    "**/build_*.log": true,
+    "**/build_*.txt": true,
+    "**/errors.log": true,
+    "**/error.log": true,
+    "**/msbuild.binlog": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/*-check": true,
+    "**/*-audit": true,
+    "**/build.log": true,
+    "**/build_*.log": true,
+    "**/build_*.txt": true,
+    "**/errors.log": true,
+    "**/error.log": true,
+    "**/msbuild.binlog": true
+  }
+}

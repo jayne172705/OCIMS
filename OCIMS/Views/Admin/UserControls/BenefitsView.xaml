@@ -1,0 +1,333 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.BenefitsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:BenefitsViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="HeartPulse"
+                                             Width="24" Height="24"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="Benefit Releases" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="Distribution by Job Order, Casual, and Regular"
+                               FontSize="12"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               VerticalAlignment="Center"
+                               Margin="12,2,0,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
+                                                     Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Refresh" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding AddCommand}"
+                            Background="{StaticResource PrimaryBrush}"
+                            Foreground="White"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="34" Padding="16,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="HeartPlus" Width="16" Height="16"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Add Benefit" FontSize="12"
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding BackToDashboardCommand}"
+                            Background="#D32F2F"
+                            Foreground="White"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="34" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Exit" FontSize="12"
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3"
+                     Foreground="{StaticResource PrimaryBrush}"
+                     Visibility="{Binding IsLoading,
+                         Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <UniformGrid Grid.Row="2" Columns="3" Margin="16,8,16,0">
+            <materialDesign:Card Margin="0,0,4,0" materialDesign:ElevationAssist.Elevation="Dp1">
+                <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                    <TextBlock Text="Total Max" FontSize="11" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalMax, StringFormat=PHP {0:N2}}"
+                               FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Margin="4,0,4,0" materialDesign:ElevationAssist.Elevation="Dp1">
+                <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                    <TextBlock Text="Total Released" FontSize="11" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalUsed, StringFormat=PHP {0:N2}}"
+                               FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource WarningBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Margin="4,0,0,0" materialDesign:ElevationAssist.Elevation="Dp1">
+                <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                    <TextBlock Text="Total Remaining" FontSize="11" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalRemaining, StringFormat=PHP {0:N2}}"
+                               FontSize="16" FontWeight="Bold"
+                               Foreground="{StaticResource SuccessBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </materialDesign:Card>
+        </UniformGrid>
+
+        <Grid Grid.Row="3" Margin="16,10,16,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="White"
+                    BorderBrush="#DDE4EF"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" Padding="16,14" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+                        <StackPanel>
+                            <TextBlock Text="Employee Tracks" FontSize="15" FontWeight="SemiBold"/>
+                            <TextBlock Text="Grouped distribution list"
+                                       FontSize="11"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ListBox ItemsSource="{Binding TrackGroups}"
+                             SelectedValue="{Binding SelectedTrack, Mode=TwoWay}"
+                             SelectedValuePath="Name"
+                             BorderThickness="0"
+                             Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="8,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14"/>
+                                    <Border Grid.Column="1"
+                                            CornerRadius="10"
+                                            Padding="8,3"
+                                            VerticalAlignment="Top"
+                                            Background="{Binding ReleaseIndicatorBackgroundHex, Converter={StaticResource HexToBrushConverter}}">
+                                        <TextBlock Text="{Binding ReleaseIndicatorText}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding ReleaseIndicatorHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                    </Border>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.ColumnSpan="2"
+                                               Text="{Binding Summary}"
+                                               FontSize="11"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               Margin="0,2,0,0"/>
+                                    <Border Grid.Row="2"
+                                            Grid.ColumnSpan="2"
+                                            CornerRadius="4"
+                                            Padding="8,6"
+                                            Margin="0,7,0,0"
+                                            Background="{Binding FundIndicatorBackgroundHex, Converter={StaticResource HexToBrushConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding FundSummary}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding FundIndicatorHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                                <TextBlock Text="{Binding UsedSummary}"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource MutedTextBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1"
+                                                        HorizontalAlignment="Right">
+                                                <TextBlock Text="Available"
+                                                           FontSize="9"
+                                                           HorizontalAlignment="Right"
+                                                           Foreground="{StaticResource MutedTextBrush}"/>
+                                                <TextBlock Text="{Binding RemainingSummary}"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           HorizontalAlignment="Right"
+                                                           Foreground="{Binding FundIndicatorHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Background="White"
+                    BorderBrush="#DDE4EF"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Padding="16,12" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="AccountCash" Width="20" Height="20"
+                                                         Foreground="{StaticResource PrimaryBrush}"
+                                                         Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding SelectedTrack}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text=" distribution" FontSize="16" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{StaticResource MutedTextBrush}">
+                                <Run Text="{Binding ReleasableDistributionCount, Mode=OneWay}"/>
+                                <Run Text=" ready of "/>
+                                <Run Text="{Binding DistributionCount, Mode=OneWay}"/>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding DistributionEmployees}"
+                              SelectedItem="{Binding SelectedDistributionEmployee}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E5EAF2"
+                              RowHeight="50"
+                              BorderThickness="0"
+                              Background="White"
+                              RowBackground="White"
+                              AlternatingRowBackground="#F8FAFC"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                              Style="{StaticResource ReadableDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Employee No" Binding="{Binding EmployeeNo}" Width="125"/>
+                            <DataGridTextColumn Header="Employee" Binding="{Binding FullName}" Width="1.3*"/>
+                            <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="1.1*"/>
+                            <DataGridTextColumn Header="Benefit" Binding="{Binding BenefitType}" Width="150"/>
+                            <DataGridTextColumn Header="Max" Binding="{Binding MaxBenefit, StringFormat=PHP {0:N2}}" Width="115"/>
+                            <DataGridTextColumn Header="Released" Binding="{Binding UsedBenefit, StringFormat=PHP {0:N2}}" Width="115"/>
+                            <DataGridTextColumn Header="Remaining" Binding="{Binding Remaining, StringFormat=PHP {0:N2}}" Width="125"/>
+                            <DataGridTemplateColumn Header="Release Indicator" Width="145">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10"
+                                                Padding="9,4"
+                                                HorizontalAlignment="Left"
+                                                Background="{Binding StatusBackgroundHex, Converter={StaticResource HexToBrushConverter}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CheckCircle"
+                                                                         Width="13"
+                                                                         Height="13"
+                                                                         Margin="0,0,5,0"
+                                                                         VerticalAlignment="Center"
+                                                                         Foreground="{Binding StatusHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                                <TextBlock Text="{Binding ReleaseIndicator}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding StatusHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Action" Width="115">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ReleaseDistributionCommand,
+                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                IsEnabled="{Binding CanRelease}"
+                                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                                Height="32"
+                                                Padding="12,0"
+                                                Background="{Binding ActionBackgroundHex, Converter={StaticResource HexToBrushConverter}}"
+                                                Foreground="White">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CashCheck"
+                                                                         Width="15"
+                                                                         Height="15"
+                                                                         Margin="0,0,6,0"
+                                                                         VerticalAlignment="Center"/>
+                                                <TextBlock Text="Release" FontSize="11"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
+                Padding="16,8">
+            <TextBlock FontSize="11">
+                <Run Text="{Binding DistributionCount, Mode=OneWay}"/>
+                <Run Text=" employee(s) shown - select Job Order, Casual, or Regular, then click Release"/>
+            </TextBlock>
+        </Border>
+    </Grid>
+</UserControl>

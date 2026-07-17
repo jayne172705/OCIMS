@@ -1,0 +1,223 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:SettingsViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Background="#F4F7FA" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ── Sidebar Navigation ── -->
+        <Border Grid.Column="0" Background="#102540" helpers:Adaptive.UseAdaptiveForeground="True">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="20,30,20,40">
+                    <materialDesign:PackIcon Kind="ShieldStar" Width="48" Height="48" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock Text="SYSTEM SETTINGS" Foreground="White" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+
+                <StackPanel>
+                    <ListBox ItemsSource="{Binding SectionList}"
+                             SelectedItem="{Binding SelectedSection}"
+                             Background="Transparent" BorderThickness="0">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                                <Setter Property="Foreground" Value="#8899AA"/>
+                                <Setter Property="Height" Value="45"/>
+                                <Setter Property="Padding" Value="20,0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#14345B"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ── Main Content Area ── -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="64"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Bar -->
+            <Border Grid.Row="0" Background="White" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+                <Grid Margin="30,0">
+                    <TextBlock Text="{Binding SelectedSection}" FontSize="20" FontWeight="Bold" Foreground="#102540" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontSize="12"
+                                   Foreground="{StaticResource SuccessBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,0"/>
+                        <Button Command="{Binding BackToDashboardCommand}"
+                                Background="#D32F2F"
+                                Foreground="White"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="34"
+                                Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="Exit" FontSize="12" FontWeight="Medium"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Content Switcher -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30">
+                <Grid>
+                    <!-- STAFF ACCOUNTS -->
+                    <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource ComparisonConverter}, ConverterParameter='Staff Accounts'}">
+                        <materialDesign:Card Padding="20" IsEnabled="{Binding CanEditSettings}">
+                            <StackPanel>
+                                <TextBlock Text="User Administration" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+                                <Button Command="{Binding SeedAdminCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,10">Seed Admin Account</Button>
+                                <Button Click="ManageDepartments_Click" Style="{StaticResource MaterialDesignOutlinedButton}">Manage Departments</Button>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                    <!-- APP DATABASE -->
+                    <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource ComparisonConverter}, ConverterParameter='App Database'}">
+                        <materialDesign:Card Padding="25" IsEnabled="{Binding CanEditSettings}">
+                            <StackPanel>
+                                <TextBlock Text="App Database Presets" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Choose which preset the app uses for its main storage." Foreground="Gray" Margin="0,0,0,25"/>
+
+                                <UniformGrid Columns="3" Margin="0,0,0,30">
+                                    <Button Command="{Binding ApplyLocalPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Height="50"
+                                            BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}" BorderThickness="2">LOCAL</Button>
+                                    <Button Command="{Binding ApplyNetworkPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Height="50"
+                                            BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}" BorderThickness="2">NETWORK LAN</Button>
+                                    <Button Command="{Binding ApplyRemotePresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="50"
+                                            BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}" BorderThickness="2">REMOTE</Button>
+                                </UniformGrid>
+
+                                <StackPanel IsEnabled="{Binding IsAppDbEditable}">
+                                    <TextBox Text="{Binding AppDbServer, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Server / IP" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+                                    <Grid Margin="0,0,0,15">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="15"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding AppDbPort, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Port" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding AppDbDatabase, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Database Name" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,15">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="15"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding AppDbUser, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding AppDbPassword, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Password" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                                    <Button Command="{Binding TestConnectionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0">TEST CONNECTION</Button>
+                                    <Button Command="{Binding SaveAppDbConfigCommand}" Background="#102540" Foreground="White">SAVE MASTER SETTINGS</Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                    <!-- SYSTEM PROFILE -->
+                    <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource ComparisonConverter}, ConverterParameter='System Profile'}">
+                        <materialDesign:Card Padding="25" IsEnabled="{Binding CanEditSettings}">
+                            <StackPanel>
+                                <TextBlock Text="Municipal Profile" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="100" Height="100" CornerRadius="10" Background="{StaticResource PrimaryBrush}">
+                                        <materialDesign:PackIcon Kind="ImageEdit" Width="40" Height="40" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding OrgName}" FontSize="18" FontWeight="Bold" Foreground="#102540"/>
+                                        <TextBlock Text="Municipality of Sulop" Foreground="Gray" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBox Text="{Binding OrgName}" materialDesign:HintAssist.Hint="Organization Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+                                <TextBox Text="{Binding SystemDesc}" materialDesign:HintAssist.Hint="System Description" Style="{StaticResource MaterialDesignOutlinedTextBox}" AcceptsReturn="True" Height="80" Margin="0,0,0,15"/>
+                                <Button HorizontalAlignment="Right" Background="#102540" Foreground="White">SAVE PROFILE</Button>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                    <!-- GGMS SETTINGS -->
+                    <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource ComparisonConverter}, ConverterParameter='GGMS Settings'}">
+                        <materialDesign:Card Padding="25" IsEnabled="{Binding CanEditSettings}">
+                            <StackPanel>
+                                <TextBlock Text="GGMS Remote Connection" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Configure the connection to the Government Grants Management System." Foreground="Gray" Margin="0,0,0,25"/>
+                                
+                                <TextBox Text="{Binding GgmsServer, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Server / IP" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="15"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding GgmsPort, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Port" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    <TextBox Grid.Column="2" Text="{Binding GgmsDatabase, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Database Name" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="15"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding GgmsUser, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    <TextBox Grid.Column="2" Text="{Binding GgmsPassword, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Password" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Command="{Binding TestGgmsConnectionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0">TEST CONNECTION</Button>
+                                    <Button Command="{Binding SaveGgmsConfigCommand}" Background="#102540" Foreground="White">SAVE GGMS CONFIG</Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                    <!-- CRS SETTINGS -->
+                    <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource ComparisonConverter}, ConverterParameter='CRS Settings'}">
+                        <materialDesign:Card Padding="25" IsEnabled="{Binding CanEditSettings}">
+                            <StackPanel>
+                                <TextBlock Text="CRS Remote Connection" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Configure the connection to the Civil Registry System." Foreground="Gray" Margin="0,0,0,25"/>
+                                
+                                <TextBox Text="{Binding CrsServer, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Server / IP" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="15"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding CrsPort, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Port" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    <TextBox Grid.Column="2" Text="{Binding CrsDatabase, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Database Name" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="15"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding CrsUser, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    <TextBox Grid.Column="2" Text="{Binding CrsPassword, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Password" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Command="{Binding TestCrsConnectionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0">TEST CONNECTION</Button>
+                                    <Button Command="{Binding SaveCrsConfigCommand}" Background="#102540" Foreground="White">SAVE CRS CONFIG</Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                    <!-- BACKUPS -->
+                    <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource ComparisonConverter}, ConverterParameter='Backups &amp; Sync'}">
+                        <materialDesign:Card Padding="20" IsEnabled="{Binding CanEditSettings}">
+                            <StackPanel>
+                                <TextBlock Text="System Backups" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+                                <Button Command="{Binding FullBackupCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,0,10">Run Full Backup</Button>
+                                <Button Command="{Binding TwoWaySyncCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">Two-Way Sync</Button>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,120 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.CedulaManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:CedulaManagementViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CardAccountDetails" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0"/>
+                    <TextBlock Text="Cedula Management" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Command="{Binding RefreshCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="{StaticResource PrimaryBrush}" BorderBrush="{StaticResource PrimaryBrush}" Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Refresh" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding AddCommand}" Background="{StaticResource PrimaryBrush}" Foreground="White" Style="{StaticResource MaterialDesignRaisedButton}" Height="34" Padding="16,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="Add Cedula" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding BackToDashboardCommand}" Background="#D32F2F" Foreground="White" Style="{StaticResource MaterialDesignRaisedButton}" Height="34" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="Exit" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3"
+                     Foreground="{StaticResource PrimaryBrush}"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <Border Grid.Row="2" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1" Padding="16,10">
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Search employee, employee no, cedula no, or place issued..."
+                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Height="46"
+                     Width="420"
+                     HorizontalAlignment="Left"
+                     FontSize="12"/>
+        </Border>
+
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Cedulas}"
+                  SelectedItem="{Binding SelectedCedula}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#E5EAF2"
+                  RowHeight="48"
+                  BorderThickness="0"
+                  Background="White"
+                  RowBackground="White"
+                  AlternatingRowBackground="#F8FAFC"
+                  Style="{StaticResource ReadableDataGrid}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Household/Resident ID" Binding="{Binding Employee.EmployeeNo}" Width="170"/>
+                <DataGridTextColumn Header="Employee" Binding="{Binding Employee.FullName}" Width="220"/>
+                <DataGridTextColumn Header="Cedula No" Binding="{Binding CedulaNo}" Width="150"/>
+                <DataGridTextColumn Header="Issue Date" Binding="{Binding IssueDate, StringFormat={}{0:MMM dd, yyyy}}" Width="130"/>
+                <DataGridTextColumn Header="Place Issued" Binding="{Binding PlaceIssued}" Width="*"/>
+                <DataGridTextColumn Header="Amount Paid" Binding="{Binding AmountPaid, StringFormat=₱{0:N2}}" Width="140"/>
+                <DataGridTextColumn Header="Remarks" Binding="{Binding Remarks}" Width="*"/>
+                <DataGridTemplateColumn Header="Actions" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        ToolTip="Edit"
+                                        Width="32" Height="32"
+                                        Foreground="{StaticResource PrimaryBrush}">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        ToolTip="Delete"
+                                        Width="32" Height="32"
+                                        Foreground="{StaticResource ErrorBrush}">
+                                    <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Padding="16,8">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="11"/>
+        </Border>
+    </Grid>
+</UserControl>

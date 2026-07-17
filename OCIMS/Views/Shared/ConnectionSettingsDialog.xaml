@@ -1,0 +1,111 @@
+<Window x:Class="eSureHi.Views.Shared.ConnectionSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:eSureHi.ViewModels.Shared"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:ConnectionSettingsViewModel}"
+        Title="Connection Settings — eSureHi+"
+        Width="480" SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        Loaded="Window_Loaded">
+
+    <StackPanel Margin="28,24,28,24">
+
+        <!-- Header -->
+        <TextBlock Text="Connection Settings"
+                   FontSize="18" FontWeight="Bold"
+                   Foreground="{StaticResource PrimaryBrush}"
+                   Margin="0,0,0,4"/>
+        <TextBlock Text="Local/Remote = eSureHi database, Network = CRS database"
+                   FontSize="12" Foreground="Gray"
+                   Margin="0,0,0,4"/>
+        <TextBlock Text="Choose Local for offline eSureHi data, Remote for cloud eSureHi data, or Network to save the CRS server/IP used by Beneficiaries."
+                   FontSize="11"
+                   Foreground="{StaticResource MutedTextBrush}"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,18"/>
+
+        <!-- Presets -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+            <Button Content="Local"
+                    Command="{Binding PresetLocalCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}"
+                    BorderThickness="2"
+                    Margin="0,0,10,0" Width="124" Height="40"/>
+            <Button Content="Network"
+                    Command="{Binding PresetNetworkCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}"
+                    BorderThickness="2"
+                    Margin="0,0,10,0" Width="124" Height="40"/>
+            <Button Content="Remote"
+                    Command="{Binding PresetRemoteCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}"
+                    BorderThickness="2"
+                    Width="124" Height="40"/>
+        </StackPanel>
+
+        <!-- Credentials View (LAN Editable, Others Hidden/ReadOnly) -->
+        <StackPanel Margin="0,0,0,10">
+            <!-- Server / IP (Only editable in Network/LAN mode) -->
+            <TextBox Text="{Binding eSureHiServer, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     materialDesign:HintAssist.Hint="Server / IP"
+                     IsEnabled="{Binding IsCredentialsEditable}"
+                     Margin="0,0,0,12"/>
+
+            <Grid Visibility="{Binding IsCredentialsEditable, Converter={StaticResource InverseBoolConverter}}"
+                  Margin="0,0,0,12">
+                <materialDesign:Card Padding="12" Background="#FFF9C4" materialDesign:ElevationAssist.Elevation="Dp0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ShieldLock" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Credentials for this mode are fixed for security." 
+                                   VerticalAlignment="Center" FontSize="11" FontWeight="Medium"/>
+                    </StackPanel>
+                </materialDesign:Card>
+            </Grid>
+        </StackPanel>
+
+        <!-- Status Message -->
+        <TextBlock Text="{Binding StatusMessage}"
+                   FontSize="12" Margin="0,12,0,0"
+                   TextWrapping="Wrap">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding TestSuccess}" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding TestSuccess}" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Test Connection"
+                    Command="{Binding TestConnectionCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="0,0,8,0"/>
+            <Button Content="Save"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    Background="{StaticResource PrimaryBrush}"
+                    Style="{StaticResource MaterialDesignRaisedButton}"/>
+        </StackPanel>
+
+    </StackPanel>
+</Window>

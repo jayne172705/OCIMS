@@ -1,45 +1,111 @@
-﻿namespace OCIMS.Models
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace eSureHi.Models
 {
+    [Table("claims")]
     public class Claim
     {
+        [Key]
+        [Column("claim_id")]
         public int ClaimId { get; set; }
-        public string ClaimNo { get; set; }
-        public string ClientName { get; set; }
-        public string ClaimType { get; set; }
-        public string ClaimDate { get; set; }
-        public decimal Amount { get; set; }
-        public string ClaimStatus { get; set; } = "Pending";
-        public string Description { get; set; }
+
+        [Column("claim_no")]
+        public string ClaimNo { get; set; } = string.Empty;
+
+        [Column("emp_id")]
         public int EmpId { get; set; }
+
+        [Column("policy_id")]
         public int PolicyId { get; set; }
 
-        public string AmountDisplay
-        {
-            get { return "₱" + Amount.ToString("N2"); }
-        }
+        [Column("ben_id")]
+        public int? BenId { get; set; }
 
-        public string StatusBg
-        {
-            get
-            {
-                if (ClaimStatus == "Approved") return "#E6F9F0";
-                if (ClaimStatus == "Pending") return "#FEF5E7";
-                if (ClaimStatus == "Rejected") return "#FDEAEA";
-                if (ClaimStatus == "Released") return "#E8F2FD";
-                return "#F0F4F8";
-            }
-        }
+        [Column("claim_type")]
+        public string ClaimType { get; set; } = string.Empty;
 
-        public string StatusFg
-        {
-            get
-            {
-                if (ClaimStatus == "Approved") return "#1A8A4A";
-                if (ClaimStatus == "Pending") return "#D68910";
-                if (ClaimStatus == "Rejected") return "#C0392B";
-                if (ClaimStatus == "Released") return "#2E86DE";
-                return "#7A8FA6";
-            }
-        }
+        [Column("claim_date")]
+        public DateOnly? ClaimDate { get; set; }
+
+        [Column("incident_date")]
+        public DateOnly? IncidentDate { get; set; }
+
+        [Column("incident_description")]
+        public string? IncidentDescription { get; set; }
+
+        [Column("hospital_clinic")]
+        public string? HospitalClinic { get; set; }
+
+        [Column("attending_physician")]
+        public string? AttendingPhysician { get; set; }
+
+        [Column("amount_claimed")]
+        public decimal AmountClaimed { get; set; } = 0;
+
+        [Column("admission_days")]
+        public int AdmissionDays { get; set; } = 0;
+
+        [Column("covered_allowance_days")]
+        public int CoveredAllowanceDays { get; set; } = 0;
+
+        [Column("daily_allowance_rate")]
+        public decimal DailyAllowanceRate { get; set; } = 0;
+
+        [Column("daily_allowance_amount")]
+        public decimal DailyAllowanceAmount { get; set; } = 0;
+
+        [Column("amount_approved")]
+        public decimal AmountApproved { get; set; } = 0;
+
+        [Column("amount_released")]
+        public decimal AmountReleased { get; set; } = 0;
+
+        [Column("source_of_funds")]
+        public string? SourceOfFunds { get; set; }
+
+        [Column("claim_status")]
+        public string ClaimStatus { get; set; } = "Draft";
+
+        [Column("submitted_date")]
+        public DateTime? SubmittedDate { get; set; }
+
+        [Column("reviewed_date")]
+        public DateTime? ReviewedDate { get; set; }
+
+        [Column("approved_date")]
+        public DateTime? ApprovedDate { get; set; }
+
+        [Column("released_date")]
+        public DateTime? ReleasedDate { get; set; }
+
+        [Column("reviewed_by")]
+        public int? ReviewedBy { get; set; }
+
+        [Column("approved_by")]
+        public int? ApprovedBy { get; set; }
+
+        [Column("rejection_reason")]
+        public string? RejectionReason { get; set; }
+
+        [Column("remarks")]
+        public string? Remarks { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        // Navigation
+        [ForeignKey("EmpId")]
+        public Employee? Employee { get; set; }
+
+        [ForeignKey("PolicyId")]
+        public InsurancePolicy? Policy { get; set; }
+
+        [ForeignKey("BenId")]
+        public Beneficiary? Beneficiary { get; set; }
     }
 }

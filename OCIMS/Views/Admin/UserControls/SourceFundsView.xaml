@@ -1,0 +1,684 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.SourceFundsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:SourceFundsViewModel/>
+    </UserControl.DataContext>
+
+    <materialDesign:DialogHost IsOpen="{Binding IsGroupBeneficiaryDialogOpen}">
+        <materialDesign:DialogHost.DialogContent>
+            <Grid Width="700" Height="500" Background="White" Margin="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <Border Background="#15314F" Padding="20,16">
+                    <Grid>
+                        <TextBlock Text="{Binding SelectedGroupFundName, StringFormat='Beneficiaries: {0}'}" FontSize="18" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Command="{Binding AddGroupBeneficiaryCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="White" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountPlus" Width="18" Height="18" Margin="0,0,4,0"/>
+                                    <TextBlock Text="ADD BENEFICIARY" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding CloseBeneficiariesCommand}" Style="{StaticResource MaterialDesignIconForegroundButton}" Foreground="White" Width="30" Height="30" Padding="0" Margin="0,-5,-10,-5">
+                                <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                
+                <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedGroupBeneficiaries}" AutoGenerateColumns="False" IsReadOnly="True" Margin="20" Style="{StaticResource ReadableDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Beneficiary Name" Binding="{Binding FullName}" Width="*"/>
+                        <DataGridTextColumn Header="Employee Name" Binding="{Binding Employee.FullName}" Width="*"/>
+                        <DataGridTextColumn Header="Barangay" Binding="{Binding Employee.Barangay}" Width="*"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding WorkflowStatus}" Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </materialDesign:DialogHost.DialogContent>
+
+        <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+            <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Wallet" Width="24" Height="24"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding PageTitle}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding PageSubtitle}"
+                               FontSize="12"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               VerticalAlignment="Center"
+                               Margin="14,2,0,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Command="{Binding NewCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="New" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ExportCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileExport" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Export" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Refresh" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding SyncGgmsFundsCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CloudSync" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Sync GGMS Funds" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding BackToDashboardCommand}"
+                            Background="#D32F2F"
+                            Foreground="White"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="34" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="Exit" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ProgressBar Grid.Row="1"
+                     IsIndeterminate="True"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <UniformGrid Grid.Row="2" Columns="4" Margin="24,18,24,12"
+                     Visibility="{Binding IsStandardLanding, Converter={StaticResource BoolToVisibilityConverter}}">
+            <materialDesign:Card Background="White" Margin="0,0,10,0">
+                <StackPanel Margin="18,12">
+                    <TextBlock Text="Configured Allocation" FontSize="11" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding TotalAllocated, StringFormat={}{0:N2}}"
+                               FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Background="White" Margin="0,0,10,0">
+                <StackPanel Margin="18,12">
+                    <TextBlock Text="Tracked Local Use" FontSize="11" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding TotalUsed, StringFormat={}{0:N2}}"
+                               FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Background="White" Margin="0,0,10,0">
+                <StackPanel Margin="18,12">
+                    <TextBlock Text="Insurance Releases" FontSize="11" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding TotalReleasedBySource, StringFormat={}{0:N2}}"
+                               FontSize="22" FontWeight="Bold" Foreground="#15803D"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Background="White">
+                <StackPanel Margin="18,12">
+                    <TextBlock Text="GGMS Status" FontSize="11" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding GgmsStatus}"
+                               FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="#0F172A"/>
+                </StackPanel>
+            </materialDesign:Card>
+        </UniformGrid>
+
+        <Grid Grid.Row="3" Margin="24,0,24,24"
+              Visibility="{Binding IsStandardLanding, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="18"/>
+                <ColumnDefinition Width="360"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <materialDesign:Card Grid.Row="0" Background="White" Margin="0,0,0,12">
+                    <Grid Margin="14,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Search source name, type, or description..."
+                                 materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                 materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="48"/>
+                        <Button Grid.Column="1"
+                                Command="{Binding ClearSearchCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                BorderBrush="{StaticResource PrimaryBrush}"
+                                Height="40"
+                                Margin="10,0,0,0">
+                            <TextBlock Text="Clear"/>
+                        </Button>
+                    </Grid>
+                </materialDesign:Card>
+
+                <TabControl Grid.Row="1"
+                            SelectedIndex="{Binding SelectedSectionIndex, Mode=TwoWay}"
+                            Background="White"
+                            BorderBrush="#DDE4EF"
+                            BorderThickness="1">
+                    <TabItem Header="Barangay Funds">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,8">
+                                <TextBlock Foreground="#475569" FontSize="12">
+                                    <Run Text="Barangay Funds   "/>
+                                    <Run Text="{Binding DisplayedBarangayFunds.Count, Mode=OneWay}" FontWeight="SemiBold"/>
+                                    <Run Text=" fund(s) with balance"/>
+                                </TextBlock>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding DisplayedBarangayFunds}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      Margin="0,12,0,0"
+                                      Style="{StaticResource ReadableDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Barangay" Binding="{Binding Barangay}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                                    <DataGridTextColumn Header="Health" Binding="{Binding FundHealth}" Width="120"/>
+                                    <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat={}{0:N2}}" Width="120"/>
+                                    <DataGridTextColumn Header="Last Updated" Binding="{Binding UpdatedText}" Width="150"/>
+                                    <DataGridTemplateColumn Header="Action" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.ReleaseBarangayFundCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding DataContext.CanReleaseBarangayFunds, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                                        Background="{StaticResource PrimaryBrush}"
+                                                        Foreground="White"
+                                                        Height="28"
+                                                        Padding="8,0">
+                                                    <TextBlock Text="Release" FontSize="11"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="Group Funds">
+                        <DataGrid ItemsSource="{Binding DisplayedFunds}"
+                                  SelectedItem="{Binding SelectedFund}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  Style="{StaticResource ReadableDataGrid}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Source Name" Binding="{Binding FundName}" Width="1.6*"/>
+                                <DataGridTextColumn Header="Type" Binding="{Binding FundType}" Width="110"/>
+                                <DataGridTextColumn Header="Allocated" Binding="{Binding AllocatedAmount, StringFormat={}{0:N2}}" Width="120"/>
+                                <DataGridTextColumn Header="Used" Binding="{Binding UsedAmount, StringFormat={}{0:N2}}" Width="120"/>
+                                <DataGridTextColumn Header="Remaining" Binding="{Binding RemainingAmount, StringFormat={}{0:N2}}" Width="120"/>
+                                <DataGridTextColumn Header="Employees" Binding="{Binding BeneficiaryCount}" Width="110"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <TabItem Header="Allocated Funds">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,8">
+                                <TextBlock Foreground="#475569" FontSize="12">
+                                    <Run Text="Configured employee track coverage: "/>
+                                    <Run Text="{Binding TrackCoverageCount, Mode=OneWay}" FontWeight="SemiBold"/>
+                                    <Run Text=" track(s)"/>
+                                </TextBlock>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding TrackCoverages}"
+                                      SelectedItem="{Binding SelectedTrackCoverage}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      Style="{StaticResource ReadableDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Policy Code" Binding="{Binding PolicyCode}" Width="150"/>
+                                    <DataGridTextColumn Header="Track Name" Binding="{Binding TrackName}" Width="160"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding TrackType}" Width="110"/>
+                                    <DataGridTextColumn Header="Funding Office" Binding="{Binding FundingOffice}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="Budget Allocation" Binding="{Binding BudgetAllocation, StringFormat={}{0:N2}}" Width="135"/>
+                                    <DataGridTextColumn Header="Effective" Binding="{Binding EffectiveDate, StringFormat={}{0:MMM dd, yyyy}}" Width="115"/>
+                                    <DataGridTextColumn Header="Expiry" Binding="{Binding ExpiryDate, StringFormat={}{0:MMM dd, yyyy}}" Width="115"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                                    <DataGridTemplateColumn Header="Actions" Width="95">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                            Command="{Binding DataContext.EditTrackCoverageCommand,
+                                                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            ToolTip="Edit Track Coverage"
+                                                            Width="32" Height="32"
+                                                            Foreground="{StaticResource PrimaryBrush}">
+                                                        <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                            Command="{Binding DataContext.CancelTrackCoverageCommand,
+                                                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            ToolTip="Cancel Track Coverage"
+                                                            Width="32" Height="32"
+                                                            Foreground="{StaticResource ErrorBrush}">
+                                                        <materialDesign:PackIcon Kind="Cancel" Width="16" Height="16"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="Release Ledger">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,8">
+                                <TextBlock Foreground="#475569" FontSize="12">
+                                    <Run Text="Released from source funds: "/>
+                                    <Run Text="{Binding TotalReleasedBySource, Mode=OneWay, StringFormat={}{0:N2}}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding ReleaseLedger}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      Style="{StaticResource ReadableDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Date" Binding="{Binding ReleaseDateText}" Width="105"/>
+                                    <DataGridTextColumn Header="Reference" Binding="{Binding ReferenceNo}" Width="135"/>
+                                    <DataGridTextColumn Header="GGMS Ref" Binding="{Binding GgmsReference}" Width="110"/>
+                                    <DataGridTextColumn Header="Recipient" Binding="{Binding RecipientName}" Width="1.4*"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding ReleaseType}" Width="150"/>
+                                    <DataGridTextColumn Header="Source" Binding="{Binding SourceOfFunds}" Width="150"/>
+                                    <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="110"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="GGMS Matching">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="0,0,0,1" Padding="12,8">
+                                <TextBlock Foreground="#1D4ED8" FontSize="12">
+                                    <Run Text="Matched: "/>
+                                    <Run Text="{Binding GgmsMatchedCount, Mode=OneWay}" FontWeight="SemiBold"/>
+                                    <Run Text="   Needs review: "/>
+                                    <Run Text="{Binding GgmsUnmatchedCount, Mode=OneWay}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding GgmsMatches}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      Style="{StaticResource ReadableDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Date" Binding="{Binding TransactionDateText}" Width="105"/>
+                                    <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectCode}" Width="120"/>
+                                    <DataGridTextColumn Header="Project Name" Binding="{Binding ProjectName}" Width="1.4*"/>
+                                    <DataGridTextColumn Header="Recipient" Binding="{Binding RecipientName}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding TransactionType}" Width="140"/>
+                                    <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="110"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                                    <DataGridTextColumn Header="Match" Binding="{Binding MatchStatus}" Width="100"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+
+                <TextBlock Grid.Row="2"
+                           Text="{Binding StatusMessage}"
+                           Foreground="{StaticResource PrimaryBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="2,10,0,0"
+                           Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+            </Grid>
+
+            <materialDesign:Card Grid.Column="2" Background="White">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Source Details" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                        <TextBox Text="{Binding FundName, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Source name"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="50"
+                                 Margin="0,0,0,12"/>
+
+                        <ComboBox ItemsSource="{Binding FundTypes}"
+                                  SelectedItem="{Binding FundType}"
+                                  materialDesign:HintAssist.Hint="Source type"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Height="50"
+                                  Margin="0,0,0,12"/>
+
+                        <TextBox Text="{Binding AllocatedAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 materialDesign:HintAssist.Hint="Configured allocation"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="50"
+                                 Margin="0,0,0,12"/>
+
+                        <TextBox Text="{Binding GgmsOfficeCode, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="GGMS office code"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="50"
+                                 Margin="0,0,0,12"/>
+
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Description"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="92"
+                                 Margin="0,0,0,18"/>
+
+                        <Button Command="{Binding SaveCommand}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Foreground="White"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="40"
+                                Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="Save Source"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Command="{Binding ToggleStatusCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="{StaticResource PrimaryBrush}"
+                                    BorderBrush="{StaticResource PrimaryBrush}"
+                                    Height="38">
+                                <TextBlock Text="Toggle Status"/>
+                            </Button>
+
+                            <Button Grid.Column="2"
+                                    Command="{Binding DeleteCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="{StaticResource ErrorBrush}"
+                                    BorderBrush="{StaticResource ErrorBrush}"
+                                    Height="38">
+                                <TextBlock Text="Delete"/>
+                            </Button>
+                        </Grid>
+
+                        <Border Background="#EFF6FF" CornerRadius="6" Padding="12" Margin="0,20,0,0">
+                            <TextBlock Text="Use this page to maintain Job Order, Casual, and Regular employee budget sources. When a track budget is depleted, request the next fund allocation through GGMS."
+                                       TextWrapping="Wrap"
+                                       Foreground="#1D4ED8"
+                                       FontSize="12"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </materialDesign:Card>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Grid.RowSpan="2"
+                Margin="24,18,24,24"
+                Background="White"
+                BorderBrush="#D7E5F5"
+                BorderThickness="1"
+                CornerRadius="6"
+                Visibility="{Binding IsBarangayLanding, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" Margin="18,16,18,10">
+                    <TextBlock Text="Barangay Funds"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#15314F"
+                               VerticalAlignment="Center"/>
+                    <TextBlock FontSize="14"
+                               Foreground="#657B96"
+                               Margin="10,2,0,0"
+                               VerticalAlignment="Center">
+                        <Run Text="{Binding DisplayedBarangayFunds.Count, Mode=OneWay}"/>
+                        <Run Text=" fund(s) with balance"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding DisplayedBarangayFunds}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          Margin="12,4,12,12"
+                          Style="{StaticResource ReadableDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Barangay" Binding="{Binding Barangay}" Width="1.5*"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                        <DataGridTextColumn Header="Health" Binding="{Binding FundHealth}" Width="120"/>
+                        <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat={}{0:N2}}" Width="120"/>
+                        <DataGridTextColumn Header="Last Updated" Binding="{Binding UpdatedText}" Width="150"/>
+                        <DataGridTemplateColumn Header="Action" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.ReleaseBarangayFundCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Visibility="{Binding DataContext.CanReleaseBarangayFunds, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Background="{StaticResource PrimaryBrush}"
+                                            Foreground="White"
+                                            Height="28"
+                                            Padding="8,0">
+                                        <TextBlock Text="Release" FontSize="11"/>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
+                Grid.RowSpan="2"
+                Margin="24,18,24,24"
+                Background="White"
+                BorderBrush="#D7E5F5"
+                BorderThickness="1"
+                CornerRadius="6"
+                Visibility="{Binding IsGroupLanding, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Margin="18,16,18,10">
+                    <StackPanel>
+                        <TextBlock Text="Group Funds - All Groups"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#15314F"/>
+                        <TextBlock Text="Overview of all group funds across all assigned admins."
+                                   FontSize="13"
+                                   Foreground="#657B96"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding GroupFundCount, StringFormat={}{0} fund(s) total}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="13"
+                               Foreground="#657B96"/>
+                </Grid>
+
+                <UniformGrid Grid.Row="1" Columns="3" Margin="13,8,13,10">
+                    <Border Margin="5" Padding="12,7" Background="#F7FAFE" CornerRadius="6">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="LayersTripleOutline"
+                                                     Width="24" Height="24"
+                                                     Foreground="{StaticResource PrimaryBrush}"
+                                                     Margin="0,0,12,0"/>
+                            <StackPanel>
+                                <TextBlock Text="Total Funds" FontSize="11" Foreground="#657B96"/>
+                                <TextBlock Text="{Binding GroupFundCount}"
+                                           FontSize="15" FontWeight="SemiBold"
+                                           Foreground="{StaticResource PrimaryBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="5" Padding="12,7" Background="#F7FAFE" CornerRadius="6">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="WalletOutline"
+                                                     Width="24" Height="24"
+                                                     Foreground="{StaticResource PrimaryBrush}"
+                                                     Margin="0,0,12,0"/>
+                            <StackPanel>
+                                <TextBlock Text="Total Balance" FontSize="11" Foreground="#657B96"/>
+                                <TextBlock Text="{Binding GroupFundBalance, StringFormat=&#x20B1;{0:N2}}"
+                                           FontSize="15" FontWeight="SemiBold"
+                                           Foreground="{StaticResource PrimaryBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="5" Padding="12,7" Background="#F7FAFE" CornerRadius="6">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountCheckOutline"
+                                                     Width="24" Height="24"
+                                                     Foreground="{StaticResource PrimaryBrush}"
+                                                     Margin="0,0,12,0"/>
+                            <StackPanel>
+                                <TextBlock Text="Assigned / Unassigned" FontSize="11" Foreground="#657B96"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding AssignedGroupFundCount}"
+                                               FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource PrimaryBrush}"/>
+                                    <TextBlock Text=" / " FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource PrimaryBrush}"/>
+                                    <TextBlock Text="{Binding UnassignedGroupFundCount}"
+                                               FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource PrimaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <DataGrid Grid.Row="2"
+                          ItemsSource="{Binding GroupFunds}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          Margin="12,4,12,12"
+                          Style="{StaticResource ReadableDataGrid}">
+                    <DataGrid.InputBindings>
+                        <MouseBinding Gesture="LeftDoubleClick"
+                                      Command="{Binding ViewBeneficiariesCommand}"
+                                      CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"/>
+                    </DataGrid.InputBindings>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.5*"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                        <DataGridTextColumn Header="Health" Binding="{Binding FundHealth}" Width="120"/>
+                        <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat={}{0:N2}}" Width="120"/>
+                        <DataGridTextColumn Header="Last Updated" Binding="{Binding UpdatedText}" Width="150"/>
+                        <DataGridTemplateColumn Header="Action" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.ViewBeneficiariesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Foreground="{StaticResource PrimaryBrush}"
+                                            BorderBrush="{StaticResource PrimaryBrush}"
+                                            Height="28" Padding="8,0">
+                                        <TextBlock Text="View Members" FontSize="11"/>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+    </materialDesign:DialogHost>
+</UserControl>

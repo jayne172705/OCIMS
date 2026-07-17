@@ -1,0 +1,506 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.ClaimFormDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Claim"
+        Width="780" Height="680"
+        MinWidth="720" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="48" ResizeBorderThickness="5"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title Bar -->
+        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="20,0">
+                    <materialDesign:PackIcon Kind="ClipboardPlus"
+                                             Width="20" Height="20"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding DialogTitle}"
+                               FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}" Width="48" Height="44"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Tabs -->
+        <TabControl Grid.Row="1"
+                    Style="{StaticResource MaterialDesignTabControl}"
+                    Margin="16,12,16,0">
+
+            <!-- ================================================== -->
+            <!-- TAB 1 — Employee & Policy                        -->
+            <!-- ================================================== -->
+            <TabItem Header="Beneficiary Claim">
+                <Grid Margin="4,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Digital ID Scanner -->
+                    <Border Grid.Column="0" Grid.ColumnSpan="3"
+                            BorderBrush="#DDE4EF" BorderThickness="1"
+                            CornerRadius="4" Background="White" Margin="0,0,0,12"
+                            helpers:Adaptive.UseAdaptiveForeground="True">
+                        <StackPanel Margin="12,10">
+                            <TextBlock Text="Digital ID Scanner"
+                                       FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBox Text="{Binding DigitalIdCode, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Scan ID here or enter code..."
+                                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                     materialDesign:TextFieldAssist.LeadingIcon="BarcodeScan"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Height="50" FontSize="12">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding ScanDigitalIdCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Employee Picker -->
+                    <Border Grid.Column="0"
+                            BorderBrush="#DDE4EF" BorderThickness="1"
+                            CornerRadius="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Padding="12,10"
+                                    BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+                                <StackPanel>
+                                    <TextBlock Text="Select Employee / Covered Member *"
+                                               FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding EmployeeSearch,
+                                                 UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="Search name or employee no..."
+                                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Height="50" FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                            <ListBox Grid.Row="1"
+                                     ItemsSource="{Binding FilteredEmployees}"
+                                     SelectedItem="{Binding SelectedEmployee}"
+                                     IsEnabled="{Binding CanChangeClaimant}"
+                                     BorderThickness="0" Background="Transparent">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="4">
+                                            <TextBlock Text="{Binding FullName, Mode=OneWay}"
+                                                       FontSize="13" FontWeight="Medium"
+                                                       />
+                                            <TextBlock FontSize="11">
+                                                <Run Text="{Binding EmployeeNo}"/>
+                                                <Run Text=" · "/>
+                                                <Run Text="{Binding Department.DeptName}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Policy + Beneficiary -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Policy Assignment *"
+                                   FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                        <!-- Loading indicator -->
+                        <ProgressBar IsIndeterminate="True" Height="2"
+                                     Margin="0,0,0,8"
+                                     Foreground="{StaticResource PrimaryBrush}"
+                                     Visibility="{Binding IsLoadingPolicies,
+                                         Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                        <!-- Policy empty-state hint -->
+                        <TextBlock Text="{Binding PolicyEmptyMessage}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,0,0,12"
+                                   Visibility="{Binding HasPolicies,
+                                       Converter={StaticResource BoolToVisibilityConverter},
+                                       ConverterParameter=Invert}"/>
+
+                        <ComboBox ItemsSource="{Binding EmployeePolicies}"
+                                  SelectedItem="{Binding SelectedEmployeePolicy}"
+                                  materialDesign:HintAssist.Hint="Select Policy"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Margin="0,0,0,12" FontSize="13"
+                                  IsEnabled="{Binding HasPolicies}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Policy.PolicyName}"
+                                                   FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock FontSize="11">
+                                            <Run Text="{Binding Policy.PolicyType}"/>
+                                            <Run Text=" · Coverage: ₱"/>
+                                            <Run Text="{Binding CoverageLimit,
+                                                StringFormat={}{0:N0}}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Border Background="#F8FAFC"
+                                BorderBrush="#DDE4EF"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="10,7"
+                                Margin="0,0,0,12">
+                            <TextBlock Text="{Binding ClaimLimitText}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+
+                        <TextBlock Text="Beneficiary Claimant (optional)"
+                                   FontSize="13" FontWeight="SemiBold" Margin="0,8,0,8"/>
+
+                        <ComboBox ItemsSource="{Binding Beneficiaries}"
+                                  SelectedItem="{Binding SelectedBeneficiary}"
+                                  materialDesign:HintAssist.Hint="Leave blank if employee will claim"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  FontSize="13"
+                                  IsEnabled="{Binding CanChangeClaimant}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding FullName, Mode=OneWay}"/>
+                                        <Run Text=" ("/>
+                                        <Run Text="{Binding Relationship}"/>
+                                        <Run Text=")"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="{Binding BeneficiaryEmptyMessage}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding HasBeneficiaries,
+                                       Converter={StaticResource BoolToVisibilityConverter},
+                                       ConverterParameter=Invert}"/>
+
+                        <!-- Selected Employee Preview -->
+                        <materialDesign:Card Margin="0,16,0,0" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                                             materialDesign:ElevationAssist.Elevation="Dp0"
+                                             Visibility="{Binding HasEmployee,
+                                                 Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Margin="12,10">
+                                <TextBlock Text="Covered through employee:"
+                                           FontSize="10" Foreground="#64748B"/>
+                                <TextBlock Text="{Binding SelectedEmployee.FullName, Mode=OneWay}"
+                                           FontSize="14" FontWeight="Bold"
+                                           Foreground="#1565C0"/>
+                                <TextBlock FontSize="11" Foreground="#64748B">
+                                    <Run Text="{Binding SelectedEmployee.EmployeeNo}"/>
+                                    <Run Text=" · "/>
+                                    <Run Text="{Binding SelectedEmployee.Department.DeptName}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </materialDesign:Card>
+
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- ================================================== -->
+            <!-- TAB 2 — Claim Details                            -->
+            <!-- ================================================== -->
+            <TabItem Header="Claim Request">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+                    <StackPanel>
+
+                        <!-- Claim Type + Amount -->
+                        <Grid Margin="0,12,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0"
+                                      ItemsSource="{Binding ClaimTypes}"
+                                      SelectedItem="{Binding ClaimType}"
+                                      materialDesign:HintAssist.Hint="Claim Type *"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      FontSize="13"/>
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding AmountClaimed,
+                                         UpdateSourceTrigger=PropertyChanged,
+                                         StringFormat={}{0:N2}}"
+                                     materialDesign:HintAssist.Hint="Amount Claimed (₱) *"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     IsReadOnly="True"
+                                     Background="#F8FAFC"
+                                     FontSize="13"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding ClaimLimitText}"
+                                   FontSize="11"
+                                   Margin="0,0,0,12"
+                                   TextWrapping="Wrap"/>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding AdmissionDays, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Admitted / Hospitalized Days *"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     FontSize="13"/>
+                            <Border Grid.Column="2"
+                                    Background="#F8FAFC"
+                                    BorderBrush="#DDE4EF"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="10,7">
+                                <StackPanel>
+                                    <TextBlock FontSize="11">
+                                        <Run Text="Covered days: "/>
+                                        <Run Text="{Binding CoveredAllowanceDays, Mode=OneWay}"/>
+                                        <Run Text=" / 5"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="11">
+                                        <Run Text="Daily allowance: PHP "/>
+                                        <Run Text="{Binding DailyAllowanceRate, Mode=OneWay, StringFormat={}{0:N2}}"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" FontWeight="SemiBold">
+                                        <Run Text="Total allowance: PHP "/>
+                                        <Run Text="{Binding DailyAllowanceAmount, Mode=OneWay, StringFormat={}{0:N2}}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Claim Date + Incident Date -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <DatePicker Grid.Column="0"
+                                        SelectedDate="{Binding ClaimDate}"
+                                        materialDesign:HintAssist.Hint="Claim Date *"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        FontSize="13"/>
+                            <DatePicker Grid.Column="2"
+                                        SelectedDate="{Binding IncidentDate}"
+                                        materialDesign:HintAssist.Hint="Incident Date"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        FontSize="13"/>
+                        </Grid>
+
+                        <!-- Hospital + Physician -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding HospitalClinic,
+                                         UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Hospital / Clinic"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     FontSize="13"/>
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding AttendingPhysician,
+                                         UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Attending Physician"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     FontSize="13"/>
+                        </Grid>
+
+                        <!-- Incident Description -->
+                        <TextBox Text="{Binding IncidentDescription,
+                                     UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Claim reason / incident description"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 Height="100" VerticalContentAlignment="Top"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,0,0,12" FontSize="13"/>
+
+                        <!-- Remarks -->
+                        <TextBox Text="{Binding Remarks,
+                                     UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Remarks (optional)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 Height="80" VerticalContentAlignment="Top"
+                                 VerticalScrollBarVisibility="Auto"
+                                 FontSize="13"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ================================================== -->
+            <!-- TAB 3 — Documents                                -->
+            <!-- ================================================== -->
+            <TabItem Header="Proof / Requirements">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal"
+                                Margin="0,8,0,12">
+                        <Button Command="{Binding AddDocumentCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                BorderBrush="{StaticResource PrimaryBrush}"
+                                Height="34" Padding="12,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="PaperclipPlus"
+                                                         Width="16" Height="16"
+                                                         Margin="0,0,6,0"
+                                                         VerticalAlignment="Center"/>
+                                <TextBlock Text="Add Proof / Requirement" FontSize="12"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="Required before review. Supports PDF, images, Word documents."
+                                   FontSize="11"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="1"
+                            BorderBrush="#DDE4EF" BorderThickness="1"
+                            CornerRadius="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
+                        <ItemsControl ItemsSource="{Binding Documents}"
+                                      Margin="8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#DDE4EF"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="8,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <materialDesign:PackIcon
+                                                Kind="FilePdfBox"
+                                                Width="24" Height="24"
+                                                Foreground="#EF9A9A"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,10,0"/>
+
+                                            <StackPanel Grid.Column="1"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FileName}"
+                                                           FontSize="13"
+                                                           FontWeight="Medium"/>
+                                                <TextBlock FontSize="11">
+                                                    <Run Text="{Binding SizeKb}"/>
+                                                    <Run Text="KB"/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <ComboBox Grid.Column="2"
+                                                      ItemsSource="{Binding DataContext.DocTypes,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      SelectedItem="{Binding DocType}"
+                                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                      Height="46" FontSize="11"
+                                                      Margin="8,0"/>
+
+                                            <Button Grid.Column="3"
+                                                    Command="{Binding DataContext.RemoveDocumentCommand,
+                                                        RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Foreground="{StaticResource ErrorBrush}"
+                                                    Width="30" Height="30">
+                                                <materialDesign:PackIcon Kind="Close"
+                                                                         Width="14" Height="14"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- Footer -->
+        <Border Grid.Row="2"
+                BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True" Padding="16,12">
+            <Grid>
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="12" TextWrapping="Wrap"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding ErrorMessage,
+                               Converter={StaticResource StringToVisibilityConverter}}"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="0,0,8,0" Width="90"/>
+                    <Button Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding IsBusy,
+                                Converter={StaticResource InverseBoolConverter}}"
+                            Background="{StaticResource PrimaryBrush}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Width="140">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave"
+                                                     Width="16" Height="16"
+                                                     Margin="0,0,6,0"
+                                                     VerticalAlignment="Center"/>
+                            <TextBlock Text="Submit Claim"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

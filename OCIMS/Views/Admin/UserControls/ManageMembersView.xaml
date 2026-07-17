@@ -1,0 +1,470 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.ManageMembersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:ManageMembersViewModel/>
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <Style x:Key="FilterLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="MetricCardLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <Style x:Key="MetricCardValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+        </Style>
+
+        <Style x:Key="MemberStatusText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Active">
+                    <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Pending">
+                    <Setter Property="Foreground" Value="#B45309"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Under Review">
+                    <Setter Property="Foreground" Value="#1D4ED8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Rejected">
+                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Released">
+                    <Setter Property="Foreground" Value="#0F766E"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GroupBadgeBorder" TargetType="Border">
+            <Setter Property="Background" Value="#EAF2FD"/>
+            <Setter Property="BorderBrush" Value="#CFE0F7"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding GroupEmploymentType}" Value="Casual">
+                    <Setter Property="Background" Value="#EEF2FF"/>
+                    <Setter Property="BorderBrush" Value="#C7D2FE"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding GroupEmploymentType}" Value="Job Order">
+                    <Setter Property="Background" Value="#FFF7E8"/>
+                    <Setter Property="BorderBrush" Value="#FCD9A6"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding GroupEmploymentType}" Value="Unassigned">
+                    <Setter Property="Background" Value="#F8FAFC"/>
+                    <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GroupBadgeText" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding GroupEmploymentType}" Value="Casual">
+                    <Setter Property="Foreground" Value="#4338CA"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding GroupEmploymentType}" Value="Job Order">
+                    <Setter Property="Foreground" Value="#B45309"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding GroupEmploymentType}" Value="Unassigned">
+                    <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PageButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="#D7E1EE"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ProgressBar Grid.Row="0"
+                     IsIndeterminate="True"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <Grid Grid.Row="1" Margin="24,18,24,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Manage Members"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource PrimaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="Manage Members"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextBrush}"/>
+                        <TextBlock Text="|"
+                                   FontSize="18"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   Margin="12,0"/>
+                        <TextBlock Text="All Members (System-Wide)"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Border Background="{StaticResource PrimaryBrush}"
+                            helpers:Adaptive.UseAdaptiveForeground="True"
+                            CornerRadius="12"
+                            Padding="10,4"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center">
+                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="White">
+                            <Run Text="{Binding FilteredCount}"/>
+                            <Run Text=" records"/>
+                        </TextBlock>
+                    </Border>
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="38"
+                            Padding="14,0"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Refresh" FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <UniformGrid Grid.Row="1" Columns="2" Margin="0,0,0,18">
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="#DDE4EF"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="24,18"
+                        Margin="0,0,10,0">
+                    <StackPanel>
+                        <TextBlock Text="Total Active Members (including Dependents)"
+                                   Style="{StaticResource MetricCardLabel}"/>
+                        <TextBlock Text="{Binding TotalActiveMembers, StringFormat={}{0:N0}}"
+                                   Style="{StaticResource MetricCardValue}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="#DDE4EF"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="24,18">
+                    <StackPanel>
+                        <TextBlock Text="Total Active Dependents"
+                                   Style="{StaticResource MetricCardLabel}"/>
+                        <TextBlock Text="{Binding TotalActiveDependents, StringFormat={}{0:N0}}"
+                                   Style="{StaticResource MetricCardValue}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Grid.Row="2"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="#DDE4EF"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24,20"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.3*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="1.35*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="1.25*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="1.15*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Search" Style="{StaticResource FilterLabel}"/>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 materialDesign:HintAssist.Hint="Search by name..."
+                                 Height="46"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Group / Employment Type" Style="{StaticResource FilterLabel}"/>
+                        <ComboBox ItemsSource="{Binding GroupOptions}"
+                                  SelectedItem="{Binding SelectedGroup}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Height="46"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Barangay" Style="{StaticResource FilterLabel}"/>
+                        <ComboBox ItemsSource="{Binding BarangayOptions}"
+                                  SelectedItem="{Binding SelectedBarangay}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Height="46"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="6">
+                        <TextBlock Text="Status Filter" Style="{StaticResource FilterLabel}"/>
+                        <ComboBox ItemsSource="{Binding StatusOptions}"
+                                  SelectedItem="{Binding SelectedStatus}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Height="46"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="8"
+                            Command="{Binding ResetCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="{StaticResource PrimaryBrush}"
+                            Height="46"
+                            Width="94"
+                            Padding="14,0"
+                            VerticalAlignment="Bottom">
+                        <TextBlock Text="Reset" FontWeight="SemiBold"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <TextBlock Grid.Row="3"
+                       Text="{Binding StatusMessage}"
+                       Foreground="{StaticResource ErrorBrush}"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap"
+                       Margin="2,0,2,12"
+                       Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+            <DataGrid Grid.Row="4"
+                      ItemsSource="{Binding DisplayedMembers}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserResizeRows="False"
+                      RowHeight="58"
+                      ColumnHeaderHeight="50"
+                      GridLinesVisibility="All"
+                      BorderBrush="#DDE4EF"
+                      BorderThickness="1"
+                      Background="White"
+                      RowBackground="White"
+                      AlternatingRowBackground="#F8FBFF"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      Style="{StaticResource ReadableDataGrid}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding RowNumber}" Width="60">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Family ID" Binding="{Binding FamilyId}" Width="165">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="220">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Barangay" Binding="{Binding Barangay}" Width="170">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTemplateColumn Header="Group / Employment Type" Width="235">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource GroupBadgeBorder}" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding GroupEmploymentType}"
+                                               Style="{StaticResource GroupBadgeText}"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Status" Width="115">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Status}"
+                                           Style="{StaticResource MemberStatusText}"
+                                           VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Update Section" Width="165">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.UpdateCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Background="{StaticResource PrimaryBrush}"
+                                        Foreground="White"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Height="36"
+                                        Padding="14,0"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Update" FontSize="12" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="View Details" Width="155">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Height="36"
+                                        Padding="14,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="View Details" FontSize="12" FontWeight="Bold"/>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid Grid.Row="5" Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding PageSummaryText}"
+                           FontSize="13"
+                           Foreground="{StaticResource TextBrush}"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Command="{Binding PreviousPageCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Width="40"
+                            Height="40"
+                            Padding="0"
+                            Margin="0,0,4,0"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="#D7E1EE">
+                        <materialDesign:PackIcon Kind="ChevronLeft" Width="18" Height="18"/>
+                    </Button>
+
+                    <ItemsControl ItemsSource="{Binding PageNumbers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.GoToPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource PageButtonStyle}">
+                                    <TextBlock Text="{Binding Number}"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Button Command="{Binding NextPageCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Width="40"
+                            Height="40"
+                            Padding="0"
+                            Margin="4,0,0,0"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            BorderBrush="#D7E1EE">
+                        <materialDesign:PackIcon Kind="ChevronRight" Width="18" Height="18"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,238 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.UserDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             xmlns:vm="clr-namespace:eSureHi.ViewModels.Admin">
+    <UserControl.DataContext>
+        <vm:DashboardViewModel/>
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <Style x:Key="StatCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#DCE7F5"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="22,18"/>
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button"
+               BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="68"/>
+            <Setter Property="Margin" Value="0,0,14,14"/>
+            <Setter Property="Background" Value="#E8F2FF"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ShortcutButton" TargetType="Button"
+               BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="#F1F6FC">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" BorderBrush="#DCE7F5" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ViewDashboard"
+                                             Width="24" Height="24"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Dashboard" FontSize="20" FontWeight="SemiBold"/>
+                        <TextBlock Text="Your assigned group overview and shortcuts"
+                                   FontSize="12" Foreground="#64748B"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Command="{Binding RefreshCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="{StaticResource PrimaryBrush}"
+                        BorderBrush="{StaticResource PrimaryBrush}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Height="36"
+                        Padding="12,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0"/>
+                        <TextBlock Text="Refresh"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ProgressBar Grid.Row="1"
+                     IsIndeterminate="True"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <Grid Grid.Row="2" Margin="22,18,22,22">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.1*"/>
+                <ColumnDefinition Width="18"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <UniformGrid Grid.Row="0" Grid.Column="0" Columns="3">
+                <Border Style="{StaticResource StatCard}" Margin="0,0,14,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="AccountGroup"
+                                                 Width="30" Height="30"
+                                                 Foreground="{StaticResource PrimaryBrush}"/>
+                        <TextBlock Text="{Binding TotalBeneficiaries}" FontSize="28"
+                                   FontWeight="Bold" Foreground="#0F172A" Margin="0,22,0,0"/>
+                        <TextBlock Text="Group Members" FontSize="15" Foreground="#475569"/>
+                        <TextBlock Text="in your assigned group" FontSize="11"
+                                   Foreground="#8193AF" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource StatCard}" Margin="0,0,14,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="ClockOutline"
+                                                 Width="30" Height="30"
+                                                 Foreground="#F59E0B"/>
+                        <TextBlock Text="{Binding PendingPayments}" FontSize="28"
+                                   FontWeight="Bold" Foreground="#0F172A" Margin="0,22,0,0"/>
+                        <TextBlock Text="Pending Payments" FontSize="15" Foreground="#475569"/>
+                        <TextBlock Text="awaiting action" FontSize="11"
+                                   Foreground="#8193AF" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource StatCard}">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="FileDocumentCheckOutline"
+                                                 Width="30" Height="30"
+                                                 Foreground="{StaticResource PrimaryBrush}"/>
+                        <TextBlock Text="{Binding GroupClaims}" FontSize="28"
+                                   FontWeight="Bold" Foreground="#0F172A" Margin="0,22,0,0"/>
+                        <TextBlock Text="Group Claims" FontSize="15" Foreground="#475569"/>
+                        <TextBlock Text="filed in your group" FontSize="11"
+                                   Foreground="#8193AF" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource StatCard}">
+                <StackPanel>
+                    <TextBlock Text="Manager Info" FontSize="17" FontWeight="SemiBold" Foreground="#1E293B"/>
+                    <Border Height="1" Background="#DCE7F5" Margin="0,18,0,16"/>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AccountOutline"
+                                                 Width="20" Height="20"
+                                                 Foreground="{StaticResource PrimaryBrush}"
+                                                 Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding CurrentUserDisplay}" FontWeight="SemiBold" Foreground="#475569"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <materialDesign:PackIcon Kind="ShieldOutline"
+                                                 Width="20" Height="20"
+                                                 Foreground="{StaticResource PrimaryBrush}"
+                                                 Margin="0,0,10,0"/>
+                        <TextBlock Text="Role: Manager" Foreground="#475569"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource StatCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Quick Actions" FontSize="17" FontWeight="SemiBold" Foreground="#1E293B"/>
+                    <Border Grid.Row="1" Background="#DCE7F5" Margin="0,18,0,16"/>
+                    <UniformGrid Grid.Row="2" Columns="2">
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding QuickRegisterMemberCommand}">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="AccountPlusOutline" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Register Member" FontWeight="SemiBold" Foreground="#475569" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding QuickFileClaimCommand}">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="FileDocumentPlusOutline" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                <TextBlock Text="File a Claim" FontWeight="SemiBold" Foreground="#475569" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding QuickAdvancePaymentCommand}">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="CreditCardOutline" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Advance Payment" FontWeight="SemiBold" Foreground="#475569" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding QuickGroupFundsCommand}">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="LayersOutline" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Group Funds" FontWeight="SemiBold" Foreground="#475569" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding QuickManageMembersCommand}"
+                                IsEnabled="{Binding CanAccessManageMembers}">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="AccountCheckOutline" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Manage Members" FontWeight="SemiBold" Foreground="#475569" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding QuickPendingPaymentsCommand}">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="ClockOutline" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Pending Payments" FontWeight="SemiBold" Foreground="#475569" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource StatCard}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="Navigation Shortcuts" FontSize="17" FontWeight="SemiBold" Foreground="#1E293B"/>
+                    <Border Height="1" Background="#DCE7F5" Margin="0,18,0,10"/>
+                    <Button Style="{StaticResource ShortcutButton}" Command="{Binding QuickGroupClaimCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileDocumentCheckOutline" Width="18" Height="18" Margin="0,0,10,0"/>
+                            <TextBlock Text="Group Claims"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ShortcutButton}" Command="{Binding QuickGroupFundsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="LayersOutline" Width="18" Height="18" Margin="0,0,10,0"/>
+                            <TextBlock Text="Assigned Group Funds"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ShortcutButton}" Command="{Binding QuickManageMembersCommand}"
+                            IsEnabled="{Binding CanAccessManageMembers}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountCheckOutline" Width="18" Height="18" Margin="0,0,10,0"/>
+                            <TextBlock Text="Manage Members"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ShortcutButton}" Command="{Binding QuickPendingPaymentsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ClockOutline" Width="18" Height="18" Margin="0,0,10,0"/>
+                            <TextBlock Text="Pending Payments"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

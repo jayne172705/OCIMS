@@ -1,0 +1,45 @@
+<Window x:Class="eSureHi.Views.Shared.OtpVerificationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="OTP Verification" Height="250" Width="350"
+        WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
+        Background="#0D1117" BorderBrush="#E0E0E0" BorderThickness="1">
+    <Window.Resources>
+        <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+        </Style>
+        <Style TargetType="{x:Type PasswordBox}" BasedOn="{StaticResource MaterialDesignFloatingHintPasswordBox}">
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="Background" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="#38BDF8"/>
+            <Setter Property="CaretBrush" Value="#F8FAFC"/>
+            <Setter Property="materialDesign:HintAssist.Foreground" Value="#38BDF8"/>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Security Verification" FontSize="18" FontWeight="SemiBold" Grid.Row="0" Margin="0,0,0,10"/>
+        <TextBlock Text="Please enter the 6-digit Admin PIN to proceed." FontSize="12" Grid.Row="1" TextWrapping="Wrap" Margin="0,0,0,15" Foreground="#CBD5E1"/>
+
+        <PasswordBox x:Name="PinBox" Grid.Row="2"
+                     materialDesign:HintAssist.Hint="Admin PIN" FontSize="18"
+                     HorizontalContentAlignment="Center" Width="200" HorizontalAlignment="Center"/>
+
+        <TextBlock x:Name="ErrorText" Grid.Row="3" Foreground="{StaticResource WarningBrush}" Visibility="Collapsed"
+                   Text="Invalid PIN. Try again." FontSize="12" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Cancel" IsCancel="True" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
+            <Button Content="Verify" IsDefault="True" Click="VerifyButton_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
+        </StackPanel>
+    </Grid>
+</Window>

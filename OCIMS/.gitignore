@@ -1,0 +1,26 @@
+# Build outputs
+bin/
+obj/
+
+# Publish output
+publish/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+
+# Backups created by OCIMS
+Backups/
+backup_metadata.json
+
+# Database config files (contain credentials — never commit)
+OCIMSConfig.txt
+eSureHiConfig.txt
+GgmsConfig.txt
+CrsConfig.txt
+
+# Local IDE/build caches
+.vscode/
+.templateengine/
+obj_audit/
