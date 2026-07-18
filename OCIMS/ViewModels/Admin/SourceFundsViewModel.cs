@@ -296,6 +296,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand EditTrackCoverageCommand { get; }
         public RelayCommand CancelTrackCoverageCommand { get; }
         public RelayCommand<BarangayFundItem> ReleaseBarangayFundCommand { get; }
+        public RelayCommand<BarangayFundItem> OpenFamilyHeadsCommand { get; }
         public RelayCommand SyncGgmsFundsCommand { get; }
         public RelayCommand<GroupFundItem> ViewBeneficiariesCommand { get; }
         public RelayCommand CloseBeneficiariesCommand { get; }
@@ -329,6 +330,8 @@ namespace eSureHi.ViewModels.Admin
                 () => SelectedTrackCoverage is not null && SelectedTrackCoverage.Status == "Active");
             ReleaseBarangayFundCommand = new RelayCommand<BarangayFundItem>(OpenBarangayReleaseDialog,
                 item => item is not null && CanReleaseBarangayFunds);
+            OpenFamilyHeadsCommand = new RelayCommand<BarangayFundItem>(OpenFamilyHeadsList,
+                item => item is not null);
             SyncGgmsFundsCommand = new RelayCommand(async () => await SyncGgmsFundsAsync(), () => GgmsAllocated > 0);
             ViewBeneficiariesCommand = new RelayCommand<GroupFundItem>(async item => { if (item != null) await ViewBeneficiariesAsync(item); });
             CloseBeneficiariesCommand = new RelayCommand(() => IsGroupBeneficiaryDialogOpen = false);
@@ -599,6 +602,15 @@ namespace eSureHi.ViewModels.Admin
                     GroupsText = summary?.GroupsText ?? string.Empty
                 });
             }
+        }
+
+        private void OpenFamilyHeadsList(BarangayFundItem? barangay)
+        {
+            if (barangay is null)
+                return;
+
+            var dialog = new Views.Admin.Dialogs.FamilyHeadsDialog(barangay.Barangay);
+            dialog.ShowDialog();
         }
 
         private void OpenBarangayReleaseDialog(BarangayFundItem? barangay)

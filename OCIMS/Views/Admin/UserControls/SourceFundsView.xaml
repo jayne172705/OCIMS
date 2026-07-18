@@ -229,19 +229,31 @@
                                     <DataGridTextColumn Header="Health" Binding="{Binding FundHealth}" Width="120"/>
                                     <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat={}{0:N2}}" Width="120"/>
                                     <DataGridTextColumn Header="Last Updated" Binding="{Binding UpdatedText}" Width="150"/>
-                                    <DataGridTemplateColumn Header="Action" Width="100">
+                                    <DataGridTemplateColumn Header="Action" Width="180">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Command="{Binding DataContext.ReleaseBarangayFundCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Visibility="{Binding DataContext.CanReleaseBarangayFunds, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
-                                                        Style="{StaticResource MaterialDesignRaisedButton}"
-                                                        Background="{StaticResource PrimaryBrush}"
-                                                        Foreground="White"
-                                                        Height="28"
-                                                        Padding="8,0">
-                                                    <TextBlock Text="Release" FontSize="11"/>
-                                                </Button>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Command="{Binding DataContext.ReleaseBarangayFundCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding DataContext.CanReleaseBarangayFunds, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                                            Background="{StaticResource PrimaryBrush}"
+                                                            Foreground="White"
+                                                            Height="28"
+                                                            Padding="8,0">
+                                                        <TextBlock Text="Release" FontSize="11"/>
+                                                    </Button>
+                                                    <Button Command="{Binding DataContext.OpenFamilyHeadsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                            Foreground="{StaticResource PrimaryBrush}"
+                                                            BorderBrush="{StaticResource PrimaryBrush}"
+                                                            Height="28"
+                                                            Padding="8,0"
+                                                            Margin="4,0,0,0">
+                                                        <TextBlock Text="List Heads" FontSize="11"/>
+                                                    </Button>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -537,19 +549,31 @@
                         <DataGridTextColumn Header="Health" Binding="{Binding FundHealth}" Width="120"/>
                         <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat={}{0:N2}}" Width="120"/>
                         <DataGridTextColumn Header="Last Updated" Binding="{Binding UpdatedText}" Width="150"/>
-                        <DataGridTemplateColumn Header="Action" Width="100">
+                        <DataGridTemplateColumn Header="Action" Width="180">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.ReleaseBarangayFundCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            Visibility="{Binding DataContext.CanReleaseBarangayFunds, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
-                                            Style="{StaticResource MaterialDesignRaisedButton}"
-                                            Background="{StaticResource PrimaryBrush}"
-                                            Foreground="White"
-                                            Height="28"
-                                            Padding="8,0">
-                                        <TextBlock Text="Release" FontSize="11"/>
-                                    </Button>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Command="{Binding DataContext.ReleaseBarangayFundCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Visibility="{Binding DataContext.CanReleaseBarangayFunds, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                                Background="{StaticResource PrimaryBrush}"
+                                                Foreground="White"
+                                                Height="28"
+                                                Padding="8,0">
+                                            <TextBlock Text="Release" FontSize="11"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.OpenFamilyHeadsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="{StaticResource PrimaryBrush}"
+                                                BorderBrush="{StaticResource PrimaryBrush}"
+                                                Height="28"
+                                                Padding="8,0"
+                                                Margin="4,0,0,0">
+                                            <TextBlock Text="List Heads" FontSize="11"/>
+                                        </Button>
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
