@@ -22,15 +22,7 @@ namespace eSureHi.Services
     {
         private const string ProjectPrefix = "IMS";
         private const string OfficeName = "Insurance Management System";
-        // String office code — used ONLY for consolidated_transactions.office_id
-        // (a varchar column) and the local ggms_allocation_cache. Never use this
-        // against budget_allocations.
         private const string OfficeCode = "OFF-2026-0004";
-        // Numeric office id — used for ALL budget_allocations queries.
-        // budget_allocations.office_id is bigint and logically references
-        // tbl_offices(id) (no DB-level FK exists). Confirmed against live GGMS:
-        // tbl_offices id 15 = "Insurance" (OFF-2026-0004).
-        private const long OfficeIdValue = 15;
 
         public static async Task<(bool IsOnline, string Message)> CheckReleaseConnectionAsync()
         {
@@ -54,10 +46,10 @@ namespace eSureHi.Services
                 using var allocationCmd = new MySqlCommand(@"
                     SELECT COUNT(*)
                     FROM yearlybudgets y
-                    INNER JOIN budget_allocations a ON a.master_budget_id = y.Id
-                    WHERE y.Year = @year AND a.office_id = @office_id", conn);
+                    INNER JOIN officeallocations a ON a.YearlyBudgetId = y.Id
+                    WHERE y.Year = @year AND a.office_code = @office_code", conn);
                 allocationCmd.Parameters.AddWithValue("@year", DateTime.Today.Year);
-                allocationCmd.Parameters.AddWithValue("@office_id", OfficeIdValue);
+                allocationCmd.Parameters.AddWithValue("@office_code", OfficeCode);
 
                 var allocationCount = Convert.ToInt32(await allocationCmd.ExecuteScalarAsync());
                 if (allocationCount == 0)
@@ -90,18 +82,18 @@ namespace eSureHi.Services
                 }
 
                 var alloc = await db.BudgetAllocations
-                    .Where(a => a.OfficeId == OfficeIdValue && a.MasterBudgetId == budget.Id)
+                    .Where(a => a.OfficeCode == OfficeCode && a.YearlyBudgetId == budget.Id)
                     .FirstOrDefaultAsync();
 
                 if (alloc is null)
                 {
-                    summary.ErrorMessage = $"No allocation found for office {OfficeIdValue}.";
+                    summary.ErrorMessage = $"No allocation found for office {OfficeCode}.";
                     return summary;
                 }
 
                 summary.Year = budget.Year;
-                summary.AllocatedAmount = alloc.Amount;
-                summary.SpentAmount = alloc.UsedAmount;
+                summary.AllocatedAmount = alloc.AllocatedAmount;
+                summary.SpentAmount = alloc.SpentAmount;
                 summary.IsLoaded = true;
                 await SaveAllocationCacheAsync(summary);
                 return summary;
@@ -258,9 +250,9 @@ namespace eSureHi.Services
                 await cmd.ExecuteNonQueryAsync();
 
                 using var updateCmd = new MySqlCommand(@"
-                    UPDATE budget_allocations
-                    SET used_amount = used_amount + @amount
-                    WHERE id = @allocation_id",
+                    UPDATE officeallocations
+                    SET SpentAmount = SpentAmount + @amount
+                    WHERE Id = @allocation_id",
                     conn, transaction);
                 updateCmd.Parameters.AddWithValue("@amount", amount);
                 updateCmd.Parameters.AddWithValue("@allocation_id", allocation.Id);
@@ -277,7 +269,7 @@ namespace eSureHi.Services
 
         private sealed class CurrentAllocation
         {
-            public long Id { get; set; }
+            public int Id { get; set; }
             public decimal AllocatedAmount { get; set; }
             public decimal SpentAmount { get; set; }
         }
@@ -287,16 +279,16 @@ namespace eSureHi.Services
             MySqlTransaction transaction)
         {
             using var cmd = new MySqlCommand(@"
-                SELECT a.id, a.amount AS AllocatedAmount, a.used_amount AS SpentAmount
+                SELECT a.Id, a.AllocatedAmount, a.SpentAmount
                 FROM yearlybudgets y
-                INNER JOIN budget_allocations a ON a.master_budget_id = y.Id
-                WHERE y.Year = @year AND a.office_id = @office_id
-                ORDER BY y.Id DESC, a.id DESC
+                INNER JOIN officeallocations a ON a.YearlyBudgetId = y.Id
+                WHERE y.Year = @year AND a.office_code = @office_code
+                ORDER BY y.Id DESC, a.Id DESC
                 LIMIT 1
                 FOR UPDATE",
                 conn, transaction);
             cmd.Parameters.AddWithValue("@year", DateTime.Today.Year);
-            cmd.Parameters.AddWithValue("@office_id", OfficeIdValue);
+            cmd.Parameters.AddWithValue("@office_code", OfficeCode);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
@@ -304,7 +296,7 @@ namespace eSureHi.Services
 
             return new CurrentAllocation
             {
-                Id = reader.GetInt64("id"),
+                Id = reader.GetInt32("Id"),
                 AllocatedAmount = reader.GetDecimal("AllocatedAmount"),
                 SpentAmount = reader.GetDecimal("SpentAmount")
             };

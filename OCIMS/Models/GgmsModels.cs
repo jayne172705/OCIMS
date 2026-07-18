@@ -4,67 +4,36 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace eSureHi.Models
 {
-    // Mirrors the live GGMS budget_allocations table (u518908950_ggms) exactly.
-    // The live table declares NO database-level foreign keys, but the following
-    // relationships are expected logically and are relied on by the app's JOINs:
-    //   - office_id        -> tbl_offices(id)   (numeric office reference)
-    //   - master_budget_id -> yearlybudgets(Id)  (which yearly budget this draws from)
-    //   - allocated_by     -> the GGMS user id that created the allocation
-    // Do NOT add DB constraints here — this is documentation of intent only.
-    [Table("budget_allocations")]
+    [Table("officeallocations")]
     public class BudgetAllocation
     {
         [Key]
-        [Column("id")]
-        public long Id { get; set; }
+        [Column("Id")]
+        public int Id { get; set; }
 
-        // Logically references yearlybudgets(Id); no DB-level FK exists.
-        [Column("master_budget_id")]
-        public long? MasterBudgetId { get; set; }
+        [Column("YearlyBudgetId")]
+        public int YearlyBudgetId { get; set; }
 
-        // Numeric office reference (logically tbl_offices(id)); no DB-level FK exists.
-        [Column("office_id")]
-        public long OfficeId { get; set; }
+        [Column("office_code")]
+        public string OfficeCode { get; set; } = string.Empty;
 
-        [Column("office_type")]
-        public string OfficeType { get; set; } = "service";
+        [Column("AllocatedAmount")]
+        public decimal AllocatedAmount { get; set; }
 
-        [Column("program")]
-        public string? Program { get; set; }
-
-        [Column("allocated_by")]
-        public long AllocatedBy { get; set; }
-
-        [Column("amount")]
-        public decimal Amount { get; set; }
-
-        [Column("description")]
-        public string? Description { get; set; }
-
-        [Column("remaining_amount")]
-        public decimal? RemainingAmount { get; set; }
-
-        [Column("used_amount")]
-        public decimal UsedAmount { get; set; } = 0.00m;
-
-        [Column("status")]
-        public string? Status { get; set; } = "active";
-
-        [Column("created_at")]
-        public DateTime? CreatedAt { get; set; }
-
-        // Maps the GGMS-native updated_at (datetime(6)). This is the single
-        // timestamp property the offline sync engine compares on.
-        [Column("updated_at")]
-        public DateTime? UpdatedAt { get; set; }
+        [Column("SpentAmount")]
+        public decimal SpentAmount { get; set; }
 
         [Column("SyncId")]
         public string? SyncId { get; set; }
 
-        // NOTE: the live table also has a legacy `UpdatedAt` column (plain datetime)
-        // left over from earlier tooling. It is intentionally NOT mapped — the single
-        // UpdatedAt property above (backed by updated_at) is the one the sync engine
-        // uses. Do not add a second property (e.g. UpdatedAt2) for the legacy column.
+        [Column("UpdatedAt")]
+        public DateTime? LegacyUpdatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
+
+        [Column("office_id")]
+        public long? OfficeId { get; set; }
     }
 
     [Table("yearlybudgets")]

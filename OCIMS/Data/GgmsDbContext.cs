@@ -14,7 +14,7 @@ namespace eSureHi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BudgetAllocation>().ToTable("budget_allocations");
+            modelBuilder.Entity<BudgetAllocation>().ToTable("officeallocations");
             modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
             modelBuilder.Entity<GgmsTransaction>().ToTable("consolidated_transactions");
         }
