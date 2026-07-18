@@ -22,8 +22,15 @@ namespace eSureHi.Services
     {
         private const string ProjectPrefix = "IMS";
         private const string OfficeName = "Insurance Management System";
+        // String office code — used ONLY for consolidated_transactions.office_id
+        // (a varchar column) and the local ggms_allocation_cache. Never use this
+        // against budget_allocations.
         private const string OfficeCode = "OFF-2026-0004";
-        private const long OfficeIdValue = 1; // Used as placeholder since new table uses numeric office_id
+        // Numeric office id — used for ALL budget_allocations queries.
+        // budget_allocations.office_id is bigint and logically references
+        // tbl_offices(id) (no DB-level FK exists). Confirmed against live GGMS:
+        // tbl_offices id 15 = "Insurance" (OFF-2026-0004).
+        private const long OfficeIdValue = 15;
 
         public static async Task<(bool IsOnline, string Message)> CheckReleaseConnectionAsync()
         {
@@ -236,6 +243,8 @@ namespace eSureHi.Services
                 cmd.Parameters.AddWithValue("@civil_registry_id", (object?)Truncate(civilRegistryId, 45) ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@project_code", Truncate(projectCode, 45)!);
                 cmd.Parameters.AddWithValue("@project_name", Truncate(projectName, 45)!);
+                // consolidated_transactions.office_id is a varchar code, unlike
+                // budget_allocations.office_id (bigint) — string OfficeCode is correct here.
                 cmd.Parameters.AddWithValue("@office_id", OfficeCode);
                 cmd.Parameters.AddWithValue("@full_name", Truncate(fullName, 45)!);
                 cmd.Parameters.AddWithValue("@first_name", Truncate(firstName, 45)!);
