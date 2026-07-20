@@ -71,6 +71,8 @@ namespace eSureHi.Services
             db.CrsBeneficiaryCache.AddRange(rows.Select(r => new CrsBeneficiaryCache
             {
                 BeneficiaryId = r.BeneficiaryId,
+                ResidentsId = r.ResidentsId,
+                CivilRegistryId = r.CivilRegistryId,
                 FullName = r.FullName,
                 FirstName = r.FirstName,
                 LastName = r.LastName,
@@ -82,6 +84,11 @@ namespace eSureHi.Services
                 MaritalStatus = r.MaritalStatus,
                 IsPwd = r.IsPwd,
                 IsSenior = r.IsSenior,
+                FamilyId = r.FamilyId,
+                HouseholdId = r.HouseholdId,
+                FamilyRole = r.FamilyRole,
+                RelationshipToHead = r.RelationshipToHead,
+                IsHouseholdHead = r.IsHouseholdHead,
                 CachedAt = cachedAt
             }));
             await db.SaveChangesAsync(cancellationToken);
@@ -120,13 +127,15 @@ namespace eSureHi.Services
                 await crsConn.OpenAsync(cancellationToken);
 
                 var sql = $@"
-                    SELECT residents_id, beneficiary_id, civilregistry_id,
-                           last_name, first_name, middle_name, full_name,
-                           sex, date_of_birth, marital_status, address,
-                           is_pwd, pwd_id_no, is_senior, senior_id_no,
-                           disability_type, cause_of_disability
-                    FROM val_beneficiaries
-                    ORDER BY id
+                    SELECT v.residents_id, v.beneficiary_id, v.civilregistry_id,
+                           v.last_name, v.first_name, v.middle_name, v.full_name,
+                           v.sex, v.date_of_birth, v.marital_status, v.address,
+                           v.is_pwd, v.pwd_id_no, v.is_senior, v.senior_id_no,
+                           v.disability_type, v.cause_of_disability,
+                           d.position, d.family_id, d.household_number, d.relationship_to_head
+                    FROM val_beneficiaries v
+                    LEFT JOIN demographic_characteristics d ON v.residents_id = d.id
+                    ORDER BY v.id
                     LIMIT {BatchSize} OFFSET {offset}";
 
                 await using var cmd = new MySqlCommand(sql, crsConn);
@@ -148,6 +157,14 @@ namespace eSureHi.Services
                         computedAge = age.ToString();
                     }
 
+                    var familyRole = ReadString(reader, "position");
+                    bool isHead = !string.IsNullOrWhiteSpace(familyRole) && 
+                                  (familyRole.Equals("head of the family", StringComparison.OrdinalIgnoreCase) ||
+                                   familyRole.Equals("family head", StringComparison.OrdinalIgnoreCase) ||
+                                   familyRole.Equals("head of family", StringComparison.OrdinalIgnoreCase) ||
+                                   familyRole.Equals("household head", StringComparison.OrdinalIgnoreCase) ||
+                                   familyRole.Equals("head", StringComparison.OrdinalIgnoreCase));
+
                     rows.Add(new BeneficiaryStaging
                     {
                         ResidentsId = ReadLong(reader, "residents_id"),
@@ -168,6 +185,16 @@ namespace eSureHi.Services
                         SeniorIdNo = ReadString(reader, "senior_id_no"),
                         DisabilityType = ReadString(reader, "disability_type"),
                         CauseOfDisability = ReadString(reader, "cause_of_disability"),
+                        FamilyRole = familyRole,
+                        FamilyId = ReadString(reader, "family_id"),
+                        HouseholdId = ReadString(reader, "household_number"),
+                        RelationshipToHead = ReadString(reader, "relationship_to_head"),
+                        IsHouseholdHead = isHead,
+                        HasDemographicProfile = !string.IsNullOrWhiteSpace(ReadString(reader, "family_id")),
+                        DemographicFamilyId = ReadString(reader, "family_id") ?? "",
+                        DemographicFamilyRole = familyRole ?? "",
+                        DemographicRelationshipToHead = ReadString(reader, "relationship_to_head") ?? "",
+                        IsDemographicHeadOfFamily = isHead,
                         LinkStatus = "Unlinked",
                         ImportedAt = DateTime.Now
                     });
@@ -195,7 +222,9 @@ namespace eSureHi.Services
 
             return cached.Select(c => new BeneficiaryStaging
             {
+                ResidentsId = c.ResidentsId,
                 BeneficiaryId = c.BeneficiaryId,
+                CivilRegistryId = c.CivilRegistryId,
                 LastName = c.LastName,
                 FirstName = c.FirstName,
                 MiddleName = c.MiddleName,
@@ -207,6 +236,16 @@ namespace eSureHi.Services
                 Address = c.Address,
                 IsPwd = c.IsPwd,
                 IsSenior = c.IsSenior,
+                FamilyId = c.FamilyId,
+                HouseholdId = c.HouseholdId,
+                FamilyRole = c.FamilyRole,
+                RelationshipToHead = c.RelationshipToHead,
+                IsHouseholdHead = c.IsHouseholdHead,
+                HasDemographicProfile = !string.IsNullOrWhiteSpace(c.FamilyId),
+                DemographicFamilyId = c.FamilyId ?? "",
+                DemographicFamilyRole = c.FamilyRole ?? "",
+                DemographicRelationshipToHead = c.RelationshipToHead ?? "",
+                IsDemographicHeadOfFamily = c.IsHouseholdHead,
                 LinkStatus = "Unlinked",
                 ImportedAt = DateTime.Now
             }).ToList();

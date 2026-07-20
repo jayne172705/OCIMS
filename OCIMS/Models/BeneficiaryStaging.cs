@@ -99,6 +99,21 @@ namespace eSureHi.Models
         public string RegisteredWorkflowStatus { get; set; } = string.Empty;
 
         [NotMapped]
+        public string? HouseholdId { get; set; }
+
+        [NotMapped]
+        public string? FamilyId { get; set; }
+
+        [NotMapped]
+        public string? FamilyRole { get; set; }
+
+        [NotMapped]
+        public string? RelationshipToHead { get; set; }
+
+        [NotMapped]
+        public bool IsHouseholdHead { get; set; }
+
+        [NotMapped]
         public bool HasDemographicProfile { get; set; }
 
         [NotMapped]
