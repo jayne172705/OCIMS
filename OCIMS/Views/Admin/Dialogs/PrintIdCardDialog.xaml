@@ -1,0 +1,70 @@
+<UserControl x:Class="eSureHi.Views.Admin.Dialogs.PrintIdCardDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             Background="White"
+             Width="500">
+    <UserControl.Resources>
+        <helpers:QRCodeConverter x:Key="QRCodeConverter"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Border Background="#2E7D32" Padding="15">
+            <TextBlock Text="Print Beneficiary ID Card" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+        </Border>
+        
+        <StackPanel Grid.Row="1" Margin="20" HorizontalAlignment="Center">
+            <!-- ID Card Visual Container -->
+            <Border x:Name="IdCardVisual" Width="336" Height="212" Background="White" BorderBrush="Black" BorderThickness="1" SnapsToDevicePixels="True">
+                <!-- Outer Border / Card Background -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Border Background="#2E7D32" Grid.Row="0">
+                        <TextBlock Text="BENEFICIARY ID" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <Grid Grid.Row="1" Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="NAME" FontSize="9" Foreground="Gray"/>
+                            <TextBlock Text="{Binding FullName}" FontSize="14" FontWeight="Bold" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                            
+                            <TextBlock Text="BENEFICIARY ID" FontSize="9" Foreground="Gray"/>
+                            <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+
+                            <TextBlock Text="ROLE" FontSize="9" Foreground="Gray"/>
+                            <TextBlock Text="{Binding RegisteredRole}" FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                            <!-- QR Code -->
+                            <Image Source="{Binding BeneficiaryId, Converter={StaticResource QRCodeConverter}}" Width="80" Height="80"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+            
+            <TextBlock Text="Note: The card is displayed at standard CR80 size (3.375 x 2.125 inches)." Margin="0,15,0,0" Foreground="Gray" FontStyle="Italic" HorizontalAlignment="Center"/>
+        </StackPanel>
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="15">
+            <Button Content="Cancel" Style="{StaticResource MaterialDesignOutlinedButton}" Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" Width="100" Margin="0,0,10,0"/>
+            <Button Content="Print Card" Click="PrintBtn_Click" Width="100"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

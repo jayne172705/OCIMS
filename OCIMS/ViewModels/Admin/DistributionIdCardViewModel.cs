@@ -1,0 +1,190 @@
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using eSureHi.Data;
+using eSureHi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace eSureHi.ViewModels.Admin
+{
+    /// <summary>
+    /// Backs the digital ID card popup shown when a beneficiary is scanned / searched in
+    /// Distribution. Loads identity + family + release history and runs the monthly-limit /
+    /// duplicate-release check that routes the beneficiary to Release or On Hold.
+    /// </summary>
+    public class DistributionIdCardViewModel : ObservableObject
+    {
+        public int BenId { get; }
+
+        public string FullName { get; private set; } = "Unknown";
+        public string BeneficiaryId { get; private set; } = string.Empty;
+        public string Program { get; private set; } = "—";
+        public string Relationship { get; private set; } = "—";
+        public string Address { get; private set; } = "—";
+        public string DateOfBirth { get; private set; } = "—";
+
+        public ObservableCollection<FamilyMemberDisplay> FamilyMembers { get; } = new();
+
+        private int _releasesThisMonth;
+        public int ReleasesThisMonth { get => _releasesThisMonth; private set => SetProperty(ref _releasesThisMonth, value); }
+
+        private int _totalReleases;
+        public int TotalReleases { get => _totalReleases; private set => SetProperty(ref _totalReleases, value); }
+
+        private string _lastReleaseText = "No prior release on record";
+        public string LastReleaseText { get => _lastReleaseText; private set => SetProperty(ref _lastReleaseText, value); }
+
+        private bool _isEligible = true;
+        public bool IsEligible { get => _isEligible; private set { SetProperty(ref _isEligible, value); OnPropertyChanged(nameof(IsNotEligible)); } }
+        public bool IsNotEligible => !IsEligible;
+
+        private string _statusBanner = "Checking eligibility…";
+        public string StatusBanner { get => _statusBanner; private set => SetProperty(ref _statusBanner, value); }
+
+        private string _statusBannerColor = "#64748B";
+        public string StatusBannerColor { get => _statusBannerColor; private set => SetProperty(ref _statusBannerColor, value); }
+
+        private string _statusBannerBackground = "#F1F5F9";
+        public string StatusBannerBackground { get => _statusBannerBackground; private set => SetProperty(ref _statusBannerBackground, value); }
+
+        /// <summary>Remark stored on the record when routed to On Hold.</summary>
+        public string HoldReason { get; private set; } = string.Empty;
+
+        public DistributionIdCardViewModel(int benId)
+        {
+            BenId = benId;
+        }
+
+        public async Task LoadAsync()
+        {
+            using var db = eSureHiDbContextFactory.Create();
+
+            var beneficiary = await db.Beneficiaries.FirstOrDefaultAsync(b => b.BenId == BenId);
+            if (beneficiary == null)
+            {
+                SetVerdict(false, "Beneficiary record not found.", "#991B1B", "#FEE2E2");
+                HoldReason = "Beneficiary record not found.";
+                return;
+            }
+
+            FullName = beneficiary.FullName;
+            BeneficiaryId = beneficiary.BeneficiaryId ?? beneficiary.BenId.ToString();
+            Program = string.IsNullOrWhiteSpace(beneficiary.SourceOfFunds) ? "—" : beneficiary.SourceOfFunds!;
+            Relationship = string.IsNullOrWhiteSpace(beneficiary.Relationship) ? "—" : beneficiary.Relationship!;
+            DateOfBirth = beneficiary.DateOfBirth?.ToString("MMM dd, yyyy") ?? "—";
+            OnPropertyChanged(nameof(FullName));
+            OnPropertyChanged(nameof(BeneficiaryId));
+            OnPropertyChanged(nameof(Program));
+            OnPropertyChanged(nameof(Relationship));
+            OnPropertyChanged(nameof(DateOfBirth));
+
+            // ── Family + address via the CRS cache (keyed on civil-registry id) ──
+            string? familyId = null;
+            if (!string.IsNullOrWhiteSpace(beneficiary.CivilRegistryId))
+            {
+                var cacheRow = await db.CrsBeneficiaryCache
+                    .FirstOrDefaultAsync(c => c.CivilRegistryId == beneficiary.CivilRegistryId);
+                if (cacheRow != null)
+                {
+                    familyId = cacheRow.FamilyId;
+                    Address = string.IsNullOrWhiteSpace(cacheRow.Address) ? "—" : cacheRow.Address!;
+                    OnPropertyChanged(nameof(Address));
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(familyId))
+            {
+                var familyMembers = await db.CrsBeneficiaryCache
+                    .Where(c => c.FamilyId == familyId)
+                    .ToListAsync();
+
+                var civilRegistryIds = familyMembers
+                    .Where(m => !string.IsNullOrWhiteSpace(m.CivilRegistryId))
+                    .Select(m => m.CivilRegistryId)
+                    .ToList();
+
+                var activeBeneficiaries = await db.Beneficiaries
+                    .Where(b => b.IsActive && civilRegistryIds.Contains(b.CivilRegistryId))
+                    .Select(b => new { b.CivilRegistryId, b.IsPrimary })
+                    .ToListAsync();
+
+                foreach (var member in familyMembers
+                             .OrderBy(m => m.IsHouseholdHead ? 0 : 1)
+                             .ThenBy(m => m.FullName))
+                {
+                    var status = "Not Registered";
+                    var bg = "#F1F5F9";
+                    var fg = "#64748B";
+
+                    if (!string.IsNullOrWhiteSpace(member.CivilRegistryId))
+                    {
+                        var ben = activeBeneficiaries.FirstOrDefault(b => b.CivilRegistryId == member.CivilRegistryId);
+                        if (ben != null)
+                        {
+                            if (ben.IsPrimary) { status = "Registered Member"; bg = "#DCFCE7"; fg = "#166534"; }
+                            else { status = "Dependent"; bg = "#DBEAFE"; fg = "#1E40AF"; }
+                        }
+                    }
+
+                    FamilyMembers.Add(new FamilyMemberDisplay
+                    {
+                        FullName = member.FullName ?? "Unknown",
+                        FamilyRole = string.IsNullOrWhiteSpace(member.FamilyRole) ? "MEMBER" : member.FamilyRole!.ToUpper(),
+                        RegistrationStatus = status,
+                        RegistrationStatusBackground = bg,
+                        RegistrationStatusForeground = fg
+                    });
+                }
+            }
+
+            // ── Release history + monthly-limit check ──
+            var releases = await db.DistributionRecords
+                .Include(r => r.Batch)
+                .Where(r => r.BeneficiaryId == BenId && r.Status == "Released")
+                .OrderByDescending(r => r.ProcessedAt)
+                .ToListAsync();
+
+            TotalReleases = releases.Count;
+
+            var now = DateTime.Now;
+            var monthStart = new DateTime(now.Year, now.Month, 1);
+            var thisMonth = releases
+                .Where(r => r.ProcessedAt.HasValue && r.ProcessedAt.Value >= monthStart)
+                .ToList();
+            ReleasesThisMonth = thisMonth.Count;
+
+            var last = releases.FirstOrDefault();
+            if (last != null)
+            {
+                var when = last.ProcessedAt?.ToString("MMM dd, yyyy") ?? "unknown date";
+                var batchName = last.Batch?.ProjectTitle ?? "a past batch";
+                LastReleaseText = $"Last released {when} under \"{batchName}\"";
+            }
+
+            if (thisMonth.Any())
+            {
+                var when = thisMonth.First().ProcessedAt?.ToString("MMM dd, yyyy") ?? "this month";
+                HoldReason = $"Already released this month ({when}) — monthly limit reached.";
+                SetVerdict(false,
+                    "ON HOLD — monthly release limit already reached.",
+                    "#991B1B", "#FEE2E2");
+            }
+            else
+            {
+                SetVerdict(true,
+                    "ELIGIBLE — no release recorded this month.",
+                    "#166534", "#DCFCE7");
+            }
+        }
+
+        private void SetVerdict(bool eligible, string banner, string color, string background)
+        {
+            IsEligible = eligible;
+            StatusBanner = banner;
+            StatusBannerColor = color;
+            StatusBannerBackground = background;
+        }
+    }
+}

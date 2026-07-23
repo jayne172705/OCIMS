@@ -1,0 +1,145 @@
+<UserControl x:Class="eSureHi.Views.Admin.Dialogs.DistributionIdCardDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             MaxWidth="560" Width="560">
+    <UserControl.Resources>
+        <helpers:QRCodeConverter x:Key="QRCodeConverter"/>
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Border Background="White" CornerRadius="8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Card header -->
+            <Border Grid.Row="0" CornerRadius="8,8,0,0" Padding="18,16">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#1B5E20" Offset="0"/>
+                        <GradientStop Color="#43A047" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="eSureHi+ Digital ID" FontSize="11" Foreground="#D6EFD8"/>
+                        <TextBlock Text="{Binding FullName}" FontSize="22" FontWeight="Bold" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding BeneficiaryId, StringFormat='ID: {0}'}" FontSize="12" Foreground="#E8F5E9" Margin="0,2,0,0"/>
+                        <Border Background="#FFFFFF33" CornerRadius="10" Padding="9,3" HorizontalAlignment="Left" Margin="0,8,0,0">
+                            <TextBlock Text="{Binding Program}" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                        </Border>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="White" CornerRadius="6" Padding="6" VerticalAlignment="Center">
+                        <Image Source="{Binding BeneficiaryId, Converter={StaticResource QRCodeConverter}}" Width="84" Height="84"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Body -->
+            <ScrollViewer Grid.Row="1" MaxHeight="420" VerticalScrollBarVisibility="Auto" Padding="18,14">
+                <StackPanel>
+                    <!-- Identity grid -->
+                    <UniformGrid Columns="2" Margin="0,0,0,10">
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="Relationship" FontSize="10" Foreground="#94A3B8"/>
+                            <TextBlock Text="{Binding Relationship}" FontSize="13" Foreground="#0F172A"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="Date of Birth" FontSize="10" Foreground="#94A3B8"/>
+                            <TextBlock Text="{Binding DateOfBirth}" FontSize="13" Foreground="#0F172A"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Address" FontSize="10" Foreground="#94A3B8"/>
+                            <TextBlock Text="{Binding Address}" FontSize="13" Foreground="#0F172A" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </UniformGrid>
+
+                    <!-- Release summary -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Release history" FontSize="12" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="{Binding ReleasesThisMonth}" FontSize="15" FontWeight="Bold" Foreground="#991B1B"/>
+                                <TextBlock Text="this month" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" Margin="5,0,16,0"/>
+                                <TextBlock Text="{Binding TotalReleases}" FontSize="15" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="total" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding LastReleaseText}" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Family members -->
+                    <TextBlock Text="Family members" FontSize="12" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <ItemsControl ItemsSource="{Binding FamilyMembers}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#EEF2F7" BorderThickness="0,0,0,1" Padding="0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding FullName}" FontSize="13" Foreground="#0F172A"/>
+                                            <TextBlock Text="{Binding FamilyRole}" FontSize="10" Foreground="#94A3B8"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" VerticalAlignment="Center" CornerRadius="9" Padding="8,3"
+                                                Background="{Binding RegistrationStatusBackground}">
+                                            <TextBlock Text="{Binding RegistrationStatus}" FontSize="10" FontWeight="Bold"
+                                                       Foreground="{Binding RegistrationStatusForeground}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Verdict banner -->
+            <Border Grid.Row="2" Padding="16,10" Margin="0,4,0,0" Background="{Binding StatusBannerBackground}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"
+                                             Foreground="{Binding StatusBannerColor}"
+                                             Kind="ShieldCheck"/>
+                    <TextBlock Text="{Binding StatusBanner}" FontSize="13" FontWeight="Bold"
+                               Foreground="{Binding StatusBannerColor}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Actions -->
+            <Border Grid.Row="3" Padding="16,12" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="CANCEL"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            CommandParameter="{x:Null}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="MOVE TO ON HOLD"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            CommandParameter="Hold"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="#991B1B" BorderBrush="#991B1B"
+                            Margin="0,0,8,0"/>
+                    <Button Content="RELEASE BENEFIT"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            CommandParameter="Release"
+                            IsEnabled="{Binding IsEligible}"
+                            Visibility="{Binding IsEligible, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#2E7D32" BorderBrush="#2E7D32" Foreground="White"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>
