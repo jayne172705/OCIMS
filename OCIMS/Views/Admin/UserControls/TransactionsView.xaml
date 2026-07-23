@@ -13,6 +13,7 @@
             <RowDefinition Height="64"/>
             <RowDefinition Height="3"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -28,7 +29,7 @@
                                              VerticalAlignment="Center"
                                              Margin="0,0,10,0"/>
                     <TextBlock Text="Transactions" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Border Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
+                    <Border Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
                             Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock FontSize="11" Foreground="White">
                             <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
@@ -183,8 +184,19 @@
             </Grid>
         </Border>
 
+        <!-- ── Sync Status Banner ── -->
+        <Border Grid.Row="3" Background="#FFF3E0" BorderBrush="#FFE0B2" BorderThickness="0,0,0,1"
+                Padding="16,8"
+                Visibility="{Binding SyncStatus.HasMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="AlertCircleOutline" Width="16" Height="16"
+                                         Foreground="#E65100" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="{Binding SyncStatus.Message}" FontSize="12" Foreground="#E65100" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
         <!-- ── DataGrid ── -->
-        <DataGrid Grid.Row="3"
+        <DataGrid Grid.Row="4"
                   ItemsSource="{Binding DisplayedTransactions}"
                   SelectedItem="{Binding SelectedTransaction}"
                   AutoGenerateColumns="False"
@@ -223,7 +235,7 @@
                 <DataGridTemplateColumn Header="Type" Width="130">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="10,3" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                            <Border CornerRadius="10" Padding="10,3" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
                                     HorizontalAlignment="Left"
                                     Margin="12,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding TransactionType}"
@@ -293,7 +305,7 @@
                                                 <Setter Property="Background" Value="#FFF3E0"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Priority}" Value="Normal">
-                                                <Setter Property="Background" Value="#E3F2FD"/>
+                                                <Setter Property="Background" Value="#ECFDF3"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -311,7 +323,7 @@
                                                     <Setter Property="Foreground" Value="#E65100"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Priority}" Value="Normal">
-                                                    <Setter Property="Foreground" Value="#1565C0"/>
+                                                    <Setter Property="Foreground" Value="#2E7D32"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -337,7 +349,7 @@
                                                 <Setter Property="Background" Value="#FFF3E0"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Status}" Value="In Transit">
-                                                <Setter Property="Background" Value="#E3F2FD"/>
+                                                <Setter Property="Background" Value="#ECFDF3"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Status}" Value="Received">
                                                 <Setter Property="Background" Value="#F3E5F5"/>
@@ -364,7 +376,7 @@
                                                     <Setter Property="Foreground" Value="#E65100"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Status}" Value="In Transit">
-                                                    <Setter Property="Foreground" Value="#1565C0"/>
+                                                    <Setter Property="Foreground" Value="#2E7D32"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Status}" Value="Acknowledged">
                                                     <Setter Property="Foreground" Value="#2E7D32"/>
@@ -429,7 +441,7 @@
         </DataGrid>
 
         <!-- ── Status Bar ── -->
-        <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+        <Border Grid.Row="5" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
                 Padding="16,8">
             <TextBlock FontSize="11">

@@ -41,7 +41,7 @@
                     <Setter Property="Foreground" Value="#B45309"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Under Review">
-                    <Setter Property="Foreground" Value="#1D4ED8"/>
+                    <Setter Property="Foreground" Value="#166534"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Rejected">
                     <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>

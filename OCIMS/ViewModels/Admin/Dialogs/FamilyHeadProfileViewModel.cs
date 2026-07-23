@@ -19,11 +19,12 @@ namespace eSureHi.ViewModels.Admin.Dialogs
         public string Status { get; set; } = string.Empty;
     }
 
-    public class FamilyHeadProfileViewModel
+    public class FamilyHeadProfileViewModel : ObservableObject
     {
         public Employee Head { get; }
         public ObservableCollection<Beneficiary> Dependents { get; } = new();
         public ObservableCollection<ConsolidatedTransaction> Transactions { get; } = new();
+        public StatusIndicator GgmsSyncStatus { get; } = new();
 
         public ICommand CloseCommand { get; }
         public Action? CloseRequested { get; set; }
@@ -36,6 +37,7 @@ namespace eSureHi.ViewModels.Admin.Dialogs
 
         public async Task LoadAsync()
         {
+            GgmsSyncStatus.Clear();
             try
             {
                 using var db = eSureHiDbContextFactory.CreateCloud();
@@ -145,7 +147,10 @@ namespace eSureHi.ViewModels.Admin.Dialogs
                         });
                     }
                 }
-                catch { /* Ignore if GGMS offline */ }
+                catch
+                {
+                    GgmsSyncStatus.Set("GGMS unavailable — showing local transactions only.", StatusSeverity.Warning);
+                }
 
                 // Sort and display
                 Transactions.Clear();

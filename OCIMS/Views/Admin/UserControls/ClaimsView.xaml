@@ -31,7 +31,7 @@
                                    Margin="0,2,0,0"/>
                     </StackPanel>
                     <Border Background="White"
-                            BorderBrush="#0D47A1"
+                            BorderBrush="#1B5E20"
                             BorderThickness="1"
                             CornerRadius="10"
                             Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
@@ -99,15 +99,19 @@
                 Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="200"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="140"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="130"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -127,12 +131,23 @@
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
                           Height="50" FontSize="12"/>
 
+                <!-- Type (All/PendingOnly modes) -->
                 <ComboBox Grid.Column="4"
                           ItemsSource="{Binding TypeOptions}"
                           SelectedItem="{Binding TypeFilter}"
                           materialDesign:HintAssist.Hint="Type"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="50" FontSize="12"
+                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+
+                <!-- Group (Group Claim mode only) -->
+                <ComboBox Grid.Column="4"
+                          ItemsSource="{Binding GroupOptions}"
+                          SelectedItem="{Binding GroupFilter}"
+                          materialDesign:HintAssist.Hint="Group"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"
+                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <DatePicker Grid.Column="6"
                             SelectedDate="{Binding DateFrom}"
@@ -146,7 +161,24 @@
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                             Height="50" FontSize="12"/>
 
-                <Button Grid.Column="10"
+                <!-- Month / Year (Group Claim mode only) -->
+                <ComboBox Grid.Column="10"
+                          ItemsSource="{Binding MonthOptions}"
+                          SelectedItem="{Binding MonthFilter}"
+                          materialDesign:HintAssist.Hint="Month"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"
+                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                <ComboBox Grid.Column="12"
+                          ItemsSource="{Binding YearOptions}"
+                          SelectedItem="{Binding YearFilter}"
+                          materialDesign:HintAssist.Hint="Year"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"
+                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                <Button Grid.Column="14"
                         Command="{Binding ClearFilterCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}"
                         Foreground="#64748B" Height="50">
@@ -239,7 +271,7 @@
                             <Border CornerRadius="10"
                                     Padding="10,3"
                                     Background="White"
-                                    BorderBrush="#0D47A1"
+                                    BorderBrush="#1B5E20"
                                     BorderThickness="1"
                                     HorizontalAlignment="Left"
                                     Margin="0,0" VerticalAlignment="Center">
@@ -294,7 +326,7 @@
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ClaimStatus}"
                                                          Value="Submitted">
-                                                <Setter Property="Background" Value="#E3F2FD"/>
+                                                <Setter Property="Background" Value="#ECFDF3"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding ClaimStatus}"
                                                          Value="Under Review">
@@ -328,7 +360,7 @@
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ClaimStatus}"
                                                              Value="Submitted">
-                                                    <Setter Property="Foreground" Value="#1565C0"/>
+                                                    <Setter Property="Foreground" Value="#2E7D32"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ClaimStatus}"
                                                              Value="Under Review">
@@ -414,6 +446,21 @@
                                                              Width="16" Height="16"/>
                                 </Button>
 
+                                <!-- Print Voucher (Group Claim mode only) -->
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.PrintVoucherCommand,
+                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Print Voucher"
+                                        Width="32" Height="32"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        Visibility="{Binding DataContext.IsGroupClaimMode,
+                                            RelativeSource={RelativeSource AncestorType=DataGrid},
+                                            Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <materialDesign:PackIcon Kind="Printer"
+                                                             Width="16" Height="16"/>
+                                </Button>
+
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -421,6 +468,15 @@
 
             </DataGrid.Columns>
         </DataGrid>
+
+        <!-- ── Empty State ── -->
+        <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Visibility="{Binding NoResults, Converter={StaticResource BoolToVisibilityConverter}}">
+            <materialDesign:PackIcon Kind="ClipboardTextOffOutline" Width="48" Height="48"
+                                     Foreground="#CBD5E1" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding EmptyStateText}" FontSize="13" Foreground="#94A3B8"
+                       Margin="0,10,0,0" HorizontalAlignment="Center"/>
+        </StackPanel>
 
         <!-- ── Status Bar ── -->
         <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"

@@ -51,7 +51,10 @@ namespace eSureHi.ViewModels.Admin
         public bool IsAdminReviewer => PermissionService.IsAdminReviewer(CurrentRole);
         public bool IsUserRegistrar => PermissionService.IsUserRegistrar(CurrentRole);
         public bool IsAdminNavigationFlow => !IsEmployee && !IsBeneficiary && !IsUserRegistrar;
-        public bool ShowClassicNavigationFlow => !IsAdminNavigationFlow;
+        // User (registrar) now has its own dedicated 6-section sidebar rather than sharing the
+        // classic flow. Classic flow is reserved for Employee/Beneficiary end-user roles.
+        public bool IsUserNavigationFlow => IsUserRegistrar;
+        public bool ShowClassicNavigationFlow => IsEmployee || IsBeneficiary;
 
         public string UserInitials
         {
@@ -160,6 +163,27 @@ namespace eSureHi.ViewModels.Admin
             set => SetProperty(ref _isAdminToolsPopupOpen, value);
         }
 
+        private bool _isClaimsManagementPopupOpen;
+        public bool IsClaimsManagementPopupOpen
+        {
+            get => _isClaimsManagementPopupOpen;
+            set => SetProperty(ref _isClaimsManagementPopupOpen, value);
+        }
+
+        private bool _isPaymentManagementPopupOpen;
+        public bool IsPaymentManagementPopupOpen
+        {
+            get => _isPaymentManagementPopupOpen;
+            set => SetProperty(ref _isPaymentManagementPopupOpen, value);
+        }
+
+        private bool _isReportsPopupOpen;
+        public bool IsReportsPopupOpen
+        {
+            get => _isReportsPopupOpen;
+            set => SetProperty(ref _isReportsPopupOpen, value);
+        }
+
         public RelayCommand ToggleNotificationsCommand { get; private set; } = null!;
         public RelayCommand ToggleSidebarCommand { get; }
         public RelayCommand ChangeProfileImageCommand { get; }
@@ -241,6 +265,17 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand NavManageAccountsCommand { get; }
         public RelayCommand NavAnnouncementsCommand { get; }
 
+        // ── New sidebar targets (User 6-section / Admin 7-section rebuild) ──
+        public RelayCommand NavDistributionCommand { get; }
+        public RelayCommand NavFileClaimCommand { get; }
+        public RelayCommand NavGroupClaimCommand { get; }
+        public RelayCommand NavAdvancePaymentCommand { get; }
+        public RelayCommand NavPendingPaymentCommand { get; }
+        public RelayCommand NavAllPaymentLedgerCommand { get; }
+        public RelayCommand OpenClaimsManagementCommand { get; }
+        public RelayCommand OpenPaymentManagementCommand { get; }
+        public RelayCommand OpenReportsMenuCommand { get; }
+
         public bool CanAccessHome => PermissionService.CanAccessHome;
         public bool CanAccessDashboard => PermissionService.CanAccessDashboard;
         public bool CanAccessMyProfile => PermissionService.CanAccessMyProfile;
@@ -279,6 +314,8 @@ namespace eSureHi.ViewModels.Admin
         public bool CanAccessReports => PermissionService.CanAccessReports;
         public bool CanAccessCompanyProfile => PermissionService.CanAccessCompanyProfile;
         public bool CanAccessSettings => PermissionService.CanAccessSettings;
+        public bool CanAccessDistribution => PermissionService.CanAccessDistribution;
+        public bool CanAccessPayments => PermissionService.CanAccessPayments;
 
         // ── Constructor ────────────────────────────────────────────────
         public AdminShellViewModel()
@@ -338,6 +375,20 @@ namespace eSureHi.ViewModels.Admin
             NavBeneficiaryPortalCommand = new RelayCommand(() => NavigateFromSidebar("Beneficiary Portal"));
             NavManageAccountsCommand = new RelayCommand(() => NavigateFromSidebar("Manage Accounts"));
             NavAnnouncementsCommand = new RelayCommand(() => NavigateFromSidebar("Announcements"));
+
+            // New rebuild targets
+            NavDistributionCommand = new RelayCommand(() => NavigateFromSidebar("Distribution"));
+            NavFileClaimCommand = new RelayCommand(() => NavigateFromSidebar("File a Claim"));
+            NavGroupClaimCommand = new RelayCommand(() => NavigateFromSidebar("Group Claim"));
+            NavAdvancePaymentCommand = new RelayCommand(() => NavigateFromSidebar("Advance Payment"));
+            NavPendingPaymentCommand = new RelayCommand(() => NavigateFromSidebar("Pending Payment"));
+            NavAllPaymentLedgerCommand = new RelayCommand(() => NavigateFromSidebar("All Payment Ledger"));
+            OpenClaimsManagementCommand = new RelayCommand(() =>
+                IsClaimsManagementPopupOpen = !IsClaimsManagementPopupOpen);
+            OpenPaymentManagementCommand = new RelayCommand(() =>
+                IsPaymentManagementPopupOpen = !IsPaymentManagementPopupOpen);
+            OpenReportsMenuCommand = new RelayCommand(() =>
+                IsReportsPopupOpen = !IsReportsPopupOpen);
 
             // Seed test notifications after login so correct user_id is used
             _ = eSureHi.ViewModels.Admin.NotificationsViewModel.SeedTestNotificationsAsync();
@@ -447,6 +498,12 @@ namespace eSureHi.ViewModels.Admin
                 "Beneficiary Portal" => new BeneficiaryPortalView(),
                 "Manage Accounts" => new ManageAccountsView(),
                 "Announcements" => new AnnouncementsView(),
+                "Distribution" => new DistributionBatchView(),
+                "File a Claim" => new ClaimsView(ClaimsListMode.All),
+                "Group Claim" => new ClaimsView(ClaimsListMode.GroupClaim),
+                "Advance Payment" => new AdvancePaymentView(),
+                "Pending Payment" => new PaymentsView(PaymentsListMode.PendingOnly),
+                "All Payment Ledger" => new PaymentsView(PaymentsListMode.All),
                 _ => new HomeView()
             };
 
@@ -470,6 +527,9 @@ namespace eSureHi.ViewModels.Admin
             IsClaimsMenuPopupOpen = false;
             IsBudgetFundsPopupOpen = false;
             IsAdminToolsPopupOpen = false;
+            IsClaimsManagementPopupOpen = false;
+            IsPaymentManagementPopupOpen = false;
+            IsReportsPopupOpen = false;
         }
 
         private static void OpenReviewQueue()

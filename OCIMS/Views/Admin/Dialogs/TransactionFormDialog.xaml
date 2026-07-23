@@ -26,7 +26,7 @@
         </Grid.RowDefinitions>
 
         <!-- Title Bar -->
-        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -230,14 +230,14 @@
                             </Border>
 
                             <!-- Selected Sender Preview -->
-                            <materialDesign:Card Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                            <materialDesign:Card Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
                                                  materialDesign:ElevationAssist.Elevation="Dp0"
                                                  Visibility="{Binding SelectedSender,
                                                      Converter={StaticResource NullToBoolConverter}}">
                                 <StackPanel Margin="12,10">
                                     <TextBlock Text="{Binding SelectedSender.SenderName}"
                                                FontSize="13" FontWeight="Bold"
-                                               Foreground="#1565C0"/>
+                                               Foreground="#2E7D32"/>
                                     <TextBlock Foreground="#64748B" FontSize="11">
                                         <Run Text="{Binding SelectedSender.SenderType}"/>
                                         <Run Text=" · "/>
@@ -382,7 +382,7 @@
                         </ComboBox>
 
                         <!-- Selected Document Preview -->
-                        <materialDesign:Card Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                        <materialDesign:Card Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
                                              materialDesign:ElevationAssist.Elevation="Dp1"
                                              Visibility="{Binding SelectedDocument,
                                                  Converter={StaticResource NullToBoolConverter}}">
@@ -399,7 +399,7 @@
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding SelectedDocument.DocTitle}"
                                                FontSize="14" FontWeight="Bold"
-                                               Foreground="#1565C0"/>
+                                               Foreground="#2E7D32"/>
                                     <TextBlock FontSize="12" Foreground="#64748B">
                                         <Run Text="{Binding SelectedDocument.Employee.FullName, Mode=OneWay,
                                                  TargetNullValue='Unknown Employee'}"/>

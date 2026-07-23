@@ -41,7 +41,7 @@
         </Grid.RowDefinitions>
 
         <!-- ── Title Bar ── -->
-        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -291,7 +291,7 @@
                                             <Setter Property="Background" Value="#F5F5F5"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding ClaimStatus}" Value="Submitted">
-                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                            <Setter Property="Background" Value="#ECFDF3"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding ClaimStatus}" Value="Under Review">
                                             <Setter Property="Background" Value="#FFF3E0"/>
@@ -323,7 +323,7 @@
                                         
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ClaimStatus}" Value="Submitted">
-                                                <Setter Property="Foreground" Value="#1565C0"/>
+                                                <Setter Property="Foreground" Value="#2E7D32"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding ClaimStatus}" Value="Under Review">
                                                 <Setter Property="Foreground" Value="#E65100"/>

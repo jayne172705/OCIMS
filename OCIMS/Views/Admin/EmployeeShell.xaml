@@ -32,7 +32,7 @@
         <!-- ═══════════════════════════════════════════════════════════ -->
         <!-- ROW 0 — Custom Title Bar                                    -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="220"/>
@@ -42,7 +42,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Left: Branding -->
-                <Border Grid.Column="0" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                <Border Grid.Column="0" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
                         BorderBrush="#1976D2" BorderThickness="0,0,1,0">
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="16,0">
@@ -88,7 +88,7 @@
                                 Padding="4"
                                 ToolTip="Change profile image">
                             <Border Width="30" Height="30" CornerRadius="15"
-                                    Background="#0D47A1"
+                                    Background="#1B5E20"
                                     helpers:Adaptive.UseAdaptiveForeground="True"
                                     ClipToBounds="True">
                                 <Grid>
@@ -216,7 +216,7 @@
                                                                         <DataTrigger Binding="{Binding IsRead}"
                                                                                      Value="False">
                                                                             <Setter Property="Background"
-                                                                                    Value="#EFF6FF"/>
+                                                                                    Value="#F0FDF4"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -331,7 +331,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- ── Sidebar ── -->
-            <Border Grid.Column="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+            <Border Grid.Column="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
                 <DockPanel>
 
                     <!-- TOP: Logo -->

@@ -115,7 +115,7 @@
                                       Height="50" FontSize="12"/>
 
                             <StackPanel Grid.Column="6" Orientation="Horizontal">
-                                <Border Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
+                                <Border Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
                                         Padding="8,2" Margin="0,0,12,0"
                                         VerticalAlignment="Center">
                                     <TextBlock FontSize="11"
@@ -162,8 +162,8 @@
                                 </Button>
                                 <Button Command="{Binding ExportCoverageWordCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Foreground="#2563EB"
-                                        BorderBrush="#2563EB"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
                                         Height="45" Padding="10,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="MicrosoftWord"
@@ -328,7 +328,7 @@
                                       VerticalAlignment="Center"
                                       Margin="12,0" FontSize="12"/>
                             <StackPanel Grid.Column="4" Orientation="Horizontal">
-                                <Border Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
+                                <Border Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
                                         Padding="8,2" Margin="0,0,12,0"
                                         VerticalAlignment="Center">
                                     <TextBlock FontSize="11"
@@ -375,8 +375,8 @@
                                 </Button>
                                 <Button Command="{Binding ExportClaimsWordCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Foreground="#2563EB"
-                                        BorderBrush="#2563EB"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
                                         Height="45" Padding="10,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="MicrosoftWord"
@@ -475,7 +475,7 @@
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Margin" Value="12,0"/>
                                         <Setter Property="FontWeight" Value="Medium"/>
-                                        <Setter Property="Foreground" Value="#0D47A1"/>
+                                        <Setter Property="Foreground" Value="#1B5E20"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -651,8 +651,8 @@
                                 </Button>
                                 <Button Command="{Binding ExportPremiumWordCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Foreground="#2563EB"
-                                        BorderBrush="#2563EB"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
                                         Height="45" Padding="10,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="MicrosoftWord"
@@ -898,8 +898,8 @@
                                 </Button>
                                 <Button Command="{Binding ExportBenefitWordCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Foreground="#2563EB"
-                                        BorderBrush="#2563EB"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
                                         Height="45" Padding="10,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="MicrosoftWord"
@@ -1048,6 +1048,750 @@
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Margin" Value="12,0"/>
                                         
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ════════════════════════════════════════════════ -->
+            <!-- TAB 5 — Monthly Payment                          -->
+            <!-- ════════════════════════════════════════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="16" Height="16"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Monthly Payment"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <ProgressBar Grid.Row="0" IsIndeterminate="True" Height="3"
+                                 Foreground="{StaticResource PrimaryBrush}"
+                                 Visibility="{Binding MonthlyPaymentLoading,
+                                     Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <!-- Filters -->
+                    <Border Grid.Row="1" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                            BorderBrush="#DDE4EF" BorderThickness="0,1,0,1"
+                            Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding MonthlyPaymentSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Search name or family ID..."
+                                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="2"
+                                      ItemsSource="{Binding PaymentStatusOptions}"
+                                      SelectedItem="{Binding MonthlyPaymentStatus}"
+                                      materialDesign:HintAssist.Hint="Status"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="4"
+                                      ItemsSource="{Binding PaymentGroupOptions}"
+                                      SelectedItem="{Binding MonthlyPaymentGroup}"
+                                      materialDesign:HintAssist.Hint="Group"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="6"
+                                      ItemsSource="{Binding MonthOptions}"
+                                      SelectedItem="{Binding MonthlyPaymentMonth}"
+                                      materialDesign:HintAssist.Hint="Month"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="8"
+                                      ItemsSource="{Binding YearOptions}"
+                                      SelectedItem="{Binding MonthlyPaymentYear}"
+                                      materialDesign:HintAssist.Hint="Year"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <StackPanel Grid.Column="10" Orientation="Horizontal">
+                                <Button Command="{Binding RefreshMonthlyPaymentCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <materialDesign:PackIcon Kind="Refresh"
+                                                             Width="16" Height="16"/>
+                                </Button>
+                                <Button Command="{Binding ExportMonthlyPaymentPdfCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource ErrorBrush}"
+                                        BorderBrush="{StaticResource ErrorBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FilePdfBox"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="PDF" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportMonthlyPaymentXlsCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource SuccessBrush}"
+                                        BorderBrush="{StaticResource SuccessBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="MicrosoftExcel"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Excel" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportMonthlyPaymentWordCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
+                                        Height="45" Padding="10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="MicrosoftWord"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Word" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Totals Strip -->
+                    <UniformGrid Grid.Row="2" Columns="3" Margin="0,8,0,0">
+                        <materialDesign:Card Margin="0,0,4,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Total Amount" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MonthlyPaymentTotalAmount, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        <materialDesign:Card Margin="4,0,4,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Approved Amount" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MonthlyPaymentApprovedAmount, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        <materialDesign:Card Margin="4,0,0,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Pending Amount" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MonthlyPaymentPendingAmount, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource WarningBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </UniformGrid>
+
+                    <!-- Data Grid -->
+                    <DataGrid Grid.Row="3"
+                              ItemsSource="{Binding MonthlyPaymentData}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E5EAF2"
+                              RowHeight="44" BorderThickness="0"
+                              Background="White" RowBackground="White"
+                              AlternatingRowBackground="#F8FAFC"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                              Style="{StaticResource ReadableDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Full Name" Binding="{Binding MemberName}" Width="180">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Family ID" Binding="{Binding FamilyId}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Relationship" Binding="{Binding Relationship}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Billing Month"
+                                                Binding="{Binding BillingMonth, StringFormat={}{0:MMM yyyy}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Amount"
+                                                Binding="{Binding Amount, StringFormat=₱{0:N2}}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Group" Binding="{Binding SourceOfFunds}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Paid Date"
+                                                Binding="{Binding PaidAt, StringFormat={}{0:MMM dd, yyyy}}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ════════════════════════════════════════════════ -->
+            <!-- TAB 6 — Monthly Claims                           -->
+            <!-- ════════════════════════════════════════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="16" Height="16"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Monthly Claims"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <ProgressBar Grid.Row="0" IsIndeterminate="True" Height="3"
+                                 Foreground="{StaticResource PrimaryBrush}"
+                                 Visibility="{Binding MonthlyClaimsLoading,
+                                     Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <!-- Filters -->
+                    <Border Grid.Row="1" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                            BorderBrush="#DDE4EF" BorderThickness="0,1,0,1"
+                            Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding MonthlyClaimsSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Search applicant, beneficiary, or claim no..."
+                                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="2"
+                                      ItemsSource="{Binding ClaimStatusOptions}"
+                                      SelectedItem="{Binding MonthlyClaimsStatus}"
+                                      materialDesign:HintAssist.Hint="Status"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="4"
+                                      ItemsSource="{Binding MonthOptions}"
+                                      SelectedItem="{Binding MonthlyClaimsMonth}"
+                                      materialDesign:HintAssist.Hint="Month"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="6"
+                                      ItemsSource="{Binding YearOptions}"
+                                      SelectedItem="{Binding MonthlyClaimsYear}"
+                                      materialDesign:HintAssist.Hint="Year"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <StackPanel Grid.Column="8" Orientation="Horizontal">
+                                <Button Command="{Binding RefreshMonthlyClaimsCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <materialDesign:PackIcon Kind="Refresh"
+                                                             Width="16" Height="16"/>
+                                </Button>
+                                <Button Command="{Binding ExportMonthlyClaimsPdfCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource ErrorBrush}"
+                                        BorderBrush="{StaticResource ErrorBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FilePdfBox"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="PDF" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportMonthlyClaimsXlsCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource SuccessBrush}"
+                                        BorderBrush="{StaticResource SuccessBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="MicrosoftExcel"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Excel" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportMonthlyClaimsWordCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
+                                        Height="45" Padding="10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="MicrosoftWord"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Word" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Totals Strip -->
+                    <UniformGrid Grid.Row="2" Columns="3" Margin="0,8,0,0">
+                        <materialDesign:Card Margin="0,0,4,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Total Claimed" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MonthlyClaimsTotalClaimed, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        <materialDesign:Card Margin="4,0,4,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Total Approved" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MonthlyClaimsTotalApproved, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource WarningBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        <materialDesign:Card Margin="4,0,0,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Total Released" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MonthlyClaimsTotalReleased, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </UniformGrid>
+
+                    <!-- Data Grid -->
+                    <DataGrid Grid.Row="3"
+                              ItemsSource="{Binding MonthlyClaimsData}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E5EAF2"
+                              RowHeight="44" BorderThickness="0"
+                              Background="White" RowBackground="White"
+                              AlternatingRowBackground="#F8FAFC"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                              Style="{StaticResource ReadableDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Claim No" Binding="{Binding ClaimNo}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Applicant" Binding="{Binding Employee.FullName}" Width="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Beneficiary" Binding="{Binding Beneficiary.FullName}" Width="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Claim Date"
+                                                Binding="{Binding ClaimDate, StringFormat={}{0:MMM dd, yyyy}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Claimed"
+                                                Binding="{Binding AmountClaimed, StringFormat=₱{0:N2}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Approved"
+                                                Binding="{Binding AmountApproved, StringFormat=₱{0:N2}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Foreground" Value="{StaticResource WarningBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Released"
+                                                Binding="{Binding AmountReleased, StringFormat=₱{0:N2}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Group" Binding="{Binding SourceOfFunds}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Status" Binding="{Binding ClaimStatus}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ════════════════════════════════════════════════ -->
+            <!-- TAB 7 — Member Reports                           -->
+            <!-- ════════════════════════════════════════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AccountGroupOutline" Width="16" Height="16"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Member Reports"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <ProgressBar Grid.Row="0" IsIndeterminate="True" Height="3"
+                                 Foreground="{StaticResource PrimaryBrush}"
+                                 Visibility="{Binding MemberReportsLoading,
+                                     Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <!-- Filters -->
+                    <Border Grid.Row="1" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                            BorderBrush="#DDE4EF" BorderThickness="0,1,0,1"
+                            Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding MemberReportsSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Search name, code, or household ID..."
+                                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="2"
+                                      ItemsSource="{Binding MemberProgramOptions}"
+                                      SelectedItem="{Binding MemberReportsProgram}"
+                                      materialDesign:HintAssist.Hint="Program"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <ComboBox Grid.Column="4"
+                                      ItemsSource="{Binding MemberStatusOptions}"
+                                      SelectedItem="{Binding MemberReportsStatus}"
+                                      materialDesign:HintAssist.Hint="Status"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Height="50" FontSize="12"/>
+                            <StackPanel Grid.Column="6" Orientation="Horizontal">
+                                <Button Command="{Binding RefreshMemberReportsCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <materialDesign:PackIcon Kind="Refresh"
+                                                             Width="16" Height="16"/>
+                                </Button>
+                                <Button Command="{Binding ExportMemberReportsPdfCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource ErrorBrush}"
+                                        BorderBrush="{StaticResource ErrorBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FilePdfBox"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="PDF" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportMemberReportsXlsCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource SuccessBrush}"
+                                        BorderBrush="{StaticResource SuccessBrush}"
+                                        Height="45" Padding="10,0" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="MicrosoftExcel"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Excel" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportMemberReportsWordCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="#2E7D32"
+                                        BorderBrush="#2E7D32"
+                                        Height="45" Padding="10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="MicrosoftWord"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Word" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Totals Strip -->
+                    <UniformGrid Grid.Row="2" Columns="2" Margin="0,8,0,0">
+                        <materialDesign:Card Margin="0,0,4,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Total Claimed" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MemberReportsTotalClaimed, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        <materialDesign:Card Margin="4,0,0,4"
+                                             materialDesign:ElevationAssist.Elevation="Dp1">
+                            <StackPanel Margin="16,10" HorizontalAlignment="Center">
+                                <TextBlock Text="Total Payments" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding MemberReportsTotalPayments, StringFormat=₱{0:N2}}"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </UniformGrid>
+
+                    <!-- Data Grid -->
+                    <DataGrid Grid.Row="3"
+                              ItemsSource="{Binding MemberReportsData}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E5EAF2"
+                              RowHeight="44" BorderThickness="0"
+                              Background="White" RowBackground="White"
+                              AlternatingRowBackground="#F8FAFC"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                              Style="{StaticResource ReadableDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Beneficiary Code" Binding="{Binding BeneficiaryCode}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="170">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Household ID" Binding="{Binding HouseholdId}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Relationship" Binding="{Binding Relationship}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Program" Binding="{Binding Program}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Claims" Binding="{Binding TotalClaims}" Width="70">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="TextAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Total Claimed"
+                                                Binding="{Binding TotalClaimed, StringFormat=₱{0:N2}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Payments" Binding="{Binding TotalPayments}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="TextAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Total Paid"
+                                                Binding="{Binding TotalPaymentAmount, StringFormat=₱{0:N2}}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="12,0"/>
+                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>

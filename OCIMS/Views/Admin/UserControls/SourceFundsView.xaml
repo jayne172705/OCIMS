@@ -68,6 +68,7 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Button Command="{Binding NewCommand}"
+                            Visibility="{Binding CanEditSourceFunds, Converter={StaticResource BoolToVisibilityConverter}}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             Foreground="{StaticResource PrimaryBrush}"
                             BorderBrush="{StaticResource PrimaryBrush}"
@@ -382,8 +383,8 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="0,0,0,1" Padding="12,8">
-                                <TextBlock Foreground="#1D4ED8" FontSize="12">
+                            <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="0,0,0,1" Padding="12,8">
+                                <TextBlock Foreground="#166534" FontSize="12">
                                     <Run Text="Matched: "/>
                                     <Run Text="{Binding GgmsMatchedCount, Mode=OneWay}" FontWeight="SemiBold"/>
                                     <Run Text="   Needs review: "/>
@@ -460,6 +461,7 @@
                                  Margin="0,0,0,18"/>
 
                         <Button Command="{Binding SaveCommand}"
+                                Visibility="{Binding CanEditSourceFunds, Converter={StaticResource BoolToVisibilityConverter}}"
                                 Background="{StaticResource PrimaryBrush}"
                                 Foreground="White"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
@@ -471,7 +473,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Grid>
+                        <Grid Visibility="{Binding CanEditSourceFunds, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="10"/>
@@ -496,10 +498,10 @@
                             </Button>
                         </Grid>
 
-                        <Border Background="#EFF6FF" CornerRadius="6" Padding="12" Margin="0,20,0,0">
+                        <Border Background="#F0FDF4" CornerRadius="6" Padding="12" Margin="0,20,0,0">
                             <TextBlock Text="Use this page to maintain Job Order, Casual, and Regular employee budget sources. When a track budget is depleted, request the next fund allocation through GGMS."
                                        TextWrapping="Wrap"
-                                       Foreground="#1D4ED8"
+                                       Foreground="#166534"
                                        FontSize="12"/>
                         </Border>
                     </StackPanel>

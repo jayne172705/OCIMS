@@ -26,7 +26,7 @@
         </Grid.RowDefinitions>
 
         <!-- Title Bar -->
-        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -215,7 +215,7 @@
                                        ConverterParameter=Invert}"/>
 
                         <!-- Selected Employee Preview -->
-                        <materialDesign:Card Margin="0,16,0,0" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                        <materialDesign:Card Margin="0,16,0,0" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
                                              materialDesign:ElevationAssist.Elevation="Dp0"
                                              Visibility="{Binding HasEmployee,
                                                  Converter={StaticResource BoolToVisibilityConverter}}">
@@ -224,7 +224,7 @@
                                            FontSize="10" Foreground="#64748B"/>
                                 <TextBlock Text="{Binding SelectedEmployee.FullName, Mode=OneWay}"
                                            FontSize="14" FontWeight="Bold"
-                                           Foreground="#1565C0"/>
+                                           Foreground="#2E7D32"/>
                                 <TextBlock FontSize="11" Foreground="#64748B">
                                     <Run Text="{Binding SelectedEmployee.EmployeeNo}"/>
                                     <Run Text=" · "/>
@@ -244,7 +244,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
                     <StackPanel>
 
-                        <!-- Claim Type + Amount -->
+                        <!-- Claim Type + Total Covered -->
                         <Grid Margin="0,12,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -258,13 +258,14 @@
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       FontSize="13"/>
                             <TextBox Grid.Column="2"
-                                     Text="{Binding AmountClaimed,
-                                         UpdateSourceTrigger=PropertyChanged,
+                                     Text="{Binding TotalCovered,
+                                         Mode=OneWay,
                                          StringFormat={}{0:N2}}"
-                                     materialDesign:HintAssist.Hint="Amount Claimed (₱) *"
+                                     materialDesign:HintAssist.Hint="Total Covered (₱)"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      IsReadOnly="True"
-                                     Background="#F8FAFC"
+                                     Background="#F1F8F2"
+                                     FontWeight="Bold"
                                      FontSize="13"/>
                         </Grid>
 
@@ -273,40 +274,98 @@
                                    Margin="0,0,0,12"
                                    TextWrapping="Wrap"/>
 
+                        <!-- Admission + Discharge dates (auto-computes covered days) -->
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0"
-                                     Text="{Binding AdmissionDays, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Admitted / Hospitalized Days *"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     FontSize="13"/>
-                            <Border Grid.Column="2"
-                                    Background="#F8FAFC"
-                                    BorderBrush="#DDE4EF"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Padding="10,7">
-                                <StackPanel>
-                                    <TextBlock FontSize="11">
-                                        <Run Text="Covered days: "/>
-                                        <Run Text="{Binding CoveredAllowanceDays, Mode=OneWay}"/>
-                                        <Run Text=" / 5"/>
-                                    </TextBlock>
-                                    <TextBlock FontSize="11">
-                                        <Run Text="Daily allowance: PHP "/>
-                                        <Run Text="{Binding DailyAllowanceRate, Mode=OneWay, StringFormat={}{0:N2}}"/>
-                                    </TextBlock>
-                                    <TextBlock FontSize="12" FontWeight="SemiBold">
-                                        <Run Text="Total allowance: PHP "/>
-                                        <Run Text="{Binding DailyAllowanceAmount, Mode=OneWay, StringFormat={}{0:N2}}"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
+                            <DatePicker Grid.Column="0"
+                                        SelectedDate="{Binding AdmissionDate}"
+                                        materialDesign:HintAssist.Hint="Admission Date *"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        FontSize="13"/>
+                            <DatePicker Grid.Column="2"
+                                        SelectedDate="{Binding DischargeDate}"
+                                        materialDesign:HintAssist.Hint="Discharge Date *"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        FontSize="13"/>
                         </Grid>
+
+                        <!-- Claim breakdown table -->
+                        <Border Background="#F8FAFC" BorderBrush="#DDE4EF" BorderThickness="1"
+                                CornerRadius="4" Padding="14,12" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Claim Breakdown" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                <!-- Daily allowance -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Daily Allowance" FontSize="12" FontWeight="Medium"/>
+                                        <TextBlock FontSize="10" Foreground="#64748B">
+                                            <Run Text="PHP 750/day ×"/>
+                                            <Run Text="{Binding CoveredAllowanceDays, Mode=OneWay}"/>
+                                            <Run Text="day(s), max 5"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                               Text="{Binding DailyAllowanceAmount, Mode=OneWay, StringFormat='PHP {0:N2}'}"/>
+                                </Grid>
+
+                                <!-- Total excess bill -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Total Excess Bill" FontSize="12" FontWeight="Medium"/>
+                                        <TextBlock Text="covered up to PHP 20,000" FontSize="10" Foreground="#64748B"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1"
+                                             Text="{Binding ExcessBillAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                             materialDesign:HintAssist.Hint="Amount (₱)"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             FontSize="12" Margin="8,0"/>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                               Text="{Binding ExcessBillCovered, Mode=OneWay, StringFormat='PHP {0:N2}'}"/>
+                                </Grid>
+
+                                <!-- Outside diagnostics -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Outside Diagnostics" FontSize="12" FontWeight="Medium"/>
+                                        <TextBlock Text="50% covered, up to PHP 20,000" FontSize="10" Foreground="#64748B"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1"
+                                             Text="{Binding OutsideDiagnosticsAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                             materialDesign:HintAssist.Hint="Amount (₱)"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             FontSize="12" Margin="8,0"/>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                               Text="{Binding DiagnosticsCovered, Mode=OneWay, StringFormat='PHP {0:N2}'}"/>
+                                </Grid>
+
+                                <Border BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Padding="0,8,0,0">
+                                    <Grid>
+                                        <TextBlock Text="Total Covered" FontSize="13" FontWeight="Bold" Foreground="#166534"/>
+                                        <TextBlock HorizontalAlignment="Right" FontSize="15" FontWeight="Bold" Foreground="#166534"
+                                                   Text="{Binding TotalCovered, Mode=OneWay, StringFormat='PHP {0:N2}'}"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
                         <!-- Claim Date + Incident Date -->
                         <Grid Margin="0,0,0,12">
@@ -382,25 +441,52 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Orientation="Horizontal"
-                                Margin="0,8,0,12">
-                        <Button Command="{Binding AddDocumentCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Foreground="{StaticResource PrimaryBrush}"
-                                BorderBrush="{StaticResource PrimaryBrush}"
-                                Height="34" Padding="12,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="PaperclipPlus"
-                                                         Width="16" Height="16"
-                                                         Margin="0,0,6,0"
-                                                         VerticalAlignment="Center"/>
-                                <TextBlock Text="Add Proof / Requirement" FontSize="12"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <TextBlock Text="Required before review. Supports PDF, images, Word documents."
+                    <StackPanel Grid.Row="0" Margin="0,8,0,12">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Command="{Binding AddHospitalBillCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="{StaticResource PrimaryBrush}"
+                                    BorderBrush="{StaticResource PrimaryBrush}"
+                                    Height="34" Padding="12,0" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileDocumentOutline"
+                                                             Width="16" Height="16"
+                                                             Margin="0,0,6,0"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Hospital Bill" FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddOfficialReceiptCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="{StaticResource PrimaryBrush}"
+                                    BorderBrush="{StaticResource PrimaryBrush}"
+                                    Height="34" Padding="12,0" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ReceiptTextOutline"
+                                                             Width="16" Height="16"
+                                                             Margin="0,0,6,0"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Official Receipt" FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddDocumentCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Height="34" Padding="12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PaperclipPlus"
+                                                             Width="16" Height="16"
+                                                             Margin="0,0,6,0"
+                                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="Other" FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="Attach the hospital bill and official receipt. Images or PDF only, 5 MB max per file."
                                    FontSize="11"
-                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                   Margin="0,8,0,0"/>
                     </StackPanel>
 
                     <Border Grid.Row="1"

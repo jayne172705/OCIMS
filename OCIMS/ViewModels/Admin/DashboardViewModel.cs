@@ -19,7 +19,7 @@ namespace eSureHi.ViewModels.Admin
     {
         public string Label { get; set; } = string.Empty;
         public int Count { get; set; }
-        public string ColorHex { get; set; } = "#1565C0";
+        public string ColorHex { get; set; } = "#2E7D32";
         public double BarHeight { get; set; }
     }
 
@@ -28,7 +28,7 @@ namespace eSureHi.ViewModels.Admin
         public string Action { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string TimeAgo { get; set; } = string.Empty;
-        public string DotColor { get; set; } = "#1565C0";
+        public string DotColor { get; set; } = "#2E7D32";
     }
 
     public class CalendarDay
@@ -73,6 +73,28 @@ namespace eSureHi.ViewModels.Admin
         {
             get => _totalBeneficiaries;
             set => SetProperty(ref _totalBeneficiaries, value);
+        }
+
+        // ── User-role landing summary ──────────────────────────────────
+        private int _myPendingMembers;
+        public int MyPendingMembers
+        {
+            get => _myPendingMembers;
+            set => SetProperty(ref _myPendingMembers, value);
+        }
+
+        private int _linkedActiveMembers;
+        public int LinkedActiveMembers
+        {
+            get => _linkedActiveMembers;
+            set => SetProperty(ref _linkedActiveMembers, value);
+        }
+
+        private int _myRecentClaims;
+        public int MyRecentClaims
+        {
+            get => _myRecentClaims;
+            set => SetProperty(ref _myRecentClaims, value);
         }
         public int TotalBenefits
         {
@@ -174,6 +196,27 @@ namespace eSureHi.ViewModels.Admin
         {
             get => _isBudgetFundsPopupOpen;
             set => SetProperty(ref _isBudgetFundsPopupOpen, value);
+        }
+
+        private bool _isClaimsManagementPopupOpen;
+        public bool IsClaimsManagementPopupOpen
+        {
+            get => _isClaimsManagementPopupOpen;
+            set => SetProperty(ref _isClaimsManagementPopupOpen, value);
+        }
+
+        private bool _isPaymentManagementPopupOpen;
+        public bool IsPaymentManagementPopupOpen
+        {
+            get => _isPaymentManagementPopupOpen;
+            set => SetProperty(ref _isPaymentManagementPopupOpen, value);
+        }
+
+        private bool _isReportsPopupOpen;
+        public bool IsReportsPopupOpen
+        {
+            get => _isReportsPopupOpen;
+            set => SetProperty(ref _isReportsPopupOpen, value);
         }
 
         public bool CanAccessManageMembers => PermissionService.CanAccessBeneficiaries;
@@ -285,6 +328,20 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand QuickManageMembersCommand { get; }
         public RelayCommand QuickCompanyProfileCommand { get; }
         public RelayCommand QuickSettingsCommand { get; }
+        public RelayCommand QuickFileClaimCommand { get; }
+        public RelayCommand QuickGroupClaimCommand { get; }
+        public RelayCommand QuickAdvancePaymentCommand { get; }
+        public RelayCommand QuickPendingPaymentsCommand { get; }
+        public RelayCommand QuickPaymentLedgerCommand { get; }
+        public RelayCommand QuickMonthlyPaymentReportCommand { get; }
+        public RelayCommand QuickMonthlyClaimsReportCommand { get; }
+        public RelayCommand QuickMemberReportsCommand { get; }
+        public RelayCommand QuickAnnouncementsCommand { get; }
+        public RelayCommand QuickManageAccountsCommand { get; }
+        public RelayCommand ToggleMemberManagementCommand { get; }
+        public RelayCommand ToggleClaimsManagementCommand { get; }
+        public RelayCommand TogglePaymentManagementCommand { get; }
+        public RelayCommand ToggleReportsCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
         public RelayCommand LogoutCommand { get; }
         public RelayCommand ChangeProfileImageCommand { get; }
@@ -391,7 +448,7 @@ namespace eSureHi.ViewModels.Admin
             QuickBarangayFundsCommand = new RelayCommand(() =>
             {
                 IsBudgetFundsPopupOpen = false;
-                OpenPage("Source of Funds", () => new SourceFundsView(SourceFundsLandingMode.BarangayFunds));
+                OpenPage("Distribution Management", () => new eSureHi.Views.Admin.UserControls.DistributionBatchView());
             });
 
             QuickGroupFundsCommand = new RelayCommand(() =>
@@ -403,9 +460,10 @@ namespace eSureHi.ViewModels.Admin
             QuickCedulasCommand = new RelayCommand(() => OpenPage("Cedulas", () => new CedulaManagementView()));
             
             QuickBeneficiariesCommand = new RelayCommand(() =>
-            {
-                IsMemberManagementPopupOpen = !IsMemberManagementPopupOpen;
-            });
+{
+    IsMemberManagementPopupOpen = false;
+    OpenPage("Register Member", () => new BeneficiariesView(null, openInitialSearch: false));
+});
 
             QuickRegisterMemberCommand = new RelayCommand(() =>
             {
@@ -423,6 +481,84 @@ namespace eSureHi.ViewModels.Admin
 
             QuickSettingsCommand = new RelayCommand(() =>
                 OpenPage("Settings", () => new SettingsView()));
+
+            // Claims Management popup (User landing + Admin)
+            QuickFileClaimCommand = new RelayCommand(() =>
+            {
+                IsClaimsManagementPopupOpen = false;
+                OpenPage("File a Claim", () => new ClaimsView(ClaimsListMode.All));
+            });
+            QuickGroupClaimCommand = new RelayCommand(() =>
+            {
+                IsClaimsManagementPopupOpen = false;
+                OpenPage("Group Claim", () => new ClaimsView(ClaimsListMode.GroupClaim));
+            });
+
+            // Payment Management popup
+            QuickAdvancePaymentCommand = new RelayCommand(() =>
+            {
+                IsPaymentManagementPopupOpen = false;
+                OpenPage("Advance Payment", () => new AdvancePaymentView());
+            });
+            QuickPendingPaymentsCommand = new RelayCommand(() =>
+            {
+                IsPaymentManagementPopupOpen = false;
+                OpenPage("Pending Payment", () => new PaymentsView(PaymentsListMode.PendingOnly));
+            });
+            QuickPaymentLedgerCommand = new RelayCommand(() =>
+            {
+                IsPaymentManagementPopupOpen = false;
+                OpenPage("All Payment Ledger", () => new PaymentsView(PaymentsListMode.All));
+            });
+
+            // Generate Reports popup — each opens the Reports page scoped to its own tab
+            QuickMonthlyPaymentReportCommand = new RelayCommand(() =>
+            {
+                IsReportsPopupOpen = false;
+                OpenPage("Reports", () => new ReportsView(4));
+            });
+            QuickMonthlyClaimsReportCommand = new RelayCommand(() =>
+            {
+                IsReportsPopupOpen = false;
+                OpenPage("Reports", () => new ReportsView(5));
+            });
+            QuickMemberReportsCommand = new RelayCommand(() =>
+            {
+                IsReportsPopupOpen = false;
+                OpenPage("Reports", () => new ReportsView(6));
+            });
+
+            // Admin landing tiles
+            QuickAnnouncementsCommand = new RelayCommand(() =>
+                OpenPage("Announcements", () => new AnnouncementsView()));
+            QuickManageAccountsCommand = new RelayCommand(() =>
+                OpenPage("Manage Accounts", () => new ManageAccountsView()));
+
+            // User-landing tile toggles — open one sub-menu popup, close the others.
+            ToggleMemberManagementCommand = new RelayCommand(() =>
+            {
+                bool open = !IsMemberManagementPopupOpen;
+                CloseLandingPopups();
+                IsMemberManagementPopupOpen = open;
+            });
+            ToggleClaimsManagementCommand = new RelayCommand(() =>
+            {
+                bool open = !IsClaimsManagementPopupOpen;
+                CloseLandingPopups();
+                IsClaimsManagementPopupOpen = open;
+            });
+            TogglePaymentManagementCommand = new RelayCommand(() =>
+            {
+                bool open = !IsPaymentManagementPopupOpen;
+                CloseLandingPopups();
+                IsPaymentManagementPopupOpen = open;
+            });
+            ToggleReportsCommand = new RelayCommand(() =>
+            {
+                bool open = !IsReportsPopupOpen;
+                CloseLandingPopups();
+                IsReportsPopupOpen = open;
+            });
 
             LogoutCommand = new RelayCommand(Logout);
             ChangeProfileImageCommand = new RelayCommand(ChangeProfileImage);
@@ -461,6 +597,16 @@ namespace eSureHi.ViewModels.Admin
                                      c.ClaimStatus == "Under Review");
 
                 TotalBeneficiaries = await db.Beneficiaries.CountAsync();
+
+                // User-landing summary. NOTE: Beneficiary has no "registered by" column,
+                // so pending is system-wide (WorkflowStatus == Pending), not per-user.
+                // Add a RegisteredBy column later if true per-user attribution is required.
+                MyPendingMembers = await db.Beneficiaries
+                    .CountAsync(b => b.WorkflowStatus == "Pending");
+                LinkedActiveMembers = await db.Beneficiaries
+                    .CountAsync(b => b.IsActive && b.WorkflowStatus != "Pending");
+                MyRecentClaims = await db.Claims
+                    .CountAsync(c => c.ClaimStatus != "Draft");
                 TotalBenefits = await db.Benefits.CountAsync();
                 TotalUsers = await db.SystemUsers.CountAsync();
                 TotalLogs = await db.AuditLogs.CountAsync();
@@ -487,7 +633,7 @@ namespace eSureHi.ViewModels.Admin
                 var claimColors = new Dictionary<string, string>
                 {
                     { "Draft",              "#9E9E9E" },
-                    { "Submitted",          "#1565C0" },
+                    { "Submitted",          "#2E7D32" },
                     { "Under Review",       "#F57F17" },
                     { "Approved",           "#2E7D32" },
                     { "Partially Approved", "#558B2F" },
@@ -504,7 +650,7 @@ namespace eSureHi.ViewModels.Admin
                         Label = item.Status,
                         Count = item.Count,
                         ColorHex = claimColors.TryGetValue(item.Status, out var cc)
-                                        ? cc : "#1565C0",
+                                        ? cc : "#2E7D32",
                         BarHeight = Math.Max(6,
                                         item.Count / (double)maxClaims * 120)
                     });
@@ -525,7 +671,7 @@ namespace eSureHi.ViewModels.Admin
                     { "Unpaid",  "#C62828" },
                     { "Partial", "#F57F17" },
                     { "Late",    "#E65100" },
-                    { "Waived",  "#1565C0" }
+                    { "Waived",  "#2E7D32" }
                 };
 
                 int maxPremiums = premiumData.Any() ? premiumData.Max(x => x.Count) : 1;
@@ -536,7 +682,7 @@ namespace eSureHi.ViewModels.Admin
                         Label = item.Status,
                         Count = item.Count,
                         ColorHex = premiumColors.TryGetValue(item.Status, out var pc)
-                                        ? pc : "#1565C0",
+                                        ? pc : "#2E7D32",
                         BarHeight = Math.Max(6,
                                         item.Count / (double)maxPremiums * 120)
                     });
@@ -553,7 +699,7 @@ namespace eSureHi.ViewModels.Admin
                 var actionColors = new Dictionary<string, string>
                 {
                     { "INSERT", "#2E7D32" },
-                    { "UPDATE", "#1565C0" },
+                    { "UPDATE", "#2E7D32" },
                     { "DELETE", "#C62828" },
                     { "LOGIN",  "#F57F17" }
                 };
@@ -687,6 +833,15 @@ namespace eSureHi.ViewModels.Admin
             var path = ProfileImageService.PickAndSaveCurrentProfileImage();
             if (!string.IsNullOrWhiteSpace(path))
                 ProfileImagePath = path;
+        }
+
+        private void CloseLandingPopups()
+        {
+            IsMemberManagementPopupOpen = false;
+            IsClaimsManagementPopupOpen = false;
+            IsPaymentManagementPopupOpen = false;
+            IsReportsPopupOpen = false;
+            IsBudgetFundsPopupOpen = false;
         }
 
         private static void OpenPage(string page, Func<System.Windows.Controls.UserControl> createView)

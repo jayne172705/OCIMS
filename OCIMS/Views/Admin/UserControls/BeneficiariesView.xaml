@@ -34,9 +34,12 @@
             <Setter Property="Padding" Value="14,0"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
         </Style>
+
+        <helpers:QRCodeConverter x:Key="QRCodeConverter"/>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+    <materialDesign:DialogHost Identifier="BeneficiariesDialogHost" CloseOnClickAway="True">
+        <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="64"/>
             <RowDefinition Height="3"/>
@@ -52,8 +55,8 @@
                                              Foreground="{StaticResource PrimaryBrush}"
                                              Margin="0,0,10,0"/>
                     <TextBlock Text="Beneficiaries" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                    <Border Background="#E3F2FD" CornerRadius="10" Padding="8,2" Margin="12,0,0,0">
-                        <TextBlock FontSize="11" Foreground="#1565C0">
+                    <Border Background="#ECFDF3" CornerRadius="10" Padding="8,2" Margin="12,0,0,0">
+                        <TextBlock FontSize="11" Foreground="#2E7D32">
                             <Run Text="{Binding ActiveFilteredCount, Mode=OneWay}"/>
                             <Run Text=" shown"/>
                         </TextBlock>
@@ -185,7 +188,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <Border Width="34" Height="34" CornerRadius="17" Background="#EFF6FF" Margin="0,0,10,0">
+                                            <Border Width="34" Height="34" CornerRadius="17" Background="#F0FDF4" Margin="0,0,10,0">
                                                 <materialDesign:PackIcon Kind="Account"
                                                                          Width="19"
                                                                          Height="19"
@@ -195,52 +198,20 @@
                                             </Border>
                                             <StackPanel Grid.Column="1" MinWidth="0">
                                                 <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock FontSize="11" Foreground="#64748B" Margin="0,3,0,0" TextTrimming="CharacterEllipsis">
-                                                    <Run Text="{Binding BeneficiaryId}"/>
-                                                    <Run Text="  |  "/>
-                                                    <Run Text="{Binding Sex, TargetNullValue='No sex'}"/>
-                                                    <Run Text="  |  "/>
-                                                    <Run Text="{Binding DateOfBirth, TargetNullValue='No birth date'}"/>
-                                                </TextBlock>
+                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                    <TextBlock FontSize="11" Foreground="#64748B" VerticalAlignment="Center">
+                                                        <Run Text="{Binding BeneficiaryId}"/>
+                                                    </TextBlock>
+                                                    <Border Background="#EDE9FE" CornerRadius="8" Padding="6,2" Margin="8,0">
+                                                        <TextBlock Text="{Binding ResidentSearchRoleBadge}" FontSize="9" FontWeight="SemiBold" Foreground="#5B21B6"/>
+                                                    </Border>
+                                                    <TextBlock FontSize="11" Foreground="#64748B" VerticalAlignment="Center">
+                                                        <Run Text="  |  "/>
+                                                        <Run Text="{Binding DateOfBirth, TargetNullValue='No birth date'}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
                                             </StackPanel>
-                                            <Border Grid.Column="2"
-                                                    Padding="8,3"
-                                                    CornerRadius="10"
-                                                    VerticalAlignment="Center"
-                                                    Margin="10,0,0,0"
-                                                    BorderThickness="1">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#FFF8E1"/>
-                                                        <Setter Property="BorderBrush" Value="#FDE68A"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding LinkStatus}" Value="Linked">
-                                                                <Setter Property="Background" Value="#E8F5E9"/>
-                                                                <Setter Property="BorderBrush" Value="#C8E6C9"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding LinkStatus}" Value="Skipped">
-                                                                <Setter Property="Background" Value="#F1F5F9"/>
-                                                                <Setter Property="BorderBrush" Value="#E2E8F0"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock Text="{Binding LinkStatus}" FontSize="10" FontWeight="Bold">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#B78103"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding LinkStatus}" Value="Linked">
-                                                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding LinkStatus}" Value="Skipped">
-                                                                    <Setter Property="Foreground" Value="#475569"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Border>
+
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -256,14 +227,52 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border Padding="12,10" BorderBrush="#E5EAF2" BorderThickness="0,0,0,1">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding FullName}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock FontSize="11" Foreground="#64748B" Margin="0,3,0,0" TextTrimming="CharacterEllipsis">
-                                                <Run Text="{Binding BeneficiaryId, TargetNullValue='No ID'}"/>
-                                                <Run Text="  |  "/>
-                                                <Run Text="{Binding Employee.FullName, TargetNullValue='No linked employee'}"/>
-                                            </TextBlock>
-                                        </StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding FullName}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock FontSize="11" Foreground="#64748B" Margin="0,3,0,0" TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding BeneficiaryId, TargetNullValue='No ID'}"/>
+                                                    <Run Text="  |  "/>
+                                                    <Run Text="{Binding Employee.FullName, TargetNullValue='No linked employee'}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    CornerRadius="10"
+                                                    Padding="9,3"
+                                                    Margin="8,0,0,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#E2E8F0"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding WorkflowStatus}" Value="Pending">
+                                                                <Setter Property="Background" Value="#FFF3D6"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding WorkflowStatus}" Value="UnderReview">
+                                                                <Setter Property="Background" Value="#FFF3D6"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding WorkflowStatus}" Value="Approved">
+                                                                <Setter Property="Background" Value="#D6EFD8"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding WorkflowStatus}" Value="Released">
+                                                                <Setter Property="Background" Value="#D6EFD8"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding WorkflowStatus}" Value="Rejected">
+                                                                <Setter Property="Background" Value="#FADBDB"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding WorkflowStatus, TargetNullValue='—'}"
+                                                           FontSize="10"
+                                                           FontWeight="Bold"
+                                                           Foreground="#334155"/>
+                                            </Border>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -345,20 +354,30 @@
                                         <TextBlock Text="{Binding SelectedRecord.CivilRegistryId, TargetNullValue='None'}" Style="{StaticResource InfoValue}"/>
                                     </StackPanel>
                                     <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="Family Role" Style="{StaticResource InfoLabel}"/>
+                                        <TextBlock Text="{Binding SelectedRecord.DemographicFamilyRole, TargetNullValue='Unknown'}" Style="{StaticResource InfoValue}"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,0,8">
                                         <TextBlock Text="Master List Status" Style="{StaticResource InfoLabel}"/>
                                         <TextBlock Text="{Binding ProfileStatus}" Style="{StaticResource InfoValue}"/>
                                     </StackPanel>
                                 </UniformGrid>
 
-                                <Border Grid.Column="2"
-                                        CornerRadius="16"
-                                        BorderBrush="#94A3B8"
-                                        BorderThickness="1"
-                                        Padding="14,7"
-                                        VerticalAlignment="Top"
-                                        Background="#F8FAFC">
-                                    <TextBlock Text="{Binding SelectedRecord.LinkStatus}" FontSize="12" FontWeight="Bold" Foreground="#475569"/>
-                                </Border>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right">
+                                    <Border CornerRadius="16"
+                                            BorderBrush="#94A3B8"
+                                            BorderThickness="1"
+                                            Padding="14,7"
+                                            Background="#F8FAFC"
+                                            Margin="0,0,0,10">
+                                        <TextBlock Text="{Binding SelectedRecord.LinkStatus}" FontSize="12" FontWeight="Bold" Foreground="#475569"/>
+                                    </Border>
+                                    
+                                    <Border CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="5" Background="White" Width="100" Height="100">
+                                        <Image Source="{Binding SelectedRecord.BeneficiaryId, Converter={StaticResource QRCodeConverter}}" Stretch="Uniform" ToolTip="Scan for Distribution"/>
+                                    </Border>
+                                    <Button Content="Print ID" Style="{StaticResource MaterialDesignOutlinedButton}" Click="PrintIdCardBtn_Click" Margin="0,10,0,0" Height="30" FontSize="11" Padding="8,0"/>
+                                </StackPanel>
                             </Grid>
                         </Border>
 
@@ -449,29 +468,39 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <StackPanel>
-                                        <TextBox Text="{Binding EmployeeSearch, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="Search employee to link (optional)..."
-                                                 materialDesign:TextFieldAssist.HasLeadingIcon="True"
-                                                 materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                 Height="48"
-                                                 Margin="0,0,0,8"/>
-                                        <ListBox ItemsSource="{Binding FilteredEmployees}"
-                                                 SelectedItem="{Binding SelectedEmployee}"
-                                                 Height="120"
-                                                 BorderBrush="#DDE4EF"
-                                                 BorderThickness="1">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Margin="6,4">
-                                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"/>
-                                                        <TextBlock Text="{Binding EmployeeNo}" FontSize="11" Foreground="#64748B"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </StackPanel>
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <TextBlock Text="Family Members" FontWeight="SemiBold" FontSize="14" Foreground="#1E293B"/>
+                                                <Border Background="#DCFCE7" CornerRadius="10" Padding="6,2" Margin="8,0,0,0">
+                                                    <TextBlock Text="{Binding FamilyMembers.Count}" FontSize="11" FontWeight="Bold" Foreground="#166534"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock FontSize="12" Foreground="#64748B" Margin="0,0,0,8" TextWrapping="Wrap">
+                                                <Run Text="All residents sharing Family ID "/>
+                                                <Run Text="{Binding SelectedRecord.DemographicFamilyId}" FontWeight="SemiBold"/>
+                                            </TextBlock>
+                                            <ListBox ItemsSource="{Binding FamilyMembers}" Height="150" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,4,0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="13" Foreground="#334155" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Text="{Binding FamilyRole}" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                            <Border Grid.Column="1" Background="{Binding RegistrationStatusBackground}" CornerRadius="10" Padding="6,2" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding RegistrationStatus}" Foreground="{Binding RegistrationStatusForeground}" FontSize="10" FontWeight="SemiBold"/>
+                                                            </Border>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
 
                                     <Grid Grid.Column="2">
                                         <Grid.ColumnDefinitions>
@@ -581,6 +610,7 @@
 
                             <Button Command="{Binding ApproveMemberCommand}"
                                     IsEnabled="{Binding CanApproveMember}"
+                                    Visibility="{Binding ShowApprovalControls, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Background="{StaticResource PrimaryBrush}"
                                     Style="{StaticResource FooterActionButton}">
                                 <StackPanel Orientation="Horizontal">
@@ -608,4 +638,5 @@
             </Grid>
         </Grid>
     </Grid>
+    </materialDesign:DialogHost>
 </UserControl>

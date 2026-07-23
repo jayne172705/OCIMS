@@ -40,9 +40,9 @@ namespace eSureHi.ViewModels.Admin
         {
             "Urgent" => "#C62828",
             "High" => "#E65100",
-            "Normal" => "#1565C0",
+            "Normal" => "#2E7D32",
             "Low" => "#757575",
-            _ => "#1565C0"
+            _ => "#2E7D32"
         };
 
         // ── Remarks for transition ─────────────────────────────────────

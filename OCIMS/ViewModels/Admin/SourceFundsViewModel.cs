@@ -110,12 +110,13 @@ namespace eSureHi.ViewModels.Admin
 
     public class SourceFundsViewModel : ObservableObject
     {
-        private static readonly string[] EmployeeTrackFunds = { "Job Order", "Casual", "Regular" };
+        private static readonly string[] EmployeeTrackFunds = { "Job Order", "Casual", "Regular", "Captain" };
         private static readonly (string Code, string Name, string Type, decimal Budget)[] EmployeeTrackDefinitions =
         {
             ("POL-JOBORDER-001", "Job Order", "Job Order", 250000m),
             ("POL-CASUAL-001", "Casual", "Casual", 500000m),
-            ("POL-REGULAR-001", "Regular", "Regular", 1000000m)
+            ("POL-REGULAR-001", "Regular", "Regular", 1000000m),
+            ("POL-CAPTAIN-001", "Captain", "Captain", 150000m)
         };
         private static readonly string[] BarangayNames =
         {
@@ -200,7 +201,7 @@ namespace eSureHi.ViewModels.Admin
             _landingMode switch
             {
                 SourceFundsLandingMode.BarangayFunds => "Distribution of member funding by barangay",
-                SourceFundsLandingMode.GroupFunds => "Assigned Job Order, Casual, and Regular budget sources",
+                SourceFundsLandingMode.GroupFunds => "Assigned Job Order, Casual, Regular, and Captain budget sources",
                 SourceFundsLandingMode.AllocatedFunds => "Configured allocation coverage and track budgets",
                 _ => "Budget sources, coverage allocations, and GGMS matching"
             };
@@ -209,6 +210,7 @@ namespace eSureHi.ViewModels.Admin
         public bool IsStandardLanding => !IsBarangayLanding && !IsGroupLanding;
         public bool CanReleaseBarangayFunds =>
             PermissionService.IsAdminReviewer(AuthService.Instance.CurrentUser?.Role);
+        public bool CanEditSourceFunds => PermissionService.CanEditSourceFunds;
         public int GroupFundCount => GroupFunds.Count;
         public decimal GroupFundBalance => GroupFunds.Sum(item => item.Balance);
         public int AssignedGroupFundCount => GroupFunds.Count(item => !string.IsNullOrWhiteSpace(item.AssignedTo));
@@ -318,10 +320,10 @@ namespace eSureHi.ViewModels.Admin
                 _ => 1
             };
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
-            NewCommand = new RelayCommand(ClearForm);
+            NewCommand = new RelayCommand(ClearForm, () => CanEditSourceFunds);
             SaveCommand = new RelayCommand(async () => await SaveAsync(), CanSave);
-            DeleteCommand = new RelayCommand(async () => await DeleteAsync(), () => SelectedFund is not null);
-            ToggleStatusCommand = new RelayCommand(async () => await ToggleStatusAsync(), () => SelectedFund is not null);
+            DeleteCommand = new RelayCommand(async () => await DeleteAsync(), () => CanEditSourceFunds && SelectedFund is not null);
+            ToggleStatusCommand = new RelayCommand(async () => await ToggleStatusAsync(), () => CanEditSourceFunds && SelectedFund is not null);
             ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty);
             ExportCommand = new RelayCommand(ExportReport);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
@@ -557,7 +559,7 @@ namespace eSureHi.ViewModels.Admin
                     StringComparer.OrdinalIgnoreCase);
 
             var summaries = beneficiaries
-                .GroupBy(b => NormalizeBarangay(b.Employee?.Barangay))
+                .GroupBy(b => NormalizeBarangay(b.Employee?.Barangay), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(
                     group => group.Key,
                     group =>
@@ -1081,6 +1083,7 @@ namespace eSureHi.ViewModels.Admin
         }
 
         private bool CanSave() =>
+            CanEditSourceFunds &&
             EmployeeTrackFunds.Any(f => string.Equals(f, FundName.Trim(), StringComparison.OrdinalIgnoreCase));
 
         private async Task SaveAsync()

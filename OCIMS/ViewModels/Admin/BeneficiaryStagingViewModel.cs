@@ -14,6 +14,15 @@ using eSureHi.Views.Admin.UserControls;
 
 namespace eSureHi.ViewModels.Admin
 {
+    public class FamilyMemberDisplay
+    {
+        public string FullName { get; init; } = string.Empty;
+        public string FamilyRole { get; init; } = string.Empty;
+        public string RegistrationStatus { get; init; } = string.Empty;
+        public string RegistrationStatusBackground { get; init; } = "#F1F5F9";
+        public string RegistrationStatusForeground { get; init; } = "#475569";
+    }
+
     public class BeneficiaryStagingViewModel : ObservableObject
     {
         // ── Import State ───────────────────────────────────────────────
@@ -59,6 +68,7 @@ namespace eSureHi.ViewModels.Admin
 
         public ObservableCollection<Employee> Employees { get; } = new();
         public ObservableCollection<Employee> FilteredEmployees { get; } = new();
+        public ObservableCollection<FamilyMemberDisplay> FamilyMembers { get; } = new();
 
         private string _employeeSearch = string.Empty;
         public string EmployeeSearch
@@ -111,9 +121,13 @@ namespace eSureHi.ViewModels.Admin
                 ? "ADD TO INSURANCE"
                 : "SUBMIT FOR APPROVAL";
 
-        public bool CanReview => 
+        // Role-level gate for whether approval/review/release controls render at all.
+        // User-role registrars submit members for approval (Pending) and never see confirm controls.
+        public bool ShowApprovalControls => PermissionService.CanApproveWorkflow;
+
+        public bool CanReview =>
             PermissionService.CanApproveWorkflow &&
-            SelectedSystemBeneficiary != null && 
+            SelectedSystemBeneficiary != null &&
             SelectedSystemBeneficiary.WorkflowStatus == WorkflowStatuses.Pending;
 
         public bool CanApproveMember =>
@@ -383,6 +397,7 @@ namespace eSureHi.ViewModels.Admin
         public string ProfileStatus { get => _profileStatus; set => SetProperty(ref _profileStatus, value); }
         public string ProfileCedulaStatus { get => _profileCedulaStatus; set => SetProperty(ref _profileCedulaStatus, value); }
         public string ProfileTransactionStatus { get => _profileTransactionStatus; set => SetProperty(ref _profileTransactionStatus, value); }
+        public StatusIndicator GgmsSyncStatus { get; } = new();
         public string ProfileAddress { get => _profileAddress; set => SetProperty(ref _profileAddress, value); }
         public string EligibilityStatus { get => _eligibilityStatus; set => SetProperty(ref _eligibilityStatus, value); }
         private string _qualificationReason = "Select a beneficiary to review qualification.";
@@ -426,7 +441,11 @@ namespace eSureHi.ViewModels.Admin
                                       () => !IsImporting);
             CancelImportCommand = new RelayCommand(CancelImport,
                                       () => IsImporting);
-            RefreshCommand = new RelayCommand(async () => await LoadAsync());
+            RefreshCommand = new RelayCommand(async () => 
+        {
+            await AutoSyncCrsMasterListAsync(force: true);
+            await LoadAsync();
+        });
             SearchCommand = new RelayCommand(ApplyFilter);
             LinkCommand = new RelayCommand(async () => await LinkAsync(),
                                       () => CanAddBeneficiary);
@@ -661,6 +680,8 @@ namespace eSureHi.ViewModels.Admin
                     .ThenBy(b => b.FirstName)
                     .ToListAsync();
 
+                await EnrichWithDemographicsAsync(db, records);
+
                 _allRecords.Clear();
                 foreach (var r in records) _allRecords.Add(r);
 
@@ -677,6 +698,58 @@ namespace eSureHi.ViewModels.Admin
             }
             catch (Exception ex) { ErrorMessage = ex.Message; }
             finally { IsLoading = false; }
+        }
+
+        // Repopulates the [NotMapped] demographic fields (position/family role,
+        // family id, head-of-family flag) on staging rows from the persisted
+        // crs_beneficiary_cache. Without this, rows reloaded from beneficiary_staging
+        // lose the position that was only held in memory during import, so the
+        // role badge falls through to "UNCLASSIFIED".
+        private static async Task EnrichWithDemographicsAsync(
+            eSureHiDbContext db,
+            System.Collections.Generic.IReadOnlyList<BeneficiaryStaging> records,
+            CancellationToken cancellationToken = default)
+        {
+            if (records.Count == 0)
+                return;
+
+            var cacheRows = await db.CrsBeneficiaryCache
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            if (cacheRows.Count == 0)
+                return;
+
+            var byBeneficiaryId = new System.Collections.Generic.Dictionary<string, CrsBeneficiaryCache>(
+                StringComparer.OrdinalIgnoreCase);
+            var byResidentsId = new System.Collections.Generic.Dictionary<long, CrsBeneficiaryCache>();
+
+            foreach (var c in cacheRows)
+            {
+                if (!string.IsNullOrWhiteSpace(c.BeneficiaryId))
+                    byBeneficiaryId[c.BeneficiaryId] = c;
+                if (c.ResidentsId.HasValue)
+                    byResidentsId[c.ResidentsId.Value] = c;
+            }
+
+            foreach (var record in records)
+            {
+                CrsBeneficiaryCache? match = null;
+                if (!string.IsNullOrWhiteSpace(record.BeneficiaryId))
+                    byBeneficiaryId.TryGetValue(record.BeneficiaryId, out match);
+                if (match is null && record.ResidentsId.HasValue)
+                    byResidentsId.TryGetValue(record.ResidentsId.Value, out match);
+
+                if (match is null)
+                    continue;
+
+                record.FamilyRole = match.FamilyRole;
+                record.DemographicFamilyRole = match.FamilyRole ?? string.Empty;
+                record.DemographicFamilyId = match.FamilyId ?? string.Empty;
+                record.DemographicRelationshipToHead = match.RelationshipToHead ?? string.Empty;
+                record.IsDemographicHeadOfFamily = match.IsHouseholdHead;
+                record.HasDemographicProfile = !string.IsNullOrWhiteSpace(match.FamilyRole);
+            }
         }
 
         private void QueueSelectionSearch()
@@ -729,6 +802,8 @@ namespace eSureHi.ViewModels.Admin
                     .ThenBy(r => r.FirstName)
                     .Take(80)
                     .ToListAsync(cancellationToken);
+
+                await EnrichWithDemographicsAsync(db, records, cancellationToken);
 
                 DisplayedRecords.Clear();
                 foreach (var record in records)
@@ -858,6 +933,7 @@ namespace eSureHi.ViewModels.Admin
             ProfileTransactions.Clear();
             ProfileCedulas.Clear();
             ProfileRequirements.Clear();
+            FamilyMembers.Clear();
             ProfileBeneficiary = null;
             ProfileEmployee = null;
             ProfileAddress = record.Address ?? string.Empty;
@@ -865,6 +941,7 @@ namespace eSureHi.ViewModels.Admin
             ProfileCedulaStatus = "No cedula payment found";
             ProfileTransactionStatus = "Searching transactions...";
             EligibilityStatus = "Evaluating...";
+            GgmsSyncStatus.Clear();
 
             try
             {
@@ -1003,11 +1080,67 @@ namespace eSureHi.ViewModels.Admin
                         });
                     }
                 }
-                catch { /* GGMS offline? Ignore and continue with local data */ }
+                catch
+                {
+                    GgmsSyncStatus.Set("GGMS unavailable — showing local transactions and benefits only.", StatusSeverity.Warning);
+                }
 
                 ProfileTransactionStatus = ProfileTransactions.Any()
                     ? $"{ProfileTransactions.Count} transaction(s) found"
                     : "No transactions found";
+
+                if (!string.IsNullOrWhiteSpace(record.DemographicFamilyId))
+                {
+                    var familyMembers = await db.CrsBeneficiaryCache
+                        .Where(c => c.FamilyId == record.DemographicFamilyId)
+                        .ToListAsync();
+
+                    var civilRegistryIds = familyMembers
+                        .Where(m => !string.IsNullOrWhiteSpace(m.CivilRegistryId))
+                        .Select(m => m.CivilRegistryId)
+                        .ToList();
+
+                    var activeBeneficiaries = await db.Beneficiaries
+                        .Where(b => b.IsActive && civilRegistryIds.Contains(b.CivilRegistryId))
+                        .Select(b => new { b.CivilRegistryId, b.IsPrimary })
+                        .ToListAsync();
+
+                    foreach (var member in familyMembers.OrderBy(m => m.IsHouseholdHead ? 0 : 1).ThenBy(m => m.FullName))
+                    {
+                        var status = "Not Registered";
+                        var bg = "#F1F5F9";
+                        var fg = "#64748B";
+
+                        if (!string.IsNullOrWhiteSpace(member.CivilRegistryId))
+                        {
+                            var ben = activeBeneficiaries.FirstOrDefault(b => b.CivilRegistryId == member.CivilRegistryId);
+                            if (ben != null)
+                            {
+                                if (ben.IsPrimary)
+                                {
+                                    status = "Registered Member";
+                                    bg = "#DCFCE7";
+                                    fg = "#166534";
+                                }
+                                else
+                                {
+                                    status = "Dependent";
+                                    bg = "#DBEAFE";
+                                    fg = "#1E40AF";
+                                }
+                            }
+                        }
+
+                        FamilyMembers.Add(new FamilyMemberDisplay
+                        {
+                            FullName = member.FullName ?? "Unknown",
+                            FamilyRole = string.IsNullOrWhiteSpace(member.FamilyRole) ? "MEMBER" : member.FamilyRole.ToUpper(),
+                            RegistrationStatus = status,
+                            RegistrationStatusBackground = bg,
+                            RegistrationStatusForeground = fg
+                        });
+                    }
+                }
 
                 BuildRequirements(record);
                 OnPropertyChanged(nameof(IsProfileOpen));
@@ -1033,9 +1166,9 @@ namespace eSureHi.ViewModels.Admin
             EmployeeSearch = string.Empty;
         }
 
-        private async Task AutoSyncCrsMasterListAsync()
+        private async Task AutoSyncCrsMasterListAsync(bool force = false)
         {
-            if (_hasAutoSyncedCrs || IsImporting)
+            if ((_hasAutoSyncedCrs && !force) || IsImporting)
                 return;
 
             var crsConfig = Data.SharedDatabaseConfiguration.LoadCrs();

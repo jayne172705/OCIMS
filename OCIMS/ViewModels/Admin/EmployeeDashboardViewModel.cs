@@ -14,7 +14,7 @@ namespace eSureHi.ViewModels.Admin
     {
         public string Title { get; set; } = string.Empty;
         public string Caption { get; set; } = string.Empty;
-        public string DotHex { get; set; } = "#1565C0";
+        public string DotHex { get; set; } = "#2E7D32";
         public string TimeText { get; set; } = string.Empty;
     }
 

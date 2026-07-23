@@ -14,7 +14,8 @@ namespace eSureHi.ViewModels.Admin
     public enum ClaimsListMode
     {
         All,
-        PendingOnly
+        PendingOnly,
+        GroupClaim
     }
 
     public class ClaimsViewModel : ObservableObject
@@ -52,6 +53,9 @@ namespace eSureHi.ViewModels.Admin
         private string _searchText = string.Empty;
         private string _statusFilter = "All";
         private string _typeFilter = "All";
+        private string _groupFilter = "All";
+        private string _monthFilter = "All";
+        private int? _yearFilter;
         private DateTime? _dateFrom;
         private DateTime? _dateTo;
 
@@ -69,6 +73,21 @@ namespace eSureHi.ViewModels.Admin
         {
             get => _typeFilter;
             set { SetProperty(ref _typeFilter, value); ApplyFilter(); }
+        }
+        public string GroupFilter
+        {
+            get => _groupFilter;
+            set { SetProperty(ref _groupFilter, value); ApplyFilter(); }
+        }
+        public string MonthFilter
+        {
+            get => _monthFilter;
+            set { SetProperty(ref _monthFilter, value); ApplyFilter(); }
+        }
+        public int? YearFilter
+        {
+            get => _yearFilter;
+            set { SetProperty(ref _yearFilter, value); ApplyFilter(); }
         }
         public DateTime? DateFrom
         {
@@ -88,25 +107,51 @@ namespace eSureHi.ViewModels.Admin
         public string[] TypeOptions { get; } =
             { "All", "Medical", "Dental", "Vision", "Life",
               "Accident", "Disability", "Reimbursement", "Other" };
-        public string PageTitle =>
-            _listMode == ClaimsListMode.PendingOnly ? "Pending Claims" : "All Claims";
-        public string PageSummaryText =>
-            _listMode == ClaimsListMode.PendingOnly
-                ? "Claims raised from barangays with insufficient funds, requiring municipal-level approval"
-                : "Browse, review, and process all filed claims.";
-        public bool CanFileClaim => _listMode != ClaimsListMode.PendingOnly;
+        public string[] GroupOptions { get; } =
+            { "All", "Job Order", "Casual", "Regular", "Captain" };
+        public string[] MonthOptions { get; } =
+            { "All", "January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December" };
+        public int[] YearOptions { get; } =
+            Enumerable.Range(DateTime.Now.Year - 4, 5).Reverse().ToArray();
+        public string PageTitle => _listMode switch
+        {
+            ClaimsListMode.PendingOnly => "Pending Claims",
+            ClaimsListMode.GroupClaim => "Group Claim",
+            _ => "All Claims"
+        };
+        public string PageSummaryText => _listMode switch
+        {
+            ClaimsListMode.PendingOnly =>
+                "Claims raised from barangays with insufficient funds, requiring municipal-level approval",
+            ClaimsListMode.GroupClaim =>
+                "Filter and process claims grouped by funding source/program.",
+            _ => "Browse, review, and process all filed claims."
+        };
+        public bool CanFileClaim => _listMode == ClaimsListMode.All;
         public bool IsPendingOnly => _listMode == ClaimsListMode.PendingOnly;
         public bool IsAllMode => _listMode == ClaimsListMode.All;
+        public bool IsGroupClaimMode => _listMode == ClaimsListMode.GroupClaim;
+        public string EmptyStateText => "No claims found matching the selected filters.";
 
         // ── Counts ─────────────────────────────────────────────────────
         private int _totalCount;
         private int _filteredCount;
         public int TotalCount { get => _totalCount; set => SetProperty(ref _totalCount, value); }
-        public int FilteredCount { get => _filteredCount; set => SetProperty(ref _filteredCount, value); }
+        public int FilteredCount
+        {
+            get => _filteredCount;
+            set { SetProperty(ref _filteredCount, value); OnPropertyChanged(nameof(NoResults)); }
+        }
+        public bool NoResults => !IsLoading && FilteredCount == 0;
 
         // ── State ──────────────────────────────────────────────────────
         private bool _isLoading;
-        public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set { SetProperty(ref _isLoading, value); OnPropertyChanged(nameof(NoResults)); }
+        }
 
         // ── Commands ───────────────────────────────────────────────────
         public RelayCommand NewCommand { get; }
@@ -115,6 +160,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand EditCommand { get; }
         public RelayCommand ClearFilterCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
+        public RelayCommand<Claim> PrintVoucherCommand { get; }
 
         // ── Constructor ────────────────────────────────────────────────
         public ClaimsViewModel(ClaimsListMode listMode = ClaimsListMode.All)
@@ -129,6 +175,7 @@ namespace eSureHi.ViewModels.Admin
                                      () => SelectedClaim?.ClaimStatus == "Draft");
             ClearFilterCommand = new RelayCommand(ClearFilters);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
+            PrintVoucherCommand = new RelayCommand<Claim>(PrintVoucher);
 
             _ = LoadAsync();
         }
@@ -202,6 +249,19 @@ namespace eSureHi.ViewModels.Admin
                 q = q.Where(c => c.ClaimDate <= to);
             }
 
+            if (_listMode == ClaimsListMode.GroupClaim)
+            {
+                if (GroupFilter != "All")
+                    q = q.Where(c => c.SourceOfFunds == GroupFilter);
+                if (MonthFilter != "All")
+                {
+                    int monthNum = Array.IndexOf(MonthOptions, MonthFilter);
+                    if (monthNum > 0) q = q.Where(c => c.ClaimDate?.Month == monthNum);
+                }
+                if (YearFilter.HasValue)
+                    q = q.Where(c => c.ClaimDate?.Year == YearFilter.Value);
+            }
+
             DisplayedClaims.Clear();
             foreach (var c in q) DisplayedClaims.Add(c);
             FilteredCount = DisplayedClaims.Count;
@@ -244,14 +304,35 @@ namespace eSureHi.ViewModels.Admin
             _searchText = string.Empty;
             _statusFilter = _listMode == ClaimsListMode.PendingOnly ? "All Pending" : "All";
             _typeFilter = "All";
+            _groupFilter = "All";
+            _monthFilter = "All";
+            _yearFilter = null;
             _dateFrom = null;
             _dateTo = null;
             OnPropertyChanged(nameof(SearchText));
             OnPropertyChanged(nameof(StatusFilter));
             OnPropertyChanged(nameof(TypeFilter));
+            OnPropertyChanged(nameof(GroupFilter));
+            OnPropertyChanged(nameof(MonthFilter));
+            OnPropertyChanged(nameof(YearFilter));
             OnPropertyChanged(nameof(DateFrom));
             OnPropertyChanged(nameof(DateTo));
             ApplyFilter();
+        }
+
+        // ── Print Voucher ──────────────────────────────────────────────
+        private void PrintVoucher(Claim? claim)
+        {
+            if (claim is null) return;
+            try
+            {
+                ReportExportService.PrintClaimVoucher(claim);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Print voucher failed: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // ── Navigation ─────────────────────────────────────────────────

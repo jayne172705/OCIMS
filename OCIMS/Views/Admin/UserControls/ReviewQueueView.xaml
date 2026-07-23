@@ -282,8 +282,8 @@
                                         VerticalAlignment="Top">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#E3F2FD"/>
-                                            <Setter Property="BorderBrush" Value="#1565C0"/>
+                                            <Setter Property="Background" Value="#ECFDF3"/>
+                                            <Setter Property="BorderBrush" Value="#2E7D32"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedDetail.ClaimStatus}" Value="Under Review">
                                                     <Setter Property="Background" Value="#FFF7ED"/>
@@ -309,7 +309,7 @@
                                                FontWeight="Bold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#1565C0"/>
+                                                <Setter Property="Foreground" Value="#2E7D32"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding SelectedDetail.ClaimStatus}" Value="Under Review">
                                                         <Setter Property="Foreground" Value="#C2410C"/>
@@ -408,8 +408,8 @@
                         </Border>
 
                         <Border
-                        Background="#E3F2FD"
-                        BorderBrush="#BBDEFB"
+                        Background="#ECFDF3"
+                        BorderBrush="#BBF7D0"
                         BorderThickness="1"
                         Padding="18,14">
                     <Grid>

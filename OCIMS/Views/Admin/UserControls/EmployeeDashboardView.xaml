@@ -83,7 +83,7 @@
                         <StackPanel>
                             <Border Width="54"
                                     Height="54"
-                                    CornerRadius="27" Background="#1D4ED8" helpers:Adaptive.UseAdaptiveForeground="True"
+                                    CornerRadius="27" Background="#166534" helpers:Adaptive.UseAdaptiveForeground="True"
                                     HorizontalAlignment="Left">
                                 <materialDesign:PackIcon Kind="AccountHeartOutline"
                                                          Width="28"
@@ -109,7 +109,7 @@
                                         Padding="10,6"
                                         Margin="0,0,10,10">
                                     <TextBlock Text="{Binding EmployeeNumber, Mode=OneWay}"
-                                               Foreground="#DBEAFE"
+                                               Foreground="#DCFCE7"
                                                FontWeight="SemiBold"/>
                                 </Border>
                                 <Border Background="#0F766E" helpers:Adaptive.UseAdaptiveForeground="True"
@@ -366,7 +366,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="42" Height="42" CornerRadius="12" Background="#DBEAFE" helpers:Adaptive.UseAdaptiveForeground="True">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#DCFCE7" helpers:Adaptive.UseAdaptiveForeground="True">
                                         <materialDesign:PackIcon Kind="AccountCircleOutline" Width="22" Height="22" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel Grid.Column="1" Margin="12,0,0,0">

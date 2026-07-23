@@ -100,11 +100,11 @@
 
                                 <UniformGrid Columns="3" Margin="0,0,0,30">
                                     <Button Command="{Binding ApplyLocalPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Height="50"
-                                            BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}" BorderThickness="2">LOCAL</Button>
+                                            BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">LOCAL</Button>
                                     <Button Command="{Binding ApplyNetworkPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Height="50"
-                                            BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}" BorderThickness="2">NETWORK LAN</Button>
+                                            BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">NETWORK LAN</Button>
                                     <Button Command="{Binding ApplyRemotePresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="50"
-                                            BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}" BorderThickness="2">REMOTE</Button>
+                                            BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">REMOTE</Button>
                                 </UniformGrid>
 
                                 <StackPanel IsEnabled="{Binding IsAppDbEditable}">

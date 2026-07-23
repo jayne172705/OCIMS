@@ -17,7 +17,7 @@
 
     <Window.Resources>
         <Style x:Key="SidebarNavButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Foreground" Value="#1565C0"/>
+            <Setter Property="Foreground" Value="#2E7D32"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Height" Value="44"/>
@@ -26,7 +26,7 @@
             <Setter Property="FontWeight" Value="Bold"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#EFF6FF"/>
+                    <Setter Property="Background" Value="#F0FDF4"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -57,7 +57,7 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#EFF6FF"/>
+                    <Setter Property="Background" Value="#F0FDF4"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -81,7 +81,7 @@
             <Setter Property="FontWeight" Value="Bold"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#EFF6FF"/>
+                    <Setter Property="Background" Value="#F0FDF4"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -301,7 +301,7 @@
                                                                     <Setter Property="Background" Value="White"/>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding IsRead}" Value="False">
-                                                                            <Setter Property="Background" Value="#EFF6FF"/>
+                                                                            <Setter Property="Background" Value="#F0FDF4"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -498,52 +498,23 @@
                                 </StackPanel>
                             </Button>
 
-                            <StackPanel Visibility="{Binding CanAccessManageMembers, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <Button Command="{Binding OpenMemberManagementCommand}"
-                                        Style="{StaticResource SidebarGroupButton}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="Member Management" FontSize="13" VerticalAlignment="Center"/>
-                                        <Grid Grid.Column="2">
-                                            <materialDesign:PackIcon Kind="ChevronDown"
-                                                                     Width="18"
-                                                                     Height="18"
-                                                                     VerticalAlignment="Center"
-                                                                     Visibility="{Binding IsMemberManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
-                                            <materialDesign:PackIcon Kind="ChevronUp"
-                                                                     Width="18"
-                                                                     Height="18"
-                                                                     VerticalAlignment="Center"
-                                                                     Visibility="{Binding IsMemberManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                        </Grid>
-                                    </Grid>
-                                </Button>
-                                <Border Style="{StaticResource SidebarGroupPanel}"
-                                        Visibility="{Binding IsMemberManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <StackPanel>
-                                        <Button Command="{Binding NavRegisterMemberCommand}"
-                                                Style="{StaticResource SidebarGroupItemButton}"
-                                                Visibility="{Binding CanAccessRegisterMember, Converter={StaticResource BoolToVisibilityConverter}}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="AccountPlus" Width="20" Height="20" Margin="0,0,12,0"/>
-                                                <TextBlock Text="CRS Listview" FontSize="13"/>
-                                            </StackPanel>
-                                        </Button>
-                                        <Button Command="{Binding NavManageMembersCommand}"
-                                                Style="{StaticResource SidebarGroupItemButton}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20" Margin="0,0,12,0"/>
-                                                <TextBlock Text="Manage Members" FontSize="13"/>
-                                            </StackPanel>
-                                        </Button>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+                            <Button Command="{Binding NavManageMembersCommand}" 
+                                    Style="{StaticResource SidebarNavButton}"
+                                    Visibility="{Binding CanAccessManageMembers, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Member Management" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{Binding NavDistributionCommand}"
+                                    Style="{StaticResource SidebarNavButton}"
+                                    Visibility="{Binding CanAccessDistribution, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="TruckDelivery" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Distribution" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
 
                             <StackPanel Visibility="{Binding CanAccessClaims, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Button Command="{Binding OpenClaimsMenuCommand}"
@@ -555,7 +526,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <materialDesign:PackIcon Kind="ClipboardList" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="Claims" FontSize="13" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Claim" FontSize="13" VerticalAlignment="Center"/>
                                         <Grid Grid.Column="2">
                                             <materialDesign:PackIcon Kind="ChevronDown"
                                                                      Width="18"
@@ -638,7 +609,7 @@
                                                 Style="{StaticResource SidebarGroupItemButton}">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="BankTransfer" Width="20" Height="20" Margin="0,0,12,0"/>
-                                                <TextBlock Text="Allocated Funds" FontSize="13"/>
+                                                <TextBlock Text="Allocated Budget" FontSize="13"/>
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
@@ -686,12 +657,238 @@
                                                 Visibility="{Binding CanAccessAnnouncements, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="Bullhorn" Width="20" Height="20" Margin="0,0,12,0"/>
-                                                <TextBlock Text="Announcements" FontSize="13"/>
+                                                <TextBlock Text="Announcement" FontSize="13"/>
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
+
+                            <Button Command="{Binding NavTransactionsCommand}"
+                                    Style="{StaticResource SidebarNavButton}"
+                                    Visibility="{Binding CanAccessTransactions, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="SwapHorizontal" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Transaction" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Payments group (shared with User role) -->
+                            <StackPanel Visibility="{Binding CanAccessPayments, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Button Command="{Binding OpenPaymentManagementCommand}" Style="{StaticResource SidebarGroupButton}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Kind="CashMultiple" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Payments" FontSize="13" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronDown" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource SidebarGroupPanel}"
+                                        Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <Button Command="{Binding NavAdvancePaymentCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CashFast" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Advance Payment" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavPendingPaymentCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CashClock" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Pending Payment" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavAllPaymentLedgerCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="BookOpenVariant" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="All Payment Ledger" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- ============ USER (registrar) navigation flow ============ -->
+                        <StackPanel Margin="0,4"
+                                    Visibility="{Binding IsUserNavigationFlow, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Button Command="{Binding NavDashboardCommand}" Style="{StaticResource SidebarNavButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ViewDashboard" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Dashboard" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Manage Member group -->
+                            <StackPanel>
+                                <Button Command="{Binding OpenMemberManagementCommand}" Style="{StaticResource SidebarGroupButton}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Manage Member" FontSize="13" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronDown" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsMemberManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsMemberManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource SidebarGroupPanel}"
+                                        Visibility="{Binding IsMemberManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <Button Command="{Binding NavRegisterMemberCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="AccountPlus" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Register Member" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavManageMembersCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="AccountSearch" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Manage Member" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Claims Management group -->
+                            <StackPanel>
+                                <Button Command="{Binding OpenClaimsManagementCommand}" Style="{StaticResource SidebarGroupButton}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Kind="ClipboardList" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Claims Management" FontSize="13" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronDown" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsClaimsManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsClaimsManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource SidebarGroupPanel}"
+                                        Visibility="{Binding IsClaimsManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <Button Command="{Binding NavFileClaimCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ClipboardPlus" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="File a Claim" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavGroupClaimCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ClipboardMultiple" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Group Claim" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Payment Management group -->
+                            <StackPanel>
+                                <Button Command="{Binding OpenPaymentManagementCommand}" Style="{StaticResource SidebarGroupButton}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Kind="CashMultiple" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Payment Management" FontSize="13" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronDown" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource SidebarGroupPanel}"
+                                        Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <Button Command="{Binding NavAdvancePaymentCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CashFast" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Advance Payment" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavPendingPaymentCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CashClock" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Pending Payment" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavAllPaymentLedgerCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="BookOpenVariant" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="All Payment Ledger" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Generate Reports group -->
+                            <StackPanel>
+                                <Button Command="{Binding OpenReportsMenuCommand}" Style="{StaticResource SidebarGroupButton}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Kind="ChartBar" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Generate Reports" FontSize="13" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronDown" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsReportsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" Width="18" Height="18" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsReportsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource SidebarGroupPanel}"
+                                        Visibility="{Binding IsReportsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <Button Command="{Binding NavReportsCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CashMultiple" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Monthly Payment" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavReportsCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ClipboardList" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Monthly Claims" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding NavReportsCommand}" Style="{StaticResource SidebarGroupItemButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20" Margin="0,0,12,0"/>
+                                                <TextBlock Text="Member Reports" FontSize="13"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Budget Funds (view-only) -->
+                            <Button Command="{Binding NavSourceFundsCommand}" Style="{StaticResource SidebarNavButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Wallet" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Budget Funds" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
 
                         <StackPanel Margin="0,4"
@@ -708,17 +905,6 @@
                                        Margin="16,16,16,4"
                                        Visibility="{Binding ShowMemberManagementSection, Converter={StaticResource BoolToVisibilityConverter}}"/>
                             <StackPanel Visibility="{Binding ShowMemberManagementMenu, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <Button Command="{Binding NavRegisterMemberCommand}"
-                                        Style="{StaticResource SidebarNavButton}"
-                                        Visibility="{Binding CanAccessRegisterMember, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="AccountPlus"
-                                                                 Width="20"
-                                                                 Height="20"
-                                                                 Margin="0,0,12,0"/>
-                                        <TextBlock Text="CRS Listview" FontSize="13"/>
-                                    </StackPanel>
-                                </Button>
                                 <Button Command="{Binding NavManageMembersCommand}"
                                         Style="{StaticResource SidebarNavButton}"
                                         Visibility="{Binding CanAccessManageMembers, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -727,7 +913,7 @@
                                                                  Width="20"
                                                                  Height="20"
                                                                  Margin="0,0,12,0"/>
-                                        <TextBlock Text="Manage Members" FontSize="13"/>
+                                        <TextBlock Text="Manage Member" FontSize="13"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

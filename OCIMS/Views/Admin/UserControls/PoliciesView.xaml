@@ -29,7 +29,7 @@
                                              Margin="0,0,10,0"/>
                     <TextBlock Text="Employee Tracks"
                                FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Border Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
+                    <Border Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
                             Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock FontSize="11" Foreground="White">
                             <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
@@ -177,7 +177,7 @@
                 <DataGridTemplateColumn Header="Type" Width="110">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="10,3" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True"
+                            <Border CornerRadius="10" Padding="10,3" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
                                     HorizontalAlignment="Left"
                                     Margin="0,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding PolicyType}"

@@ -21,7 +21,7 @@
                BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="68"/>
             <Setter Property="Margin" Value="0,0,14,14"/>
-            <Setter Property="Background" Value="#E8F2FF"/>
+            <Setter Property="Background" Value="#ECFDF3"/>
             <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>

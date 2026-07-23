@@ -37,19 +37,19 @@
             <Button Content="Local"
                     Command="{Binding PresetLocalCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                    BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}"
+                    BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
                     Margin="0,0,10,0" Width="124" Height="40"/>
             <Button Content="Network"
                     Command="{Binding PresetNetworkCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                    BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}"
+                    BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
                     Margin="0,0,10,0" Width="124" Height="40"/>
             <Button Content="Remote"
                     Command="{Binding PresetRemoteCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                    BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2196F3'}"
+                    BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
                     Width="124" Height="40"/>
         </StackPanel>

@@ -78,6 +78,9 @@ namespace eSureHi.ViewModels.Admin
         private bool _isLoading;
         public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
 
+        // ── Sync status (visible, non-silent GGMS failures) ──────────────
+        public StatusIndicator SyncStatus { get; } = new();
+
         // ── Commands ───────────────────────────────────────────────────
         public RelayCommand NewCommand { get; }
         public RelayCommand RefreshCommand { get; }
@@ -93,9 +96,9 @@ namespace eSureHi.ViewModels.Admin
             NewCommand = new RelayCommand(OpenNewDialog);
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
             ViewCommand = new RelayCommand(OpenDetailDialog,
-                                     () => SelectedTransaction is not null);
+                                     () => SelectedTransaction is { TransactionId: > 0 });
             EditCommand = new RelayCommand(OpenEditDialog,
-                                     () => SelectedTransaction?.Status == "Pending");
+                                     () => SelectedTransaction is { TransactionId: > 0 } && SelectedTransaction.Status == "Pending");
             ClearFilterCommand = new RelayCommand(ClearFilters);
             UploadToEGoogGovCommand = new RelayCommand(async () => await UploadToEGoogGovAsync(), () => CanUploadToEGoogGov && DisplayedTransactions.Any());
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
@@ -112,14 +115,41 @@ namespace eSureHi.ViewModels.Admin
             try
             {
                 using var db = eSureHiDbContextFactory.Create();
-                var list = await db.DocumentTransactions
+                var merged = await db.DocumentTransactions
                     .Include(t => t.Sender)
                     .Include(t => t.Receiver)
-                    .OrderByDescending(t => t.CreatedAt)
                     .ToListAsync();
 
+                // ── Merge system-wide GGMS-sourced transactions ──
+                try
+                {
+                    using var ggmsDb = GgmsDbContextFactory.Create();
+                    var ggmsTransactions = await ggmsDb.GgmsTransactions.ToListAsync();
+
+                    foreach (var gt in ggmsTransactions)
+                    {
+                        merged.Add(new DocumentTransaction
+                        {
+                            TransactionNo = gt.ProjectCode,
+                            TransactionType = gt.TransactionType,
+                            Subject = $"{gt.ProjectName} ({gt.OfficeName})",
+                            Status = gt.Status,
+                            Priority = "Normal",
+                            TransactionDate = gt.TransactionDate,
+                            CreatedAt = gt.CreatedAt ?? gt.TransactionDate.ToDateTime(TimeOnly.MinValue),
+                            Sender = new Sender { SenderName = gt.OfficeName },
+                            Receiver = new Receiver { ReceiverName = gt.FullName }
+                        });
+                    }
+                    SyncStatus.Clear();
+                }
+                catch
+                {
+                    SyncStatus.Set("GGMS unavailable — showing local transactions only.", StatusSeverity.Warning);
+                }
+
                 _all.Clear();
-                foreach (var t in list) _all.Add(t);
+                foreach (var t in merged.OrderByDescending(t => t.CreatedAt)) _all.Add(t);
                 TotalCount = _all.Count;
                 ApplyFilter();
             }
@@ -166,7 +196,7 @@ namespace eSureHi.ViewModels.Admin
         // ── Edit ───────────────────────────────────────────────────────
         private void OpenEditDialog()
         {
-            if (SelectedTransaction is null) return;
+            if (SelectedTransaction is not { TransactionId: > 0 }) return;
             var dialog = new Views.Admin.Dialogs.TransactionFormDialog(
                 SelectedTransaction.TransactionId);
             dialog.SetSaveCallback(async () => await LoadAsync());
@@ -177,7 +207,7 @@ namespace eSureHi.ViewModels.Admin
         // ── View Detail ────────────────────────────────────────────────
         private void OpenDetailDialog()
         {
-            if (SelectedTransaction is null) return;
+            if (SelectedTransaction is not { TransactionId: > 0 }) return;
             var dialog = new Views.Admin.Dialogs.TransactionDetailDialog(
                 SelectedTransaction.TransactionId);
             dialog.SetStatusChangedCallback(async () => await LoadAsync());

@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <SolidColorBrush x:Key="TileEmployeesBrush" Color="#D94E35"/>
         <SolidColorBrush x:Key="TileBeneficiariesBrush" Color="#8312A7"/>
-        <SolidColorBrush x:Key="TilePoliciesBrush" Color="#236DB7"/>
+        <SolidColorBrush x:Key="TilePoliciesBrush" Color="#2E7D32"/>
         <SolidColorBrush x:Key="TileClaimsBrush" Color="#0F7E61"/>
         <SolidColorBrush x:Key="TileReportsBrush" Color="#B40058"/>
         <SolidColorBrush x:Key="TilePremiumsBrush" Color="#2E8D31"/>
@@ -19,14 +19,14 @@
         <SolidColorBrush x:Key="TileDocumentsBrush" Color="#51372F"/>
         <SolidColorBrush x:Key="TileTransactionsBrush" Color="#344D54"/>
         <SolidColorBrush x:Key="TileReviewQueueBrush" Color="#E8461A"/>
-        <SolidColorBrush x:Key="TileDashboardBrush" Color="#168DBA"/>
+        <SolidColorBrush x:Key="TileDashboardBrush" Color="#1B7A3D"/>
         <SolidColorBrush x:Key="TileAnnouncementsBrush" Color="#00796B"/>
-        <SolidColorBrush x:Key="TileDistributionBrush" Color="#1261A0"/>
+        <SolidColorBrush x:Key="TileDistributionBrush" Color="#2E7D32"/>
         <SolidColorBrush x:Key="TileSettingsBrush" Color="#414141"/>
 
         <LinearGradientBrush x:Key="DashboardHeaderBrush" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#1D56A6" Offset="0"/>
-            <GradientStop Color="#259DDF" Offset="1"/>
+            <GradientStop Color="#1B5E20" Offset="0"/>
+            <GradientStop Color="#43A047" Offset="1"/>
         </LinearGradientBrush>
 
         <Style x:Key="DashboardTileButton" TargetType="Button">
@@ -138,12 +138,38 @@
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Member, Payment, Claim, and Fund Workflow"
                                FontSize="10"
-                               Foreground="#CFE8FF"/>
+                               Foreground="#D6EFD8"/>
                     <TextBlock Text="SURE HI Health Initiative"
                                FontSize="20"
                                FontWeight="Bold"
                                Foreground="White"
                                Margin="0,3,0,0"/>
+
+                    <StackPanel Orientation="Horizontal"
+                                Margin="0,6,0,0"
+                                Visibility="{Binding ShowUserLandingDashboard, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,18,0">
+                            <TextBlock Text="{Binding MyPendingMembers}"
+                                       FontSize="15" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="Pending members"
+                                       FontSize="11" Foreground="#D6EFD8"
+                                       VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,18,0">
+                            <TextBlock Text="{Binding LinkedActiveMembers}"
+                                       FontSize="15" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="Active members"
+                                       FontSize="11" Foreground="#D6EFD8"
+                                       VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding MyRecentClaims}"
+                                       FontSize="15" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="Recent claims"
+                                       FontSize="11" Foreground="#D6EFD8"
+                                       VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1"
@@ -157,7 +183,7 @@
                                    HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding CurrentRoleDisplay}"
                                    FontSize="10"
-                                   Foreground="#D8ECFF"
+                                   Foreground="#D6EFD8"
                                    HorizontalAlignment="Right"/>
                     </StackPanel>
                     <Button Command="{Binding ChangeProfileImageCommand}"
@@ -171,7 +197,7 @@
                                 CornerRadius="21"
                                 BorderBrush="White"
                                 BorderThickness="2"
-                                Background="#2469B6"
+                                Background="#2E7D32"
                                 ClipToBounds="True">
                             <Grid>
                                 <TextBlock Text="{Binding UserInitials}"
@@ -229,7 +255,7 @@
                         Grid.Column="0"
                         Style="{StaticResource DashboardTileButton}"
                         Background="{StaticResource TileBeneficiariesBrush}"
-                        Command="{Binding QuickBeneficiariesCommand}">
+                        Command="{Binding ToggleMemberManagementCommand}">
                     <StackPanel VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="AccountGroup"
                                                  Width="42"
@@ -307,7 +333,7 @@
                         Grid.Column="1"
                         Style="{StaticResource DashboardTileButton}"
                         Background="{StaticResource TileClaimsBrush}"
-                        Command="{Binding QuickNewClaimCommand}">
+                        Command="{Binding ToggleClaimsManagementCommand}">
                     <StackPanel VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="ClipboardCheck"
                                                  Width="42"
@@ -397,7 +423,7 @@
                         Grid.Column="2"
                         Style="{StaticResource DashboardTileButton}"
                         Background="{StaticResource TilePremiumsBrush}"
-                        Command="{Binding QuickPremiumsCommand}">
+                        Command="{Binding TogglePaymentManagementCommand}">
                     <StackPanel VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="CashMultiple"
                                                  Width="42"
@@ -507,7 +533,7 @@
                         Grid.Column="3"
                         Style="{StaticResource DashboardTileButton}"
                         Background="{StaticResource TileReportsBrush}"
-                        Command="{Binding QuickViewReportsCommand}">
+                        Command="{Binding ToggleReportsCommand}">
                     <StackPanel VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="ChartBar"
                                                  Width="42"
@@ -735,7 +761,6 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -743,10 +768,11 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
+            <!-- ROW 0 -->
             <Button x:Name="AdminMemberManagementTile"
                     Grid.Row="0"
                     Grid.Column="0"
-                    Grid.ColumnSpan="2"
+                    Margin="4"
                     Style="{StaticResource DashboardTileButton}"
                     Background="{StaticResource TileBeneficiariesBrush}"
                     Command="{Binding QuickManageMembersCommand}">
@@ -761,10 +787,139 @@
                 </StackPanel>
             </Button>
 
-            <Button x:Name="AdminClaimsTile"
+            <Button Style="{StaticResource DashboardTileButton}"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="4"
+                    Background="{StaticResource TileDistributionBrush}"
+                    Command="{Binding QuickBarangayFundsCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="BankTransferOut"
+                                             Width="34"
+                                             Height="34"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="DISTRIBUTION" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Release and monitor barangay funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
+
+            <Button Style="{StaticResource DashboardTileButton}"
                     Grid.Row="0"
                     Grid.Column="2"
+                    Margin="4"
+                    Background="{StaticResource TileTransactionsBrush}"
+                    Command="{Binding QuickTransactionsCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="History"
+                                             Width="34"
+                                             Height="34"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="TRANSACTION" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="View transaction history and logs" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
+
+            <Border Grid.Row="0"
+                    Grid.Column="3"
+                    Grid.RowSpan="2"
+                    Margin="4"
+                    CornerRadius="7"
+                    Background="White"
+                    BorderBrush="#DDE7F0"
+                    BorderThickness="1">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Margin="10">
+                    <Border Width="74"
+                            Height="74"
+                            CornerRadius="37"
+                            Background="#F6FBFF"
+                            BorderBrush="#BFE5FF"
+                            BorderThickness="1"
+                            Margin="0,0,0,12">
+                        <Image Source="pack://application:,,,/Assets/logo.png"
+                               Stretch="Uniform"
+                               Margin="8"/>
+                    </Border>
+                    <TextBlock Text="eSureHi+"
+                               FontSize="15"
+                               FontWeight="Bold"
+                               Foreground="#1E73BE"
+                               HorizontalAlignment="Center"/>
+                    <Border Width="110"
+                            Height="1"
+                            Background="#D7E7F2"
+                            Margin="0,10"/>
+                    <TextBlock Text="Municipality of Sulop"
+                               FontSize="12"
+                               Foreground="#64748B"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Health Initiative Management"
+                               FontSize="10"
+                               FontStyle="Italic"
+                               Foreground="#94A3B8"
+                               HorizontalAlignment="Center"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ROW 1 -->
+            <Border Grid.Row="1"
+                    Grid.Column="0"
                     Grid.ColumnSpan="2"
+                    Margin="4"
+                    CornerRadius="7"
+                    Background="#0B1F31"
+                    helpers:Adaptive.UseAdaptiveForeground="True">
+                <StackPanel VerticalAlignment="Center" Margin="16,0">
+                    <TextBlock Text="{Binding CurrentDateDisplay}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding CurrentTimeDisplay}"
+                               FontSize="16"
+                               Foreground="#B8D5EA"
+                               Margin="0,8,0,0"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Ellipse Width="10"
+                                 Height="10"
+                                 Fill="#38D65A"
+                                 VerticalAlignment="Center"
+                                 Margin="0,0,8,0"/>
+                        <TextBlock Text="SYSTEM READY"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="#39D764"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Button x:Name="AdminBudgetFundsTile"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="4"
+                    Style="{StaticResource DashboardTileButton}"
+                    Background="{StaticResource TilePremiumsBrush}"
+                    Command="{Binding QuickGroupFundsCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Wallet"
+                                             Width="38"
+                                             Height="38"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="BUDGET FUNDS" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Group and allocated funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
+
+            <!-- ROW 2 -->
+            <Button x:Name="AdminClaimsTile"
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="4"
                     Style="{StaticResource DashboardTileButton}"
                     Background="{StaticResource TileClaimsBrush}"
                     Command="{Binding QuickNewClaimCommand}">
@@ -844,174 +999,56 @@
                 </Border>
             </Popup>
 
-            <Border Grid.Row="0"
-                    Grid.Column="4"
-                    Grid.RowSpan="2"
-                    Margin="2"
-                    CornerRadius="7"
-                    Background="White"
-                    BorderBrush="#DDE7F0"
-                    BorderThickness="1">
-                <StackPanel HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Margin="10">
-                    <Border Width="74"
-                            Height="74"
-                            CornerRadius="37"
-                            Background="#F6FBFF"
-                            BorderBrush="#BFE5FF"
-                            BorderThickness="1"
-                            Margin="0,0,0,12">
-                        <Image Source="pack://application:,,,/Assets/logo.png"
-                               Stretch="Uniform"
-                               Margin="8"/>
-                    </Border>
-                    <TextBlock Text="eSureHi+"
-                               FontSize="15"
-                               FontWeight="Bold"
-                               Foreground="#1E73BE"
-                               HorizontalAlignment="Center"/>
-                    <Border Width="110"
-                            Height="1"
-                            Background="#D7E7F2"
-                            Margin="0,10"/>
-                    <TextBlock Text="Municipality of Sulop"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Health Initiative Management"
-                               FontSize="10"
-                               FontStyle="Italic"
-                               Foreground="#94A3B8"
-                               HorizontalAlignment="Center"
-                               Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <Border Grid.Row="1"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    Margin="2"
-                    CornerRadius="7"
-                    Background="#0B1F31"
-                    helpers:Adaptive.UseAdaptiveForeground="True">
-                <StackPanel VerticalAlignment="Center" Margin="16,0">
-                    <TextBlock Text="{Binding CurrentDateDisplay}"
-                               FontSize="22"
-                               FontWeight="Bold"
-                               Foreground="White"
-                               TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding CurrentTimeDisplay}"
-                               FontSize="16"
-                               Foreground="#B8D5EA"
-                               Margin="0,8,0,0"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Ellipse Width="10"
-                                 Height="10"
-                                 Fill="#38D65A"
-                                 VerticalAlignment="Center"
-                                 Margin="0,0,8,0"/>
-                        <TextBlock Text="SYSTEM READY"
-                                   FontSize="12"
-                                   FontWeight="Bold"
-                                   Foreground="#39D764"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <Button x:Name="AdminBudgetFundsTile"
-                    Grid.Row="1"
-                    Grid.Column="2"
-                    Grid.ColumnSpan="2"
-                    Style="{StaticResource DashboardTileButton}"
-                    Background="{StaticResource TilePremiumsBrush}"
-                    Command="{Binding QuickGroupFundsCommand}">
+            <Button Style="{StaticResource DashboardTileButton}"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Margin="4"
+                    Background="{StaticResource TileDashboardBrush}"
+                    Command="{Binding QuickDashboardCommand}">
                 <StackPanel VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="Wallet"
-                                             Width="38"
-                                             Height="38"
+                    <materialDesign:PackIcon Kind="ViewDashboard"
+                                             Width="34"
+                                             Height="34"
                                              Foreground="White"
                                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="BUDGET FUNDS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="Group and allocated funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    <TextBlock Text="DASHBOARD" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="View analytics and announcements" Style="{StaticResource TileSubtext}" FontSize="11"/>
                 </StackPanel>
             </Button>
 
-            <UniformGrid Grid.Row="2"
-                         Grid.Column="0"
-                         Grid.ColumnSpan="5"
-                         Columns="5">
-                <Button Style="{StaticResource DashboardTileButton}"
-                        Background="{StaticResource TileSettingsBrush}"
-                        Command="{Binding QuickManageAccountsCommand}">
-                    <StackPanel VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="ShieldAccount"
-                                                 Width="34"
-                                                 Height="34"
-                                                 Foreground="White"
-                                                 HorizontalAlignment="Center"/>
-                        <TextBlock Text="MANAGE ACCOUNTS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                        <TextBlock Text="Open access and account controls" Style="{StaticResource TileSubtext}" FontSize="11"/>
-                    </StackPanel>
-                </Button>
+            <Button Style="{StaticResource DashboardTileButton}"
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="4"
+                    Background="{StaticResource TileAnnouncementsBrush}"
+                    Command="{Binding QuickAnnouncementsCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Bullhorn"
+                                             Width="34"
+                                             Height="34"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="ANNOUNCEMENT" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Read and manage announcements" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
 
-                <Button Style="{StaticResource DashboardTileButton}"
-                        Background="{StaticResource TileDashboardBrush}"
-                        Command="{Binding QuickDashboardCommand}">
-                    <StackPanel VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="ViewDashboard"
-                                                 Width="34"
-                                                 Height="34"
-                                                 Foreground="White"
-                                                 HorizontalAlignment="Center"/>
-                        <TextBlock Text="DASHBOARD" Style="{StaticResource TileTitle}" FontSize="14"/>
-                        <TextBlock Text="View analytics and announcements" Style="{StaticResource TileSubtext}" FontSize="11"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{StaticResource DashboardTileButton}"
-                        Background="{StaticResource TileDistributionBrush}"
-                        Command="{Binding QuickBarangayFundsCommand}">
-                    <StackPanel VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="BankTransferOut"
-                                                 Width="34"
-                                                 Height="34"
-                                                 Foreground="White"
-                                                 HorizontalAlignment="Center"/>
-                        <TextBlock Text="DISTRIBUTION" Style="{StaticResource TileTitle}" FontSize="14"/>
-                        <TextBlock Text="Release and monitor barangay funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{StaticResource DashboardTileButton}"
-                        Background="{StaticResource TileAnnouncementsBrush}"
-                        Command="{Binding QuickAnnouncementsCommand}">
-                    <StackPanel VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Bullhorn"
-                                                 Width="34"
-                                                 Height="34"
-                                                 Foreground="White"
-                                                 HorizontalAlignment="Center"/>
-                        <TextBlock Text="ANNOUNCEMENTS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                        <TextBlock Text="Read and manage announcements" Style="{StaticResource TileSubtext}" FontSize="11"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{StaticResource DashboardTileButton}"
-                        Background="{StaticResource TileTransactionsBrush}"
-                        Command="{Binding QuickTransactionsCommand}">
-                    <StackPanel VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="History"
-                                                 Width="34"
-                                                 Height="34"
-                                                 Foreground="White"
-                                                 HorizontalAlignment="Center"/>
-                        <TextBlock Text="TRANSACTIONS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                        <TextBlock Text="View transaction history and logs" Style="{StaticResource TileSubtext}" FontSize="11"/>
-                    </StackPanel>
-                </Button>
-
-            </UniformGrid>
+            <Button Style="{StaticResource DashboardTileButton}"
+                    Grid.Row="2"
+                    Grid.Column="3"
+                    Margin="4"
+                    Background="{StaticResource TileSettingsBrush}"
+                    Command="{Binding QuickManageAccountsCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ShieldAccount"
+                                             Width="34"
+                                             Height="34"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="MANAGE ACCOUNTS" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Open access and account controls" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
 		</Grid>
 
 		<UniformGrid Grid.Row="1"

@@ -89,18 +89,18 @@
 
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <Border Background="#E3F2FD" BorderBrush="#BBDEFB" BorderThickness="0,0,0,1" Padding="10,6">
+                <Border Background="#ECFDF3" BorderBrush="#BBF7D0" BorderThickness="0,0,0,1" Padding="10,6">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ClockAlertOutline"
                                                  Width="15"
                                                  Height="15"
-                                                 Foreground="#1565C0"
+                                                 Foreground="#2E7D32"
                                                  Margin="0,0,6,0"/>
                         <TextBlock Text="PENDING"
                                    FontSize="12"
                                    FontWeight="Bold"
-                                   Foreground="#1565C0"/>
-                        <Border Background="#1565C0"
+                                   Foreground="#2E7D32"/>
+                        <Border Background="#2E7D32"
                                 CornerRadius="8"
                                 Padding="6,1"
                                 Margin="8,0,0,0">

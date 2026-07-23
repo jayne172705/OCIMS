@@ -10,6 +10,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -26,7 +27,16 @@
             </StackPanel>
         </Border>
 
-        <TabControl Grid.Row="1" Margin="10" Style="{StaticResource MaterialDesignFilledTabControl}">
+        <Border Grid.Row="1" Background="#FFF3E0" BorderBrush="#FFE0B2" BorderThickness="0,0,0,1" Padding="20,8"
+                Visibility="{Binding GgmsSyncStatus.HasMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="AlertCircleOutline" Width="16" Height="16"
+                                         Foreground="#E65100" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="{Binding GgmsSyncStatus.Message}" FontSize="12" Foreground="#E65100" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <TabControl Grid.Row="2" Margin="10" Style="{StaticResource MaterialDesignFilledTabControl}">
             <TabItem Header="Personal Info">
                 <ScrollViewer Margin="20">
                     <StackPanel>

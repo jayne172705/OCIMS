@@ -28,7 +28,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -92,8 +92,8 @@
                     <CheckBox Content="Settings" IsChecked="{Binding CanAccessSettings}" Margin="0,0,12,10"/>
                 </UniformGrid>
 
-                <Border Background="#EFF6FF"
-                        BorderBrush="#BFDBFE"
+                <Border Background="#F0FDF4"
+                        BorderBrush="#BBF7D0"
                         BorderThickness="1"
                         CornerRadius="4"
                         Padding="12,10"

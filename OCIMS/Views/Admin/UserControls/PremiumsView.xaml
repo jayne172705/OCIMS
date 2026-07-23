@@ -29,7 +29,7 @@
                                              VerticalAlignment="Center"
                                              Margin="0,0,10,0"/>
                     <TextBlock Text="Payments / Premiums" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Border Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
+                    <Border Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
                             Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock FontSize="11" Foreground="White">
                             <Run Text="{Binding FilteredCount, Mode=OneWay}"/>

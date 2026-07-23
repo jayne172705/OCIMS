@@ -26,7 +26,7 @@
         </Grid.RowDefinitions>
 
         <!-- ── Title Bar ── -->
-        <Border Grid.Row="0" Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -78,7 +78,7 @@
                                 <TextBlock Text="{Binding Transaction.Subject, Mode=OneWay}"
                                            FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <Border CornerRadius="10" Padding="8,2" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True" Margin="0,0,8,0">
+                                    <Border CornerRadius="10" Padding="8,2" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" Margin="0,0,8,0">
                                         <TextBlock Text="{Binding Transaction.TransactionType, Mode=OneWay}"
                                                    FontSize="11" FontWeight="Medium"
                                                    Foreground="{StaticResource PrimaryBrush}"/>
@@ -202,7 +202,7 @@
                                             <Setter Property="Background" Value="#FFF3E0"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding TxStatus}" Value="In Transit">
-                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                            <Setter Property="Background" Value="#ECFDF3"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding TxStatus}" Value="Received">
                                             <Setter Property="Background" Value="#F3E5F5"/>
@@ -230,7 +230,7 @@
                                                 <Setter Property="Foreground" Value="#E65100"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding TxStatus}" Value="In Transit">
-                                                <Setter Property="Foreground" Value="#1565C0"/>
+                                                <Setter Property="Foreground" Value="#2E7D32"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding TxStatus}" Value="Received">
                                                 <Setter Property="Foreground" Value="#6A1B9A"/>

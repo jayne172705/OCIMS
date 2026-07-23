@@ -80,13 +80,30 @@ namespace eSureHi.ViewModels.Admin
         public bool HasPolicies => EmployeePolicies.Count > 0;
         public decimal MonthlyContribution => SelectedEmployeePolicy?.EmployeeShare ?? 0;
         public decimal MaxClaimAmount => MonthlyContribution * 100;
-        public decimal DailyAllowanceRate => GetDailyAllowanceRate(MonthlyContribution);
-        public int CoveredAllowanceDays => Math.Min(Math.Max(AdmissionDays, 0), 5);
+
+        // ── Claim-breakdown rules (reference layout) ───────────────────
+        public const decimal DailyAllowancePerDay = 750m;   // PHP 750 / day
+        public const int MaxAllowanceDays = 5;              // capped at 5 days
+        public const decimal ExcessBillCap = 20000m;        // PHP 20,000 max
+        public const decimal DiagnosticsCoverageRate = 0.5m; // 50% covered
+        public const decimal DiagnosticsCap = 20000m;       // PHP 20,000 max
+
+        public decimal DailyAllowanceRate => DailyAllowancePerDay;
+        public int CoveredAllowanceDays => Math.Min(Math.Max(AdmissionDays, 0), MaxAllowanceDays);
         public decimal DailyAllowanceAmount => DailyAllowanceRate * CoveredAllowanceDays;
+
+        // Total Excess Bill — covered up to the PHP 20,000 cap.
+        public decimal ExcessBillCovered => Math.Min(Math.Max(ExcessBillAmount, 0), ExcessBillCap);
+        // Outside Diagnostics — 50% covered, capped at PHP 20,000.
+        public decimal DiagnosticsCovered =>
+            Math.Min(Math.Max(OutsideDiagnosticsAmount, 0) * DiagnosticsCoverageRate, DiagnosticsCap);
+        // Total Covered — the sum the claim pays out.
+        public decimal TotalCovered => DailyAllowanceAmount + ExcessBillCovered + DiagnosticsCovered;
+
         public string ClaimLimitText =>
             SelectedEmployeePolicy is null
                 ? "Select a policy to see the claim limit."
-                : $"Monthly contribution: PHP {MonthlyContribution:N2} - Daily allowance: PHP {DailyAllowanceRate:N2}/day - Maximum claim: PHP {MaxClaimAmount:N2}";
+                : $"Daily allowance: PHP {DailyAllowanceRate:N2}/day (max {MaxAllowanceDays} days) - Excess bill cap: PHP {ExcessBillCap:N0} - Diagnostics: {DiagnosticsCoverageRate:P0} up to PHP {DiagnosticsCap:N0}";
 
         private Beneficiary? _selectedBeneficiary;
         public Beneficiary? SelectedBeneficiary
@@ -99,8 +116,12 @@ namespace eSureHi.ViewModels.Admin
         private string _claimType = "Medical";
         private DateTime? _claimDate = DateTime.Today;
         private DateTime? _incidentDate = DateTime.Today;
+        private DateTime? _admissionDate;
+        private DateTime? _dischargeDate;
         private decimal _amountClaimed;
         private int _admissionDays;
+        private decimal _excessBillAmount;
+        private decimal _outsideDiagnosticsAmount;
         private string _hospitalClinic = string.Empty;
         private string _attendingPhysician = string.Empty;
         private string _incidentDescription = string.Empty;
@@ -109,6 +130,18 @@ namespace eSureHi.ViewModels.Admin
         public string ClaimType { get => _claimType; set => SetProperty(ref _claimType, value); }
         public DateTime? ClaimDate { get => _claimDate; set => SetProperty(ref _claimDate, value); }
         public DateTime? IncidentDate { get => _incidentDate; set => SetProperty(ref _incidentDate, value); }
+
+        public DateTime? AdmissionDate
+        {
+            get => _admissionDate;
+            set { if (SetProperty(ref _admissionDate, value)) RecomputeAdmissionDays(); }
+        }
+        public DateTime? DischargeDate
+        {
+            get => _dischargeDate;
+            set { if (SetProperty(ref _dischargeDate, value)) RecomputeAdmissionDays(); }
+        }
+
         public decimal AmountClaimed { get => _amountClaimed; set => SetProperty(ref _amountClaimed, value); }
         public int AdmissionDays
         {
@@ -118,6 +151,16 @@ namespace eSureHi.ViewModels.Admin
                 if (SetProperty(ref _admissionDays, value))
                     RefreshDailyAllowance();
             }
+        }
+        public decimal ExcessBillAmount
+        {
+            get => _excessBillAmount;
+            set { if (SetProperty(ref _excessBillAmount, value)) RefreshDailyAllowance(); }
+        }
+        public decimal OutsideDiagnosticsAmount
+        {
+            get => _outsideDiagnosticsAmount;
+            set { if (SetProperty(ref _outsideDiagnosticsAmount, value)) RefreshDailyAllowance(); }
         }
         public string HospitalClinic { get => _hospitalClinic; set => SetProperty(ref _hospitalClinic, value); }
         public string AttendingPhysician { get => _attendingPhysician; set => SetProperty(ref _attendingPhysician, value); }
@@ -156,7 +199,14 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand SaveCommand { get; }
         public RelayCommand CancelCommand { get; }
         public RelayCommand AddDocumentCommand { get; }
+        public RelayCommand AddHospitalBillCommand { get; }
+        public RelayCommand AddOfficialReceiptCommand { get; }
+        public RelayCommand ScanDigitalIdCommand { get; }
         public RelayCommand<ClaimDocumentItem> RemoveDocumentCommand { get; }
+
+        // ── Digital ID scan (looks up a beneficiary by their printed ID code) ──
+        private string _digitalIdCode = string.Empty;
+        public string DigitalIdCode { get => _digitalIdCode; set => SetProperty(ref _digitalIdCode, value); }
 
         // ── Callbacks ──────────────────────────────────────────────────
         public Action? CloseAction { get; set; }
@@ -168,6 +218,9 @@ namespace eSureHi.ViewModels.Admin
             SaveCommand = new RelayCommand(async () => await SaveAsync(), () => !IsBusy);
             CancelCommand = new RelayCommand(() => CloseAction?.Invoke());
             AddDocumentCommand = new RelayCommand(AddDocument);
+            AddHospitalBillCommand = new RelayCommand(() => AddDocumentOfType("Hospital Bill"));
+            AddOfficialReceiptCommand = new RelayCommand(() => AddDocumentOfType("Official Receipt"));
+            ScanDigitalIdCommand = new RelayCommand(async () => await ScanDigitalIdAsync());
             RemoveDocumentCommand = new RelayCommand<ClaimDocumentItem>(
                 item => { if (item is not null) Documents.Remove(item); });
 
@@ -198,7 +251,13 @@ namespace eSureHi.ViewModels.Admin
                                       ? c.ClaimDate.Value.ToDateTime(TimeOnly.MinValue) : null;
             IncidentDate = c.IncidentDate.HasValue
                                       ? c.IncidentDate.Value.ToDateTime(TimeOnly.MinValue) : null;
+            AdmissionDate = c.AdmissionDate.HasValue
+                                      ? c.AdmissionDate.Value.ToDateTime(TimeOnly.MinValue) : null;
+            DischargeDate = c.DischargeDate.HasValue
+                                      ? c.DischargeDate.Value.ToDateTime(TimeOnly.MinValue) : null;
             AdmissionDays = c.AdmissionDays;
+            ExcessBillAmount = c.ExcessBillAmount;
+            OutsideDiagnosticsAmount = c.OutsideDiagnosticsAmount;
             AmountClaimed = c.AmountClaimed;
             HospitalClinic = c.HospitalClinic ?? string.Empty;
             AttendingPhysician = c.AttendingPhysician ?? string.Empty;
@@ -279,6 +338,39 @@ namespace eSureHi.ViewModels.Admin
             SelectedBeneficiary = Beneficiaries.FirstOrDefault(b => b.BenId == beneficiary.BenId);
         }
 
+        // Resolves a scanned/typed digital-ID code to a beneficiary and selects their
+        // employee + beneficiary in the form.
+        private async Task ScanDigitalIdAsync()
+        {
+            var code = DigitalIdCode?.Trim();
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                ErrorMessage = "Scan or enter a digital ID code first.";
+                return;
+            }
+
+            try
+            {
+                using var db = eSureHiDbContextFactory.Create();
+                var beneficiary = await db.Beneficiaries
+                    .FirstOrDefaultAsync(b => b.BeneficiaryId == code || b.CivilRegistryId == code);
+                if (beneficiary is null)
+                {
+                    ErrorMessage = $"No beneficiary found for ID \"{code}\".";
+                    return;
+                }
+
+                ErrorMessage = string.Empty;
+                SelectedEmployee = _allEmployees.FirstOrDefault(e => e.EmpId == beneficiary.EmpId);
+                await LoadPoliciesForEmployeeAsync();
+                SelectedBeneficiary = Beneficiaries.FirstOrDefault(b => b.BenId == beneficiary.BenId);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Digital ID lookup failed: {ex.Message}";
+            }
+        }
+
         private async Task LoadPoliciesForEmployeeAsync()
         {
             EmployeePolicies.Clear();
@@ -322,22 +414,41 @@ namespace eSureHi.ViewModels.Admin
         }
 
         // ── Add Document ───────────────────────────────────────────────
-        private void AddDocument()
+        public const long MaxAttachmentBytes = 5 * 1024 * 1024; // 5 MB
+
+        private void AddDocument() => AddDocumentOfType("Other");
+
+        // Adds an attachment of a specific type (e.g. "Hospital Bill", "Official Receipt").
+        // Enforces image/PDF only and the 5 MB size cap.
+        private void AddDocumentOfType(string docType)
         {
             var dlg = new OpenFileDialog
             {
-                Title = "Select Claim Document",
-                Filter = "Documents|*.pdf;*.jpg;*.jpeg;*.png;*.doc;*.docx|All Files|*.*",
-                Multiselect = true
+                Title = $"Select {docType}",
+                Filter = "Image or PDF|*.pdf;*.jpg;*.jpeg;*.png",
+                Multiselect = docType == "Other"
             };
             if (dlg.ShowDialog() != true) return;
 
             foreach (var path in dlg.FileNames)
             {
                 var info = new System.IO.FileInfo(path);
+                if (info.Length > MaxAttachmentBytes)
+                {
+                    ErrorMessage = $"\"{info.Name}\" is {info.Length / 1024d / 1024d:N1} MB — attachments must be 5 MB or smaller.";
+                    continue;
+                }
+
+                // For dedicated slots, replace any existing attachment of the same type.
+                if (docType != "Other")
+                {
+                    var existing = Documents.Where(d => d.DocType == docType).ToList();
+                    foreach (var e in existing) Documents.Remove(e);
+                }
+
                 Documents.Add(new ClaimDocumentItem
                 {
-                    DocType = "Other",
+                    DocType = docType,
                     FileName = info.Name,
                     FilePath = path,
                     SizeKb = (int)(info.Length / 1024)
@@ -352,18 +463,16 @@ namespace eSureHi.ViewModels.Admin
             { ErrorMessage = "Please select an employee."; return false; }
             if (SelectedEmployeePolicy is null)
             { ErrorMessage = "Please select a policy."; return false; }
-            if (AmountClaimed <= 0)
-            { ErrorMessage = "Amount claimed must be greater than zero."; return false; }
-            if (AdmissionDays <= 0)
-            { ErrorMessage = "Enter the number of admitted/hospitalized days."; return false; }
-            if (MaxClaimAmount <= 0)
-            { ErrorMessage = "This employee has no monthly contribution set. Update the employee insurance contribution first."; return false; }
-            if (AmountClaimed > MaxClaimAmount)
-            { ErrorMessage = $"Amount claimed cannot exceed PHP {MaxClaimAmount:N2} based on the employee monthly contribution."; return false; }
+            if (AdmissionDate is null || DischargeDate is null)
+            { ErrorMessage = "Enter both admission and discharge dates."; return false; }
+            if (DischargeDate.Value.Date < AdmissionDate.Value.Date)
+            { ErrorMessage = "Discharge date cannot be earlier than the admission date."; return false; }
+            if (TotalCovered <= 0)
+            { ErrorMessage = "The claim breakdown totals zero — enter admitted days, excess bill, or diagnostics."; return false; }
             if (ClaimDate is null)
             { ErrorMessage = "Claim date is required."; return false; }
             if (Documents.Count == 0)
-            { ErrorMessage = "Please attach at least one proof, document, or requirement."; return false; }
+            { ErrorMessage = "Please attach at least the hospital bill or official receipt."; return false; }
             ErrorMessage = string.Empty;
             return true;
         }
@@ -444,10 +553,17 @@ namespace eSureHi.ViewModels.Admin
                                        ? DateOnly.FromDateTime(ClaimDate.Value) : null;
             c.IncidentDate = IncidentDate.HasValue
                                        ? DateOnly.FromDateTime(IncidentDate.Value) : null;
+            c.AdmissionDate = AdmissionDate.HasValue
+                                       ? DateOnly.FromDateTime(AdmissionDate.Value) : null;
+            c.DischargeDate = DischargeDate.HasValue
+                                       ? DateOnly.FromDateTime(DischargeDate.Value) : null;
             c.AdmissionDays = AdmissionDays;
             c.CoveredAllowanceDays = CoveredAllowanceDays;
             c.DailyAllowanceRate = DailyAllowanceRate;
             c.DailyAllowanceAmount = DailyAllowanceAmount;
+            c.ExcessBillAmount = ExcessBillAmount;
+            c.OutsideDiagnosticsAmount = OutsideDiagnosticsAmount;
+            c.TotalCovered = TotalCovered;
             c.AmountClaimed = AmountClaimed;
             c.HospitalClinic = string.IsNullOrWhiteSpace(HospitalClinic)
                                        ? null : HospitalClinic.Trim();
@@ -486,16 +602,21 @@ namespace eSureHi.ViewModels.Admin
             OnPropertyChanged(nameof(CoveredAllowanceDays));
             OnPropertyChanged(nameof(DailyAllowanceRate));
             OnPropertyChanged(nameof(DailyAllowanceAmount));
+            OnPropertyChanged(nameof(ExcessBillCovered));
+            OnPropertyChanged(nameof(DiagnosticsCovered));
+            OnPropertyChanged(nameof(TotalCovered));
             OnPropertyChanged(nameof(ClaimLimitText));
-            AmountClaimed = DailyAllowanceAmount;
+            AmountClaimed = TotalCovered;
         }
 
-        private static decimal GetDailyAllowanceRate(decimal monthlyContribution)
+        // Auto-computes admitted days from the admission/discharge date pickers.
+        private void RecomputeAdmissionDays()
         {
-            if (monthlyContribution <= 0) return 0;
-            if (monthlyContribution <= 50) return 250;
-            if (monthlyContribution <= 100) return 500;
-            return 750;
+            if (AdmissionDate.HasValue && DischargeDate.HasValue &&
+                DischargeDate.Value.Date >= AdmissionDate.Value.Date)
+            {
+                AdmissionDays = (DischargeDate.Value.Date - AdmissionDate.Value.Date).Days;
+            }
         }
 
         private static string GenerateClaimNo()

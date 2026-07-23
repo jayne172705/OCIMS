@@ -74,5 +74,14 @@ namespace eSureHi.Views.Admin.UserControls
                 }
             }
         }
+
+        private async void PrintIdCardBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is BeneficiaryStagingViewModel vm && vm.SelectedRecord != null)
+            {
+                var dialog = new PrintIdCardDialog(vm.SelectedRecord);
+                await MaterialDesignThemes.Wpf.DialogHost.Show(dialog, "BeneficiariesDialogHost");
+            }
+        }
     }
 }

@@ -26,7 +26,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- ── Left Panel (Brand & Info) ── -->
-            <Border Grid.Column="0" Background="#0D47A1" helpers:Adaptive.UseAdaptiveForeground="True">
+            <Border Grid.Column="0" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True">
                 <Grid Margin="30">
                     <StackPanel VerticalAlignment="Top">
                         <!-- Municipal Logo Placeholder -->
@@ -69,7 +69,7 @@
                     </StackPanel>
 
                     <!-- Serial info at bottom -->
-                    <Border Background="#1565C0" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="4" Padding="12,6" 
+                    <Border Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="4" Padding="12,6" 
                             VerticalAlignment="Bottom" HorizontalAlignment="Center">
                         <TextBlock Text="Company Serial: BAS-20260326-CF43"
                                    FontSize="11" Opacity="0.9"/>
@@ -102,7 +102,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="24" Height="24" CornerRadius="12" Background="#E3F2FD" helpers:Adaptive.UseAdaptiveForeground="True">
+                            <Border Width="24" Height="24" CornerRadius="12" Background="#ECFDF3" helpers:Adaptive.UseAdaptiveForeground="True">
                                 <TextBlock Text="1" FontSize="12" FontWeight="Bold" Foreground="#90CAF9" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -115,7 +115,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="24" Height="24" CornerRadius="12" Background="#E3F2FD" helpers:Adaptive.UseAdaptiveForeground="True">
+                            <Border Width="24" Height="24" CornerRadius="12" Background="#ECFDF3" helpers:Adaptive.UseAdaptiveForeground="True">
                                 <TextBlock Text="2" FontSize="12" FontWeight="Bold" Foreground="#90CAF9" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -128,7 +128,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="24" Height="24" CornerRadius="12" Background="#E3F2FD" helpers:Adaptive.UseAdaptiveForeground="True">
+                            <Border Width="24" Height="24" CornerRadius="12" Background="#ECFDF3" helpers:Adaptive.UseAdaptiveForeground="True">
                                 <TextBlock Text="3" FontSize="12" FontWeight="Bold" Foreground="#90CAF9" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -141,7 +141,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="24" Height="24" CornerRadius="12" Background="#E3F2FD" helpers:Adaptive.UseAdaptiveForeground="True">
+                            <Border Width="24" Height="24" CornerRadius="12" Background="#ECFDF3" helpers:Adaptive.UseAdaptiveForeground="True">
                                 <TextBlock Text="4" FontSize="12" FontWeight="Bold" Foreground="#90CAF9" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -158,8 +158,8 @@
                             Width="180"
                             HorizontalAlignment="Right"
                             materialDesign:ButtonAssist.CornerRadius="22"
-                            Background="#1565C0"
-                            BorderBrush="#1565C0"
+                            Background="#2E7D32"
+                            BorderBrush="#2E7D32"
                             FontWeight="Bold"/>
                 </StackPanel>
 

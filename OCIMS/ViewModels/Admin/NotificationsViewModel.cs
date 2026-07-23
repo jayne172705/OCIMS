@@ -17,7 +17,7 @@ namespace eSureHi.ViewModels.Admin
         public string Title { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
         public string TimeAgo { get; set; } = string.Empty;
-        public string DotColor { get; set; } = "#1565C0";
+        public string DotColor { get; set; } = "#2E7D32";
 
         private bool _isRead;
         public bool IsRead
@@ -161,7 +161,7 @@ namespace eSureHi.ViewModels.Admin
 
         private static string GetDotColor(string type) => type switch
         {
-            "Claim Update" => "#1565C0",
+            "Claim Update" => "#2E7D32",
             "Premium Due" => "#C62828",
             "Policy Renewal" => "#E65100",
             "New Policy" => "#2E7D32",
