@@ -158,12 +158,13 @@ namespace eSureHi.Services
                     }
 
                     var familyRole = ReadString(reader, "position");
-                    bool isHead = !string.IsNullOrWhiteSpace(familyRole) && 
-                                  (familyRole.Equals("head of the family", StringComparison.OrdinalIgnoreCase) ||
-                                   familyRole.Equals("family head", StringComparison.OrdinalIgnoreCase) ||
-                                   familyRole.Equals("head of family", StringComparison.OrdinalIgnoreCase) ||
-                                   familyRole.Equals("household head", StringComparison.OrdinalIgnoreCase) ||
-                                   familyRole.Equals("head", StringComparison.OrdinalIgnoreCase));
+                    var normalizedRole = familyRole?.Replace('_', ' ').Trim() ?? "";
+                    bool isHead = !string.IsNullOrWhiteSpace(normalizedRole) && 
+                                  (normalizedRole.Equals("head of the family", StringComparison.OrdinalIgnoreCase) ||
+                                   normalizedRole.Equals("family head", StringComparison.OrdinalIgnoreCase) ||
+                                   normalizedRole.Equals("head of family", StringComparison.OrdinalIgnoreCase) ||
+                                   normalizedRole.Equals("household head", StringComparison.OrdinalIgnoreCase) ||
+                                   normalizedRole.Equals("head", StringComparison.OrdinalIgnoreCase));
 
                     rows.Add(new BeneficiaryStaging
                     {

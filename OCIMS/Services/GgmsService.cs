@@ -175,6 +175,33 @@ namespace eSureHi.Services
                 transactionDate: transactionDate);
         }
 
+        public static async Task<(bool Success, string Message)> RecordDistributionReleaseAsync(
+            int distributionRecordId,
+            string? beneficiaryIdentity,
+            string? civilRegistryId,
+            decimal amountReleased,
+            string programType,
+            string firstName,
+            string? middleName,
+            string lastName,
+            string fullName,
+            string batchName,
+            string? sourceOfFunds = null)
+        {
+            return await RecordConsolidatedTransactionAsync(
+                projectCode: BuildProjectCode(distributionRecordId),
+                projectName: AddSourceSuffix(string.IsNullOrWhiteSpace(batchName) ? "Pension Distribution" : batchName, sourceOfFunds),
+                beneficiaryId: beneficiaryIdentity,
+                civilRegistryId: civilRegistryId,
+                firstName: firstName,
+                middleName: middleName,
+                lastName: lastName,
+                fullName: fullName,
+                transactionType: string.IsNullOrWhiteSpace(programType) ? "Pension Distribution" : programType,
+                amount: amountReleased,
+                transactionDate: DateOnly.FromDateTime(DateTime.Today));
+        }
+
         private static string BuildProjectCode(int id) =>
             $"{ProjectPrefix}-{Math.Max(0, id):000000}";
 

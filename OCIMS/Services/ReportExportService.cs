@@ -188,6 +188,106 @@ namespace eSureHi.Services
             OpenFile(path);
         }
 
+        public static void ExportMonthlyPaymentExcel(
+            IEnumerable<Payment> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Monthly_Payment", "xlsx");
+            if (path is null) return;
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Monthly Payment");
+            WriteExcelTitle(ws, title, profile);
+            string[] h = {
+                "Full Name","Family ID","Relationship","Billing Month",
+                "Amount","Group","Status","Paid Date"
+            };
+            WriteHeaders(ws, 5, h);
+            int row = 6;
+            foreach (var r in data)
+            {
+                ws.Cell(row, 1).Value = r.MemberName;
+                ws.Cell(row, 2).Value = r.FamilyId;
+                ws.Cell(row, 3).Value = r.Relationship;
+                ws.Cell(row, 4).Value = r.BillingMonth.ToString("MMM yyyy");
+                SetMoney(ws.Cell(row, 5), r.Amount);
+                ws.Cell(row, 6).Value = r.SourceOfFunds;
+                ws.Cell(row, 7).Value = r.Status;
+                ws.Cell(row, 8).Value = r.PaidAt?.ToString("MMM dd, yyyy") ?? "";
+                row++;
+            }
+            ws.Columns().AdjustToContents();
+            wb.SaveAs(path);
+            OpenFile(path);
+        }
+
+        public static void ExportMonthlyClaimsExcel(
+            IEnumerable<Claim> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Monthly_Claims", "xlsx");
+            if (path is null) return;
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Monthly Claims");
+            WriteExcelTitle(ws, title, profile);
+            string[] h = {
+                "Claim No","Applicant","Beneficiary","Claim Type","Claim Date",
+                "Amount Claimed","Amount Approved","Amount Released","Group","Status"
+            };
+            WriteHeaders(ws, 5, h);
+            int row = 6;
+            foreach (var r in data)
+            {
+                ws.Cell(row, 1).Value = r.ClaimNo;
+                ws.Cell(row, 2).Value = r.Employee?.FullName;
+                ws.Cell(row, 3).Value = r.Beneficiary?.FullName;
+                ws.Cell(row, 4).Value = r.ClaimType;
+                ws.Cell(row, 5).Value = r.ClaimDate?.ToString("MMM dd, yyyy") ?? "";
+                SetMoney(ws.Cell(row, 6), r.AmountClaimed);
+                SetMoney(ws.Cell(row, 7), r.AmountApproved);
+                SetMoney(ws.Cell(row, 8), r.AmountReleased);
+                ws.Cell(row, 9).Value = r.SourceOfFunds;
+                ws.Cell(row, 10).Value = r.ClaimStatus;
+                row++;
+            }
+            ws.Columns().AdjustToContents();
+            wb.SaveAs(path);
+            OpenFile(path);
+        }
+
+        public static void ExportMemberReportsExcel(
+            IEnumerable<MemberReportRow> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Member_Report", "xlsx");
+            if (path is null) return;
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Member Reports");
+            WriteExcelTitle(ws, title, profile);
+            string[] h = {
+                "Beneficiary Code","Full Name","Household ID","Relationship","Program",
+                "Status","Total Claims","Total Claimed","Total Payments","Total Payment Amount"
+            };
+            WriteHeaders(ws, 5, h);
+            int row = 6;
+            foreach (var r in data)
+            {
+                ws.Cell(row, 1).Value = r.BeneficiaryCode;
+                ws.Cell(row, 2).Value = r.FullName;
+                ws.Cell(row, 3).Value = r.HouseholdId;
+                ws.Cell(row, 4).Value = r.Relationship;
+                ws.Cell(row, 5).Value = r.Program;
+                ws.Cell(row, 6).Value = r.Status;
+                ws.Cell(row, 7).Value = r.TotalClaims;
+                SetMoney(ws.Cell(row, 8), r.TotalClaimed);
+                ws.Cell(row, 9).Value = r.TotalPayments;
+                SetMoney(ws.Cell(row, 10), r.TotalPaymentAmount);
+                row++;
+            }
+            ws.Columns().AdjustToContents();
+            wb.SaveAs(path);
+            OpenFile(path);
+        }
+
         // ══════════════════════════════════════════════════════════════
         // PDF
         // ══════════════════════════════════════════════════════════════
@@ -286,6 +386,76 @@ namespace eSureHi.Services
             });
 
             ExportWordTable("Benefit_Utilization", title, headers, rows);
+        }
+
+        public static void ExportMonthlyPaymentWord(
+            IEnumerable<Payment> data, string title)
+        {
+            string[] headers = {
+                "Full Name","Family ID","Relationship","Billing Month",
+                "Amount","Group","Status","Paid Date"
+            };
+
+            var rows = data.Select(r => new[] {
+                r.MemberName ?? "",
+                r.FamilyId ?? "",
+                r.Relationship ?? "",
+                r.BillingMonth.ToString("MMM yyyy"),
+                Money(r.Amount),
+                r.SourceOfFunds ?? "",
+                r.Status ?? "",
+                r.PaidAt?.ToString("MMM dd, yyyy") ?? ""
+            });
+
+            ExportWordTable("Monthly_Payment", title, headers, rows);
+        }
+
+        public static void ExportMonthlyClaimsWord(
+            IEnumerable<Claim> data, string title)
+        {
+            string[] headers = {
+                "Claim No","Applicant","Beneficiary","Claim Type","Claim Date",
+                "Amount Claimed","Amount Approved","Amount Released","Group","Status"
+            };
+
+            var rows = data.Select(r => new[] {
+                r.ClaimNo ?? "",
+                r.Employee?.FullName ?? "",
+                r.Beneficiary?.FullName ?? "",
+                r.ClaimType ?? "",
+                r.ClaimDate?.ToString("MMM dd, yyyy") ?? "",
+                Money(r.AmountClaimed),
+                Money(r.AmountApproved),
+                Money(r.AmountReleased),
+                r.SourceOfFunds ?? "",
+                r.ClaimStatus ?? ""
+            });
+
+            ExportWordTable("Monthly_Claims", title, headers, rows);
+        }
+
+        public static void ExportMemberReportsWord(
+            IEnumerable<MemberReportRow> data, string title)
+        {
+            string[] headers = {
+                "Beneficiary Code","Full Name","Household ID","Relationship","Program",
+                "Status","Total Claims","Total Claimed","Total Payments","Total Payment Amount"
+            };
+
+            var rows = data.Select(r => new[] {
+                r.BeneficiaryCode,
+                r.FullName,
+                r.HouseholdId,
+                r.Relationship,
+                r.Program,
+                r.Status,
+                r.TotalClaims.ToString(),
+                Money(r.TotalClaimed),
+                r.TotalPayments.ToString(),
+                Money(r.TotalPaymentAmount)
+            });
+
+            ExportWordTable("Member_Report", title, headers, rows);
         }
 
         public static void ExportEmployeeCoveragePdf(
@@ -392,6 +562,85 @@ namespace eSureHi.Services
             OpenFile(path);
         }
 
+        public static void PrintClaimVoucher(Claim claim)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath($"Claim_Voucher_{claim.ClaimNo}", "pdf");
+            if (path is null) return;
+
+            string claimant = claim.Beneficiary?.FullName ?? claim.Employee?.FullName ?? "";
+            string group = string.IsNullOrWhiteSpace(claim.SourceOfFunds) ? "—" : claim.SourceOfFunds;
+
+            QuestDocument.Create(c => c.Page(page =>
+            {
+                page.Size(PageSizes.A5);
+                page.Margin(30);
+                page.DefaultTextStyle(t => t.FontSize(9));
+                page.Header().Element(h => PdfHeader(h, "Claim Voucher", profile));
+                page.Footer().Element(f => PdfFooter(f, profile));
+                page.Content().Column(col =>
+                {
+                    col.Spacing(6);
+                    col.Item().Text($"Claim No.: {claim.ClaimNo}").Bold();
+                    col.Item().Text($"Claimant: {claimant}");
+                    col.Item().Text($"Group / Budget Source: {group}");
+                    col.Item().Text($"Claim Type: {claim.ClaimType}");
+                    col.Item().Text($"Claim Date: {claim.ClaimDate:MMM dd, yyyy}");
+                    col.Item().Text($"Status: {claim.ClaimStatus}");
+                    col.Item().LineHorizontal(0.5f);
+                    col.Item().Text($"Total Covered: ₱{claim.AmountClaimed:N2}").Bold().FontSize(12);
+                    col.Item().PaddingTop(20).Text("Signature: _______________________________");
+                });
+            })).GeneratePdf(path);
+            OpenFile(path);
+        }
+
+        public static void PrintPaymentLedger(IEnumerable<Payment> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Payment_Ledger", "pdf");
+            if (path is null) return;
+            var list = data.ToList();
+
+            QuestDocument.Create(c => c.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(30);
+                page.DefaultTextStyle(t => t.FontSize(8));
+                page.Header().Element(h => PdfHeader(h, title, profile));
+                page.Footer().Element(f => PdfFooter(f, profile));
+                page.Content().Table(table =>
+                {
+                    table.ColumnsDefinition(cd => {
+                        cd.RelativeColumn(3); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2);
+                    });
+                    table.Header(th => {
+                        foreach (var h in new[]{
+                            "Full Name","Family ID","Relationship","Billing Month",
+                            "Amount","Budget Source","Status"})
+                            th.Cell().PdfHeaderCell(h);
+                    });
+                    bool alt = false;
+                    foreach (var r in list)
+                    {
+                        var bg = alt ? "#F5F5F5" : "#FFFFFF";
+                        table.Cell().PdfCell(r.MemberName ?? "", bg);
+                        table.Cell().PdfCell(r.FamilyId ?? "", bg);
+                        table.Cell().PdfCell(r.Relationship ?? "", bg);
+                        table.Cell().PdfCell(r.BillingMonth.ToString("MMM yyyy"), bg);
+                        table.Cell().PdfCellRight($"₱{r.Amount:N2}", bg);
+                        table.Cell().PdfCell(r.SourceOfFunds ?? "", bg);
+                        table.Cell().PdfCell(r.Status ?? "", bg);
+                        alt = !alt;
+                    }
+                });
+            })).GeneratePdf(path);
+            OpenFile(path);
+        }
+
         public static void ExportPremiumStatusPdf(
             IEnumerable<VwPremiumStatus> data, string title)
         {
@@ -481,6 +730,156 @@ namespace eSureHi.Services
                         table.Cell().PdfCellRight($"₱{r.UsedBenefit:N2}", bg);
                         table.Cell().PdfCellRight($"₱{r.Remaining:N2}", bg);
                         table.Cell().PdfCell(r.LastUsedDate?.ToString("MMM dd, yyyy") ?? "", bg);
+                        alt = !alt;
+                    }
+                });
+            })).GeneratePdf(path);
+            OpenFile(path);
+        }
+
+        public static void ExportMonthlyPaymentPdf(
+            IEnumerable<Payment> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Monthly_Payment", "pdf");
+            if (path is null) return;
+            var list = data.ToList();
+
+            QuestDocument.Create(c => c.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(30);
+                page.DefaultTextStyle(t => t.FontSize(8));
+                page.Header().Element(h => PdfHeader(h, title, profile));
+                page.Footer().Element(f => PdfFooter(f, profile));
+                page.Content().Table(table =>
+                {
+                    table.ColumnsDefinition(cd => {
+                        cd.RelativeColumn(3); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                    });
+                    table.Header(th => {
+                        foreach (var h in new[]{
+                            "Full Name","Family ID","Relationship","Billing Month",
+                            "Amount","Group","Status","Paid Date"})
+                            th.Cell().PdfHeaderCell(h);
+                    });
+                    bool alt = false;
+                    foreach (var r in list)
+                    {
+                        var bg = alt ? "#F5F5F5" : "#FFFFFF";
+                        table.Cell().PdfCell(r.MemberName ?? "", bg);
+                        table.Cell().PdfCell(r.FamilyId ?? "", bg);
+                        table.Cell().PdfCell(r.Relationship ?? "", bg);
+                        table.Cell().PdfCell(r.BillingMonth.ToString("MMM yyyy"), bg);
+                        table.Cell().PdfCellRight($"₱{r.Amount:N2}", bg);
+                        table.Cell().PdfCell(r.SourceOfFunds ?? "", bg);
+                        table.Cell().PdfCell(r.Status ?? "", bg);
+                        table.Cell().PdfCell(r.PaidAt?.ToString("MMM dd, yyyy") ?? "", bg);
+                        alt = !alt;
+                    }
+                });
+            })).GeneratePdf(path);
+            OpenFile(path);
+        }
+
+        public static void ExportMonthlyClaimsPdf(
+            IEnumerable<Claim> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Monthly_Claims", "pdf");
+            if (path is null) return;
+            var list = data.ToList();
+
+            QuestDocument.Create(c => c.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(30);
+                page.DefaultTextStyle(t => t.FontSize(8));
+                page.Header().Element(h => PdfHeader(h, title, profile));
+                page.Footer().Element(f => PdfFooter(f, profile));
+                page.Content().Table(table =>
+                {
+                    table.ColumnsDefinition(cd => {
+                        cd.RelativeColumn(2); cd.RelativeColumn(3);
+                        cd.RelativeColumn(3); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                    });
+                    table.Header(th => {
+                        foreach (var h in new[]{
+                            "Claim No","Applicant","Beneficiary","Claim Type","Claim Date",
+                            "Claimed","Approved","Released","Group","Status"})
+                            th.Cell().PdfHeaderCell(h);
+                    });
+                    bool alt = false;
+                    foreach (var r in list)
+                    {
+                        var bg = alt ? "#F5F5F5" : "#FFFFFF";
+                        table.Cell().PdfCell(r.ClaimNo ?? "", bg);
+                        table.Cell().PdfCell(r.Employee?.FullName ?? "", bg);
+                        table.Cell().PdfCell(r.Beneficiary?.FullName ?? "", bg);
+                        table.Cell().PdfCell(r.ClaimType ?? "", bg);
+                        table.Cell().PdfCell(r.ClaimDate?.ToString("MMM dd, yyyy") ?? "", bg);
+                        table.Cell().PdfCellRight($"₱{r.AmountClaimed:N2}", bg);
+                        table.Cell().PdfCellRight($"₱{r.AmountApproved:N2}", bg);
+                        table.Cell().PdfCellRight($"₱{r.AmountReleased:N2}", bg);
+                        table.Cell().PdfCell(r.SourceOfFunds ?? "", bg);
+                        table.Cell().PdfCell(r.ClaimStatus ?? "", bg);
+                        alt = !alt;
+                    }
+                });
+            })).GeneratePdf(path);
+            OpenFile(path);
+        }
+
+        public static void ExportMemberReportsPdf(
+            IEnumerable<MemberReportRow> data, string title)
+        {
+            var profile = GetCompanyProfile();
+            var path = PickSavePath("Member_Report", "pdf");
+            if (path is null) return;
+            var list = data.ToList();
+
+            QuestDocument.Create(c => c.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(30);
+                page.DefaultTextStyle(t => t.FontSize(8));
+                page.Header().Element(h => PdfHeader(h, title, profile));
+                page.Footer().Element(f => PdfFooter(f, profile));
+                page.Content().Table(table =>
+                {
+                    table.ColumnsDefinition(cd => {
+                        cd.RelativeColumn(2); cd.RelativeColumn(3);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(2); cd.RelativeColumn(2);
+                        cd.RelativeColumn(1); cd.RelativeColumn(2);
+                        cd.RelativeColumn(1); cd.RelativeColumn(2);
+                    });
+                    table.Header(th => {
+                        foreach (var h in new[]{
+                            "Beneficiary Code","Full Name","Household ID","Relationship","Program",
+                            "Status","Claims","Total Claimed","Pmts","Total Paid"})
+                            th.Cell().PdfHeaderCell(h);
+                    });
+                    bool alt = false;
+                    foreach (var r in list)
+                    {
+                        var bg = alt ? "#F5F5F5" : "#FFFFFF";
+                        table.Cell().PdfCell(r.BeneficiaryCode, bg);
+                        table.Cell().PdfCell(r.FullName, bg);
+                        table.Cell().PdfCell(r.HouseholdId, bg);
+                        table.Cell().PdfCell(r.Relationship, bg);
+                        table.Cell().PdfCell(r.Program, bg);
+                        table.Cell().PdfCell(r.Status, bg);
+                        table.Cell().PdfCellRight(r.TotalClaims.ToString(), bg);
+                        table.Cell().PdfCellRight($"₱{r.TotalClaimed:N2}", bg);
+                        table.Cell().PdfCellRight(r.TotalPayments.ToString(), bg);
+                        table.Cell().PdfCellRight($"₱{r.TotalPaymentAmount:N2}", bg);
                         alt = !alt;
                     }
                 });
@@ -714,7 +1113,7 @@ namespace eSureHi.Services
                 cell.Value = headers[i];
                 cell.Style.Font.Bold = true;
                 cell.Style.Font.FontColor = XLColor.White;
-                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1565C0");
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#2E7D32");
                 cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                 cell.Style.Border.BottomBorderColor = XLColor.White;
@@ -766,7 +1165,7 @@ namespace eSureHi.Services
     {
         public static void PdfHeaderCell(this IContainer c, string text)
         {
-            c.Background(Color.FromHex("#1565C0"))
+            c.Background(Color.FromHex("#2E7D32"))
              .Padding(5)
              .Text(text)
              .Bold().FontSize(8).FontColor(Colors.White);

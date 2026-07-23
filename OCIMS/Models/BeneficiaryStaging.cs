@@ -162,19 +162,104 @@ namespace eSureHi.Models
 
         private static string NormalizeRoleBadge(string? role)
         {
-            if (string.IsNullOrWhiteSpace(role))
-                return "UNCLASSIFIED";
+            var label = MapPositionToLabel(role);
+            return string.IsNullOrWhiteSpace(label) ? "UNCLASSIFIED" : label;
+        }
 
-            var value = role.Trim();
-            if (value.Equals("Head of the Family", StringComparison.OrdinalIgnoreCase) ||
-                value.Equals("Head of Family", StringComparison.OrdinalIgnoreCase) ||
-                value.Equals("Family Head", StringComparison.OrdinalIgnoreCase) ||
-                value.Equals("Household Head", StringComparison.OrdinalIgnoreCase))
+        // Maps a raw CRS demographic_characteristics.position value to a clean
+        // display label. Handles underscores, inconsistent casing, and truncated
+        // values such as "brother_in...". Returns null when the value is empty or
+        // whitespace so callers can fall back to "UNCLASSIFIED".
+        public static string? MapPositionToLabel(string? rawPosition)
+        {
+            if (string.IsNullOrWhiteSpace(rawPosition))
+                return null;
+
+            // Normalize separators (underscores/dots) and casing to a single
+            // lowercase, single-spaced key for matching.
+            var key = rawPosition.Replace('_', ' ').Replace('.', ' ').Trim().ToLowerInvariant();
+            while (key.Contains("  "))
+                key = key.Replace("  ", " ");
+
+            if (key.Length == 0)
+                return null;
+
+            // Head of family — several spellings collapse to one badge.
+            if (key is "head" or "head of family" or "head of the family"
+                or "family head" or "household head" or "hh head" or "householdhead")
+                return "Head of Family";
+
+            // In-law relations, including truncated forms like "brother in..." →
+            // "brother in". Detect the base relation before the "in" marker.
+            if (key.Contains("in law") || key.Contains("inlaw") ||
+                key.EndsWith(" in") || key.Contains(" in "))
             {
-                return "FAMILY HEAD";
+                var basePart = key.Split(new[] { " in" }, StringSplitOptions.None)[0].Trim();
+                var baseLabel = basePart switch
+                {
+                    "brother" => "Brother",
+                    "sister" => "Sister",
+                    "father" => "Father",
+                    "mother" => "Mother",
+                    "son" => "Son",
+                    "daughter" => "Daughter",
+                    _ => TitleCase(basePart)
+                };
+                if (!string.IsNullOrWhiteSpace(baseLabel))
+                    return $"{baseLabel}-in-law";
             }
 
-            return value.ToUpperInvariant();
+            return key switch
+            {
+                "spouse" or "wife" or "husband" => "Spouse",
+                "son" => "Son",
+                "daughter" => "Daughter",
+                "child" or "children" => "Child",
+                "father" => "Father",
+                "mother" => "Mother",
+                "parent" => "Parent",
+                "brother" => "Brother",
+                "sister" => "Sister",
+                "sibling" => "Sibling",
+                "grandson" => "Grandson",
+                "granddaughter" => "Granddaughter",
+                "grandchild" => "Grandchild",
+                "grandfather" or "grandpa" or "lolo" => "Grandfather",
+                "grandmother" or "grandma" or "lola" => "Grandmother",
+                "grandparent" => "Grandparent",
+                "uncle" => "Uncle",
+                "aunt" or "auntie" => "Aunt",
+                "nephew" => "Nephew",
+                "niece" => "Niece",
+                "cousin" => "Cousin",
+                "stepson" => "Stepson",
+                "stepdaughter" => "Stepdaughter",
+                "stepchild" => "Stepchild",
+                "stepfather" => "Stepfather",
+                "stepmother" => "Stepmother",
+                "ward" => "Ward",
+                "boarder" => "Boarder",
+                "househelp" or "house help" or "helper" or "maid" or "kasambahay" => "House Helper",
+                "relative" or "other relative" => "Relative",
+                "non relative" or "nonrelative" or "non-relative" => "Non-relative",
+                "other" or "others" => "Other",
+                // Unknown but present → clean Title Case rather than "UNCLASSIFIED".
+                _ => TitleCase(key)
+            };
+        }
+
+        private static string TitleCase(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            var words = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            for (var i = 0; i < words.Length; i++)
+            {
+                var w = words[i];
+                words[i] = char.ToUpperInvariant(w[0]) + (w.Length > 1 ? w.Substring(1) : string.Empty);
+            }
+            return string.Join(' ', words);
         }
     }
 }

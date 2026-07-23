@@ -7,7 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Material Design Theme - required for LoginWindow and other views -->
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="LightBlue"/>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Green" SecondaryColor="LightGreen"/>
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml"/>
                 
                 <!-- Custom Converters -->
@@ -23,23 +23,23 @@
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Brand Colors -->
-            <SolidColorBrush x:Key="PrimaryBrush" Color="#1565C0"/>
-            <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#0D47A1"/>
+            <!-- Brand Colors — GREEN primary; yellow/red reserved for status accents only -->
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#2E7D32"/>
+            <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#1B5E20"/>
             <LinearGradientBrush x:Key="HeaderGradientBrush" StartPoint="0,0" EndPoint="1,0">
-                <GradientStop Color="#1565C0" Offset="0"/>
-                <GradientStop Color="#03A9F4" Offset="1"/>
+                <GradientStop Color="#1B5E20" Offset="0"/>
+                <GradientStop Color="#43A047" Offset="1"/>
             </LinearGradientBrush>
             <SolidColorBrush x:Key="SuccessBrush" Color="#2E7D32"/>
             <SolidColorBrush x:Key="WarningBrush" Color="#F57F17"/>
             <SolidColorBrush x:Key="ErrorBrush" Color="#C62828"/>
-            <SolidColorBrush x:Key="InfoBrush" Color="#1565C0"/>
+            <SolidColorBrush x:Key="InfoBrush" Color="#2E7D32"/>
             <SolidColorBrush x:Key="BackgroundBrush" Color="#F3F5F7"/>
             <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="BorderBrushSoft" Color="#DDE4EF"/>
             <SolidColorBrush x:Key="TextBrush" Color="#1E293B"/>
             <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B"/>
-            <SolidColorBrush x:Key="SidebarBrush" Color="#0D2137"/>
+            <SolidColorBrush x:Key="SidebarBrush" Color="#0F2A1A"/>
             <SolidColorBrush x:Key="SidebarTextBrush" Color="#FFFFFF"/>
 
             <Style TargetType="{x:Type Window}">
@@ -72,7 +72,7 @@
                             <Setter Property="Padding" Value="8,0"/>
                             <Style.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#DBEAFE"/>
+                                    <Setter Property="Background" Value="#DCFCE7"/>
                                     <Setter Property="Foreground" Value="#0F172A"/>
                                 </Trigger>
                             </Style.Triggers>
@@ -89,10 +89,10 @@
                                     <Setter Property="Background" Value="#F8FAFC"/>
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#EFF6FF"/>
+                                    <Setter Property="Background" Value="#F0FDF4"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#DBEAFE"/>
+                                    <Setter Property="Background" Value="#DCFCE7"/>
                                     <Setter Property="Foreground" Value="#0F172A"/>
                                 </Trigger>
                             </Style.Triggers>

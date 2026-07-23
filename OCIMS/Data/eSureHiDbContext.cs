@@ -34,7 +34,9 @@ namespace eSureHi.Data
             typeof(Contribution),
             typeof(Training),
             typeof(Cedula),
-            typeof(SourceFund)
+            typeof(SourceFund),
+            typeof(DistributionBatch),
+            typeof(DistributionRecord)
         };
 
         // ── Core Tables ────────────────────────────────────────────────
@@ -63,7 +65,10 @@ namespace eSureHi.Data
         public DbSet<Training> Trainings { get; set; }
         public DbSet<Cedula> Cedulas { get; set; }
         public DbSet<SourceFund> SourceFunds { get; set; }
+        public DbSet<DistributionBatch> DistributionBatches { get; set; }
+        public DbSet<DistributionRecord> DistributionRecords { get; set; }
         public DbSet<CrsBeneficiaryCache> CrsBeneficiaryCache { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         public DbSet<GgmsAllocationCache> GgmsAllocationCache { get; set; }
 
         // ── Read-Only Views ────────────────────────────────────────────

@@ -133,6 +133,23 @@ namespace eSureHi.Services
             CanAccessBeneficiaries;
         public static bool CanApproveWorkflow => IsAdminReviewer(AuthService.Instance.CurrentUser?.Role);
         public static bool CreatesPendingWorkflow => !CanApproveWorkflow;
+
+        // Granular member/claim review gates. Admin & Super Admin only — mirror CanApproveWorkflow
+        // so the single source of truth stays role-consistent. User (registrar) role is read-only.
+        public static bool CanApproveMember => CanApproveWorkflow;
+        public static bool CanReject => CanApproveWorkflow;
+        public static bool CanReleaseBenefit => CanApproveWorkflow;
+
+        // Distribution is an Admin/Super Admin activity. Payments (Advance/Pending/All Ledger)
+        // are shared by Admin and User (registrar) per spec.
+        public static bool CanAccessDistribution => IsAdminOrSuperAdmin;
+        public static bool CanAccessPayments =>
+            IsAdminOrSuperAdmin || IsUserRegistrar(AuthService.Instance.CurrentUser?.Role);
+
+        // Budget Funds page is shared (Admin + User), but edit/release actions inside it are
+        // Admin/Super Admin only — User (registrar) gets a view-only experience.
+        public static bool CanEditSourceFunds => IsAdminOrSuperAdmin;
+
         private static bool IsAdminOrSuperAdmin =>
             IsAdminReviewer(AuthService.Instance.CurrentUser?.Role);
 
@@ -172,6 +189,13 @@ namespace eSureHi.Services
             "Allocated Funds" => CanAccessSourceFunds,
             "Cedulas" => CanAccessCedulas,
             "Reports" => CanAccessReports,
+            "Distribution" => CanAccessDistribution,
+            "Payments" => CanAccessPayments,
+            "Advance Payment" => CanAccessPayments,
+            "Pending Payment" => CanAccessPayments,
+            "All Payment Ledger" => CanAccessPayments,
+            "File a Claim" => CanAccessClaims,
+            "Group Claim" => CanAccessClaims,
             "Company Profile" => CanAccessCompanyProfile,
             "Settings" => CanAccessSettings,
             "Manage Accounts" => CanAccessEmployees,

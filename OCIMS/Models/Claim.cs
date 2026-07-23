@@ -44,6 +44,21 @@ namespace eSureHi.Models
         [Column("amount_claimed")]
         public decimal AmountClaimed { get; set; } = 0;
 
+        [Column("admission_date")]
+        public DateOnly? AdmissionDate { get; set; }
+
+        [Column("discharge_date")]
+        public DateOnly? DischargeDate { get; set; }
+
+        [Column("excess_bill_amount")]
+        public decimal ExcessBillAmount { get; set; } = 0;
+
+        [Column("outside_diagnostics_amount")]
+        public decimal OutsideDiagnosticsAmount { get; set; } = 0;
+
+        [Column("total_covered")]
+        public decimal TotalCovered { get; set; } = 0;
+
         [Column("admission_days")]
         public int AdmissionDays { get; set; } = 0;
 

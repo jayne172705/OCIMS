@@ -18,6 +18,7 @@ namespace eSureHi.Data
                     o =>
                     {
                         o.CommandTimeout(60);
+                        o.EnableRetryOnFailure();
                     })
                 .Options;
             return new GgmsDbContext(options);

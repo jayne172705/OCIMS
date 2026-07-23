@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using MySqlConnector;
 using eSureHi.Data;
 using eSureHi.Models;
@@ -22,17 +23,19 @@ namespace eSureHi.Services
         public int Inserted { get; set; }
         public int Updated { get; set; }
         public int Skipped { get; set; }
+        public int Failed { get; set; } // ★ FIX: track per-entity failures instead of aborting whole sync
         public string? Details { get; set; }
         public string Message =>
             !string.IsNullOrWhiteSpace(Details)
                 ? Details
-                : $"Inserted: {Inserted}, Updated: {Updated}, Skipped older conflicts: {Skipped}";
+                : $"Inserted: {Inserted}, Updated: {Updated}, Skipped older conflicts: {Skipped}, Failed: {Failed}";
 
         public void Add(SyncResult other)
         {
             Inserted += other.Inserted;
             Updated += other.Updated;
             Skipped += other.Skipped;
+            Failed += other.Failed; // ★ FIX
             if (!string.IsNullOrWhiteSpace(other.Details))
                 Details = string.IsNullOrWhiteSpace(Details)
                     ? other.Details
@@ -147,6 +150,14 @@ namespace eSureHi.Services
             }
         }
 
+        // Sync ownership/direction contract:
+        //   • Local SQLite (ims.db) is the WORKING COPY used while offline — all data entry happens here first.
+        //   • MySQL cloud (Hostinger) is the SHARED / AUTHORITATIVE store when online.
+        // A TwoWay sync copies cloud→local first (so newer authoritative rows win) then local→cloud
+        // (to push offline-entered rows up). Per-row conflicts are resolved by the getTimestamp selector
+        // in UpsertAsync (newest UpdatedAt/CreatedAt wins); rows are matched by SyncId, falling back to a
+        // natural key (emp_id / BeneficiaryId / CivilRegistryId) via FindExistingByNaturalKeyAsync before
+        // inserting, so duplicate natural keys update in place instead of throwing UNIQUE violations.
         public static async Task<SyncResult> SyncAsync(SyncDirection direction)
         {
             if (!await SyncLock.WaitAsync(0))
@@ -188,13 +199,18 @@ namespace eSureHi.Services
 
                 var crsUnavailable = !await CanConnectSharedAsync(SharedDatabaseConfiguration.LoadCrs());
                 var ggmsUnavailable = !await CanConnectSharedAsync(SharedDatabaseConfiguration.LoadGgms());
+
+                // ★ FIX: if some entities failed, still report "Online" so future syncs keep retrying,
+                // but surface the failure count instead of silently looking fully synced.
                 SetStatus(new SyncStatusSnapshot
                 {
                     IsOnline = true,
                     CrsUnavailable = crsUnavailable,
                     GgmsUnavailable = ggmsUnavailable,
-                    Message = "Online - Synced",
-                    Color = "#16A34A"
+                    Message = result.Failed > 0
+                        ? $"Online - Synced with {result.Failed} issue(s)"
+                        : "Online - Synced",
+                    Color = result.Failed > 0 ? "#F59E0B" : "#16A34A"
                 });
 
                 return result;
@@ -344,34 +360,65 @@ namespace eSureHi.Services
         {
             var result = new SyncResult();
 
-            result.Add(await UpsertAsync(source, await source.Departments.ToListAsync(), target, target.Departments, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Employees.ToListAsync(), target, target.Employees, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.SystemUsers.ToListAsync(), target, target.SystemUsers, x => x.LastLogin ?? x.CreatedAt));
-            result.Add(await UpsertAsync(source, await source.UserPermissions.ToListAsync(), target, target.UserPermissions, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.InsurancePolicies.ToListAsync(), target, target.InsurancePolicies, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.CompanyProfiles.ToListAsync(), target, target.CompanyProfiles, _ => null));
-            result.Add(await UpsertAsync(source, await source.EmployeePolicies.ToListAsync(), target, target.EmployeePolicies, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Beneficiaries.ToListAsync(), target, target.Beneficiaries, x => x.CreatedAt));
-            result.Add(await UpsertAsync(source, await source.BeneficiaryStaging.ToListAsync(), target, target.BeneficiaryStaging, x => x.ImportedAt));
-            result.Add(await UpsertAsync(source, await source.ResidentDemographics.ToListAsync(), target, target.ResidentDemographics, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Contributions.ToListAsync(), target, target.Contributions, x => x.CreatedAt));
-            result.Add(await UpsertAsync(source, await source.Trainings.ToListAsync(), target, target.Trainings, _ => null));
-            result.Add(await UpsertAsync(source, await source.Cedulas.ToListAsync(), target, target.Cedulas, x => x.CreatedAt));
-            result.Add(await UpsertAsync(source, await source.Claims.ToListAsync(), target, target.Claims, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.ClaimDocuments.ToListAsync(), target, target.ClaimDocuments, x => x.UploadedAt));
-            result.Add(await UpsertAsync(source, await source.Benefits.ToListAsync(), target, target.Benefits, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Premiums.ToListAsync(), target, target.Premiums, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.DocumentTypes.ToListAsync(), target, target.DocumentTypes, x => x.CreatedAt));
-            result.Add(await UpsertAsync(source, await source.Documents.ToListAsync(), target, target.Documents, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Senders.ToListAsync(), target, target.Senders, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Receivers.ToListAsync(), target, target.Receivers, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.DocumentTransactions.ToListAsync(), target, target.DocumentTransactions, x => x.UpdatedAt));
-            result.Add(await UpsertAsync(source, await source.Notifications.ToListAsync(), target, target.Notifications, x => x.CreatedAt));
-            result.Add(await UpsertAsync(source, await source.AuditLogs.ToListAsync(), target, target.AuditLogs, x => x.LoggedAt));
-            result.Add(await UpsertAsync(source, await source.SourceFunds.ToListAsync(), target, target.SourceFunds, x => x.UpdatedAt));
+            // ★ FIX: each entity's upsert now runs through SafeUpsertAsync, which catches
+            // per-entity failures so one bad table (e.g. duplicate emp_id) can no longer
+            // abort the sync of every other table (Beneficiaries, BeneficiaryStaging, etc.)
+            result.Add(await SafeUpsertAsync("Departments", source, await source.Departments.ToListAsync(), target, target.Departments, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Employees", source, await source.Employees.ToListAsync(), target, target.Employees, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("SystemUsers", source, await source.SystemUsers.ToListAsync(), target, target.SystemUsers, x => x.LastLogin ?? x.CreatedAt));
+            result.Add(await SafeUpsertAsync("UserPermissions", source, await source.UserPermissions.ToListAsync(), target, target.UserPermissions, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("InsurancePolicies", source, await source.InsurancePolicies.ToListAsync(), target, target.InsurancePolicies, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("CompanyProfiles", source, await source.CompanyProfiles.ToListAsync(), target, target.CompanyProfiles, _ => null));
+            result.Add(await SafeUpsertAsync("EmployeePolicies", source, await source.EmployeePolicies.ToListAsync(), target, target.EmployeePolicies, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Beneficiaries", source, await source.Beneficiaries.ToListAsync(), target, target.Beneficiaries, x => x.CreatedAt));
+            result.Add(await SafeUpsertAsync("BeneficiaryStaging", source, await source.BeneficiaryStaging.ToListAsync(), target, target.BeneficiaryStaging, x => x.ImportedAt));
+            result.Add(await SafeUpsertAsync("ResidentDemographics", source, await source.ResidentDemographics.ToListAsync(), target, target.ResidentDemographics, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Contributions", source, await source.Contributions.ToListAsync(), target, target.Contributions, x => x.CreatedAt));
+            result.Add(await SafeUpsertAsync("Trainings", source, await source.Trainings.ToListAsync(), target, target.Trainings, _ => null));
+            result.Add(await SafeUpsertAsync("Cedulas", source, await source.Cedulas.ToListAsync(), target, target.Cedulas, x => x.CreatedAt));
+            result.Add(await SafeUpsertAsync("Claims", source, await source.Claims.ToListAsync(), target, target.Claims, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("ClaimDocuments", source, await source.ClaimDocuments.ToListAsync(), target, target.ClaimDocuments, x => x.UploadedAt));
+            result.Add(await SafeUpsertAsync("Benefits", source, await source.Benefits.ToListAsync(), target, target.Benefits, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Premiums", source, await source.Premiums.ToListAsync(), target, target.Premiums, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("DocumentTypes", source, await source.DocumentTypes.ToListAsync(), target, target.DocumentTypes, x => x.CreatedAt));
+            result.Add(await SafeUpsertAsync("Documents", source, await source.Documents.ToListAsync(), target, target.Documents, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Senders", source, await source.Senders.ToListAsync(), target, target.Senders, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Receivers", source, await source.Receivers.ToListAsync(), target, target.Receivers, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("DocumentTransactions", source, await source.DocumentTransactions.ToListAsync(), target, target.DocumentTransactions, x => x.UpdatedAt));
+            result.Add(await SafeUpsertAsync("Notifications", source, await source.Notifications.ToListAsync(), target, target.Notifications, x => x.CreatedAt));
+            result.Add(await SafeUpsertAsync("AuditLogs", source, await source.AuditLogs.ToListAsync(), target, target.AuditLogs, x => x.LoggedAt));
+            result.Add(await SafeUpsertAsync("SourceFunds", source, await source.SourceFunds.ToListAsync(), target, target.SourceFunds, x => x.UpdatedAt));
 
             source.ChangeTracker.Clear();
             return result;
+        }
+
+        // ★ FIX: new wrapper — isolates each entity type's sync so a failure (e.g. UNIQUE
+        // constraint on employees.emp_id) is recorded and skipped instead of bubbling up
+        // and killing the sync for every other table.
+        private static async Task<SyncResult> SafeUpsertAsync<T>(
+            string entityLabel,
+            eSureHiDbContext source,
+            List<T> sourceRows,
+            eSureHiDbContext target,
+            DbSet<T> targetSet,
+            Func<T, DateTime?> getTimestamp) where T : class
+        {
+            try
+            {
+                return await UpsertAsync(source, sourceRows, target, targetSet, getTimestamp);
+            }
+            catch (Exception ex)
+            {
+                // Roll back whatever this entity type staged so it doesn't poison
+                // the next entity's SaveChanges call.
+                target.ChangeTracker.Clear();
+                return new SyncResult
+                {
+                    Failed = 1,
+                    Details = $"{entityLabel} sync skipped: {ex.GetBaseException().Message}"
+                };
+            }
         }
 
         private static async Task<SyncResult> UpsertAsync<T>(
@@ -394,6 +441,13 @@ namespace eSureHi.Services
 
                 var existing = await targetSet
                     .FirstOrDefaultAsync(x => EF.Property<string>(x, "SyncId") == syncId);
+
+                // ★ FIX: fall back to matching on the entity's natural/unique key
+                // (e.g. Employees.EmpId) when SyncId doesn't match. Without this,
+                // two independently-created rows with the same emp_id but different
+                // SyncId look "new" to both sides and the insert throws a UNIQUE
+                // constraint violation instead of merging into the existing row.
+                existing ??= await FindExistingByNaturalKeyAsync(source, row, target, targetSet);
 
                 if (existing is null)
                 {
@@ -426,6 +480,63 @@ namespace eSureHi.Services
 
             target.ChangeTracker.Clear();
             return result;
+        }
+
+        // ★ FIX: new helper — looks up alternate keys / unique indexes (other than SyncId)
+        // defined on the entity, and tries to find a matching row in target using those
+        // values. This is what lets Employees.EmpId (and any other unique business key
+        // on any synced table) reconcile correctly instead of duplicating.
+        private static async Task<T?> FindExistingByNaturalKeyAsync<T>(
+            eSureHiDbContext sourceContext,
+            T sourceRow,
+            eSureHiDbContext targetContext,
+            DbSet<T> targetSet) where T : class
+        {
+            var entityType = targetContext.Model.FindEntityType(typeof(T));
+            if (entityType is null)
+                return null;
+
+            var sourceEntry = sourceContext.Entry(sourceRow);
+
+            var candidateKeyGroups = entityType.GetKeys()
+                .Where(k => !k.IsPrimaryKey())
+                .Select(k => k.Properties.Select(p => p.Name).ToArray())
+                .Concat(entityType.GetIndexes()
+                    .Where(i => i.IsUnique)
+                    .Select(i => i.Properties.Select(p => p.Name).ToArray()))
+                .Where(names => names.Length > 0 && !(names.Length == 1 && names[0] == "SyncId"));
+
+            foreach (var propNames in candidateKeyGroups)
+            {
+                object?[] values;
+                try
+                {
+                    values = propNames
+                        .Select(name => sourceEntry.Property(name).CurrentValue)
+                        .ToArray();
+                }
+                catch
+                {
+                    continue; // property not tracked/found on this entity, skip this key group
+                }
+
+                if (values.Any(v => v is null))
+                    continue; // avoid matching everything on an all-null key
+
+                IQueryable<T> query = targetSet;
+                for (int i = 0; i < propNames.Length; i++)
+                {
+                    var propName = propNames[i];
+                    var value = values[i];
+                    query = query.Where(e => EF.Property<object>(e, propName) == value);
+                }
+
+                var match = await query.FirstOrDefaultAsync();
+                if (match is not null)
+                    return match;
+            }
+
+            return null;
         }
 
         private static void CopyValues<T>(

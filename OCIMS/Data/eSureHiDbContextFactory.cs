@@ -47,7 +47,7 @@ namespace eSureHi.Data
             var connStr = config.ToConnectionString();
 
             var options = new DbContextOptionsBuilder<eSureHiDbContext>()
-                .UseMySql(connStr, CloudServerVersion)
+                .UseMySql(connStr, CloudServerVersion, mySqlOptions => mySqlOptions.EnableRetryOnFailure())
                 .Options;
 
             return new eSureHiDbContext(options);
