@@ -1,0 +1,384 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.PaymentsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers">
+
+    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Header ── -->
+        <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CashMultiple"
+                                             Width="24" Height="24"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding PageSummaryText}"
+                                   FontSize="11"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <Border Background="White"
+                            BorderBrush="#1B5E20"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="11" Foreground="#0F172A" FontWeight="Bold">
+                            <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
+                            <Run Text="of"/>
+                            <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right" VerticalAlignment="Center">
+
+                    <Button Command="{Binding PrintLedgerCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="#64748B"
+                            BorderBrush="#CBD5E1"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Printer" Width="16" Height="16"
+                                                     Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Print Ledger" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="#64748B"
+                            BorderBrush="#CBD5E1"
+                            Height="34" Padding="12,0" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
+                                                     Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Refresh" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding BackToDashboardCommand}"
+                            Background="#D32F2F"
+                            Foreground="White"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="34" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Exit" FontSize="12"
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── Loading Bar ── -->
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3"
+                     Foreground="{StaticResource PrimaryBrush}"
+                     Visibility="{Binding IsLoading,
+                         Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <!-- ── Filters ── -->
+        <Border Grid.Row="2" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1"
+                Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Search member, family ID..."
+                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                         materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Height="50" FontSize="12"/>
+
+                <ComboBox Grid.Column="2"
+                          ItemsSource="{Binding StatusOptions}"
+                          SelectedItem="{Binding StatusFilter}"
+                          materialDesign:HintAssist.Hint="Status"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"/>
+
+                <ComboBox Grid.Column="4"
+                          ItemsSource="{Binding GroupOptions}"
+                          SelectedItem="{Binding GroupFilter}"
+                          materialDesign:HintAssist.Hint="Group"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"/>
+
+                <DatePicker Grid.Column="6"
+                            SelectedDate="{Binding DateFrom}"
+                            materialDesign:HintAssist.Hint="From"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                            Height="50" FontSize="12"/>
+
+                <DatePicker Grid.Column="8"
+                            SelectedDate="{Binding DateTo}"
+                            materialDesign:HintAssist.Hint="To"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                            Height="50" FontSize="12"/>
+
+                <ComboBox Grid.Column="10"
+                          ItemsSource="{Binding MonthOptions}"
+                          SelectedItem="{Binding MonthFilter}"
+                          materialDesign:HintAssist.Hint="Month"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"/>
+
+                <ComboBox Grid.Column="12"
+                          ItemsSource="{Binding YearOptions}"
+                          SelectedItem="{Binding YearFilter}"
+                          materialDesign:HintAssist.Hint="Year"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Height="50" FontSize="12"/>
+
+                <Button Grid.Column="14"
+                        Command="{Binding ClearFilterCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Foreground="#64748B" Height="50">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
+                                                 Margin="0,0,4,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Clear" FontSize="12" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ── DataGrid ── -->
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding DisplayedPayments}"
+                  SelectedItem="{Binding SelectedPayment}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#E5EAF2"
+                  RowHeight="48"
+                  BorderThickness="0"
+                  Background="White"
+                  RowBackground="White"
+                  AlternatingRowBackground="#F8FAFC"
+                  materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                  Style="{StaticResource ReadableDataGrid}">
+
+            <DataGrid.Columns>
+
+                <!-- Family ID -->
+                <DataGridTextColumn Header="Family ID"
+                                    Binding="{Binding FamilyId}" Width="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="Medium"/>
+                            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Full Name -->
+                <DataGridTextColumn Header="Full Name"
+                                    Binding="{Binding MemberName}" Width="180">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="#0F172A"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Relationship -->
+                <DataGridTextColumn Header="Relationship"
+                                    Binding="{Binding Relationship}" Width="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Foreground" Value="#1E293B"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Billing Month -->
+                <DataGridTextColumn Header="Billing Month"
+                                    Binding="{Binding BillingMonth, StringFormat={}{0:MMM yyyy}}" Width="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Amount -->
+                <DataGridTextColumn Header="Amount"
+                                    Binding="{Binding Amount, StringFormat=₱{0:N2}}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="Medium"/>
+                            <Setter Property="Foreground" Value="#0F172A"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Budget Source -->
+                <DataGridTextColumn Header="Budget Source"
+                                    Binding="{Binding SourceOfFunds}" Width="140">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Foreground" Value="#1E293B"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Status Badge -->
+                <DataGridTemplateColumn Header="Status" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="10"
+                                    Padding="10,3"
+                                    BorderBrush="#CBD5E1"
+                                    BorderThickness="1"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                <Setter Property="Background" Value="#FFF3E0"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Approved">
+                                                <Setter Property="Background" Value="#E8F5E9"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Rejected">
+                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#334155"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                    <Setter Property="Foreground" Value="#E65100"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Approved">
+                                                    <Setter Property="Foreground" Value="#2E7D32"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Rejected">
+                                                    <Setter Property="Foreground" Value="#C62828"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Created Date -->
+                <DataGridTextColumn Header="Created Date"
+                                    Binding="{Binding CreatedAt, StringFormat={}{0:MMM dd, yyyy}}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Actions (Pending mode only) -->
+                <DataGridTemplateColumn Header="Actions" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                        Visibility="{Binding DataContext.IsPendingMode,
+                                            RelativeSource={RelativeSource AncestorType=DataGrid},
+                                            Converter={StaticResource BoolToVisibilityConverter}}">
+
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.ApproveCommand,
+                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Approve"
+                                        Width="32" Height="32"
+                                        Foreground="{StaticResource SuccessBrush}">
+                                    <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16"/>
+                                </Button>
+
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.RejectCommand,
+                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Reject"
+                                        Width="32" Height="32"
+                                        Foreground="{StaticResource ErrorBrush}">
+                                    <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16"/>
+                                </Button>
+
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- ── Empty State ── -->
+        <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Visibility="{Binding NoResults, Converter={StaticResource BoolToVisibilityConverter}}">
+            <materialDesign:PackIcon Kind="CashRemove" Width="48" Height="48"
+                                     Foreground="#CBD5E1" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding EmptyStateText}" FontSize="13" Foreground="#94A3B8"
+                       Margin="0,10,0,0" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- ── Status Bar ── -->
+        <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
+                Padding="16,8">
+            <TextBlock FontSize="11">
+                <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
+                <Run Text="payment record(s) shown"/>
+            </TextBlock>
+        </Border>
+
+    </Grid>
+</UserControl>
