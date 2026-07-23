@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +12,12 @@ namespace eSureHi.Data
             await db.Database.EnsureCreatedAsync();
             await EnsureResidentDemographicsTableAsync(db);
             await EnsureCrsBeneficiaryCacheTableAsync(db);
+            await EnsureDistributionTablesAsync(db);
+            await EnsureClaimColumnsAsync(db);
+            await EnsurePaymentsTableAsync(db);
             await EnsureSyncColumnsAsync(db);
             await EnsureLocalViewsAsync(db);
             await BackfillSyncIdsAsync(db);
-            await SeedSampleDataAsync(db);
         }
 
         private static async Task EnsureResidentDemographicsTableAsync(eSureHiDbContext db)
@@ -102,6 +103,72 @@ namespace eSureHi.Data
             await db.Database.ExecuteSqlRawAsync(@"
                 CREATE INDEX IF NOT EXISTS ix_crs_beneficiary_cache_beneficiary_id
                 ON crs_beneficiary_cache (beneficiary_id);");
+        }
+
+        private static async Task EnsureDistributionTablesAsync(eSureHiDbContext db)
+        {
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS distribution_batches (
+                    batch_id INTEGER NOT NULL CONSTRAINT PK_distribution_batches PRIMARY KEY AUTOINCREMENT,
+                    project_code TEXT NOT NULL,
+                    project_title TEXT NOT NULL,
+                    project_description TEXT NULL,
+                    source_fund_id INTEGER NULL,
+                    amount_per_beneficiary TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS distribution_records (
+                    record_id INTEGER NOT NULL CONSTRAINT PK_distribution_records PRIMARY KEY AUTOINCREMENT,
+                    batch_id INTEGER NOT NULL,
+                    beneficiary_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Unreleased',
+                    remarks TEXT NULL,
+                    processed_at TEXT NULL
+                );");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_distribution_batches_source_fund_id
+                ON distribution_batches (source_fund_id);");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_distribution_records_batch_id
+                ON distribution_records (batch_id);");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_distribution_records_beneficiary_id
+                ON distribution_records (beneficiary_id);");
+        }
+
+        private static async Task EnsurePaymentsTableAsync(eSureHiDbContext db)
+        {
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS payments (
+                    payment_id INTEGER NOT NULL CONSTRAINT PK_payments PRIMARY KEY AUTOINCREMENT,
+                    beneficiary_id INTEGER NOT NULL,
+                    family_id TEXT NULL,
+                    member_name TEXT NOT NULL,
+                    dependent_name TEXT NULL,
+                    relationship TEXT NULL,
+                    billing_month TEXT NOT NULL,
+                    amount TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    payment_type TEXT NOT NULL DEFAULT 'Advance',
+                    source_of_funds TEXT NULL,
+                    paid_at TEXT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    created_by TEXT NULL,
+                    remarks TEXT NULL
+                );");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_payments_beneficiary_id
+                ON payments (beneficiary_id);");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_payments_family_id
+                ON payments (family_id);");
         }
 
         private static async Task EnsureSyncColumnsAsync(eSureHiDbContext db)
@@ -251,6 +318,17 @@ namespace eSureHi.Data
             await cmd.ExecuteNonQueryAsync();
         }
 
+        private static async Task EnsureClaimColumnsAsync(eSureHiDbContext db)
+        {
+            // New claim-breakdown columns (added Phase 6). Idempotent for existing DBs;
+            // fresh DBs already get these from EnsureCreatedAsync via the model.
+            await EnsureSqliteColumnAsync(db, "claims", "admission_date", "TEXT NULL");
+            await EnsureSqliteColumnAsync(db, "claims", "discharge_date", "TEXT NULL");
+            await EnsureSqliteColumnAsync(db, "claims", "excess_bill_amount", "TEXT NOT NULL DEFAULT '0'");
+            await EnsureSqliteColumnAsync(db, "claims", "outside_diagnostics_amount", "TEXT NOT NULL DEFAULT '0'");
+            await EnsureSqliteColumnAsync(db, "claims", "total_covered", "TEXT NOT NULL DEFAULT '0'");
+        }
+
         private static async Task EnsureSqliteColumnAsync(
             eSureHiDbContext db,
             string tableName,
@@ -272,45 +350,5 @@ namespace eSureHi.Data
         private static string Escape(string value) =>
             value.Replace("\"", "\"\"", StringComparison.Ordinal);
 
-        private static async Task SeedSampleDataAsync(eSureHiDbContext db)
-        {
-            if (await db.Beneficiaries.AnyAsync())
-            {
-                db.Beneficiaries.RemoveRange(db.Beneficiaries);
-                await db.SaveChangesAsync();
-            }
-
-            if (await db.Employees.AnyAsync()) return;
-
-            var employees = new[]
-            {
-                new eSureHi.Models.Employee { EmployeeNo = "EMP-001", FirstName = "Juan", LastName = "Dela Cruz", EmploymentType = "Regular", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                new eSureHi.Models.Employee { EmployeeNo = "EMP-002", FirstName = "Maria", LastName = "Clara", EmploymentType = "Casual", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                new eSureHi.Models.Employee { EmployeeNo = "EMP-003", FirstName = "Jose", LastName = "Rizal", EmploymentType = "Job Order", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                new eSureHi.Models.Employee { EmployeeNo = "EMP-004", FirstName = "Andres", LastName = "Bonifacio", EmploymentType = "Regular", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                new eSureHi.Models.Employee { EmployeeNo = "EMP-005", FirstName = "Emilio", LastName = "Aguinaldo", EmploymentType = "Casual", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now }
-            };
-
-            db.Employees.AddRange(employees);
-            await db.SaveChangesAsync();
-
-            var policy = await db.InsurancePolicies.FirstOrDefaultAsync();
-            if (policy != null)
-            {
-                var claims = new[]
-                {
-                    new eSureHi.Models.Claim { ClaimNo = "CLM-001", EmpId = employees[0].EmpId, PolicyId = policy.PolicyId, ClaimType = "Medical", AmountClaimed = 5000, ClaimStatus = "Submitted", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                    new eSureHi.Models.Claim { ClaimNo = "CLM-002", EmpId = employees[1].EmpId, PolicyId = policy.PolicyId, ClaimType = "Accident", AmountClaimed = 10000, ClaimStatus = "Approved", AmountApproved = 10000, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                    new eSureHi.Models.Claim { ClaimNo = "CLM-003", EmpId = employees[2].EmpId, PolicyId = policy.PolicyId, ClaimType = "Death", AmountClaimed = 50000, ClaimStatus = "Released", AmountReleased = 50000, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                    new eSureHi.Models.Claim { ClaimNo = "CLM-004", EmpId = employees[3].EmpId, PolicyId = policy.PolicyId, ClaimType = "Medical", AmountClaimed = 2000, ClaimStatus = "Submitted", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now },
-                    new eSureHi.Models.Claim { ClaimNo = "CLM-005", EmpId = employees[4].EmpId, PolicyId = policy.PolicyId, ClaimType = "Accident", AmountClaimed = 15000, ClaimStatus = "Under Review", CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now }
-                };
-                db.Claims.AddRange(claims);
-                await db.SaveChangesAsync();
-            }
-
-            // Dummy CRS Cache removed to use remote CRS database instead
-
-        }
     }
 }
