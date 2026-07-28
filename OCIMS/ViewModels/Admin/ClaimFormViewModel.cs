@@ -4,6 +4,8 @@ using eSureHi.Data;
 using eSureHi.Helpers;
 using eSureHi.Models;
 using eSureHi.Services;
+using eSureHi.Views.Admin.Dialogs;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -24,6 +26,13 @@ namespace eSureHi.ViewModels.Admin
         private int? _lockedBeneficiaryId;
         public bool IsBeneficiaryLocked => _lockedBeneficiaryId.HasValue;
         public bool CanChangeClaimant => !IsBeneficiaryLocked;
+
+        // ── Applicant / Household info (beneficiary self-service path) ──
+        public string ApplicantName { get; private set; } = string.Empty;
+        public bool IsHouseholdHead { get; private set; }
+        public string FamilyRole => IsHouseholdHead ? "Household Head" : "Dependent Member";
+        public string HouseholdStatusBadge => IsHouseholdHead ? "Registered Member" : "Dependent";
+        public ObservableCollection<FamilyMemberDisplay> FamilyMembers { get; } = new();
 
         // ── Step 1: Employee Selection ─────────────────────────────────
         private ObservableCollection<Employee> _allEmployees = new();
@@ -202,6 +211,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand AddHospitalBillCommand { get; }
         public RelayCommand AddOfficialReceiptCommand { get; }
         public RelayCommand ScanDigitalIdCommand { get; }
+        public RelayCommand ScanCameraCommand { get; }
         public RelayCommand<ClaimDocumentItem> RemoveDocumentCommand { get; }
 
         // ── Digital ID scan (looks up a beneficiary by their printed ID code) ──
@@ -221,6 +231,7 @@ namespace eSureHi.ViewModels.Admin
             AddHospitalBillCommand = new RelayCommand(() => AddDocumentOfType("Hospital Bill"));
             AddOfficialReceiptCommand = new RelayCommand(() => AddDocumentOfType("Official Receipt"));
             ScanDigitalIdCommand = new RelayCommand(async () => await ScanDigitalIdAsync());
+            ScanCameraCommand = new RelayCommand(async () => await ScanCameraAsync());
             RemoveDocumentCommand = new RelayCommand<ClaimDocumentItem>(
                 item => { if (item is not null) Documents.Remove(item); });
 
@@ -336,6 +347,39 @@ namespace eSureHi.ViewModels.Admin
             SelectedEmployee = _allEmployees.FirstOrDefault(e => e.EmpId == beneficiary.EmpId) ?? beneficiary.Employee;
             await LoadPoliciesForEmployeeAsync();
             SelectedBeneficiary = Beneficiaries.FirstOrDefault(b => b.BenId == beneficiary.BenId);
+
+            ApplicantName = beneficiary.FullName;
+            var snapshot = await HouseholdLookupService.GetHouseholdSnapshotAsync(db, beneficiary);
+            IsHouseholdHead = snapshot.IsHouseholdHead;
+            FamilyMembers.Clear();
+            foreach (var m in snapshot.Members) FamilyMembers.Add(m);
+            OnPropertyChanged(nameof(ApplicantName));
+            OnPropertyChanged(nameof(IsHouseholdHead));
+            OnPropertyChanged(nameof(FamilyRole));
+            OnPropertyChanged(nameof(HouseholdStatusBadge));
+        }
+
+        // Opens the camera QR scanner (same pattern as DistributionBatchViewModel.ScanCameraAsync)
+        // and forwards the decoded code into the existing digital-ID lookup path.
+        private async Task ScanCameraAsync()
+        {
+            try
+            {
+                var dialog = new QRScannerDialog();
+                dialog.QRCodeScanned += code =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        DigitalIdCode = code;
+                        ScanDigitalIdCommand.Execute(null);
+                    });
+                };
+                await DialogHost.Show(dialog, "ClaimVerificationDialogHost");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Camera scanning is unavailable: {ex.Message}";
+            }
         }
 
         // Resolves a scanned/typed digital-ID code to a beneficiary and selects their
@@ -357,6 +401,14 @@ namespace eSureHi.ViewModels.Admin
                 if (beneficiary is null)
                 {
                     ErrorMessage = $"No beneficiary found for ID \"{code}\".";
+                    return;
+                }
+
+                // Self-service mode: the scan/code entry only confirms identity against the
+                // beneficiary who opened the dialog — it must never switch the claimant.
+                if (_lockedBeneficiaryId.HasValue && beneficiary.BenId != _lockedBeneficiaryId.Value)
+                {
+                    ErrorMessage = "This ID does not match your account — you can only file a claim for yourself.";
                     return;
                 }
 

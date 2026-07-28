@@ -1,0 +1,119 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.DistributionStatusDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Distribution Status"
+        Width="600" Height="620"
+        MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="48" ResizeBorderThickness="5"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <materialDesign:DialogHost Identifier="DistributionStatusDialogHost" CloseOnClickAway="False">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="20,0">
+                        <materialDesign:PackIcon Kind="BankTransferOut"
+                                                 Width="20" Height="20"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,10,0"/>
+                        <TextBlock Text="My Distribution Status"
+                                   FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Command="{Binding CloseCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}" Width="48" Height="44"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Body -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Text="Status of any distribution/relief batch you're part of. This is read-only — release actions are handled by program staff."
+                               FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="No distribution records found for your account yet."
+                               FontSize="13" Foreground="#94A3B8"
+                               HorizontalAlignment="Center" Margin="0,40,0,0"
+                               Visibility="{Binding HasRecords, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+
+                    <ItemsControl ItemsSource="{Binding Records}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"
+                                        CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <TextBlock Text="{Binding ProjectTitle}" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                            <Border HorizontalAlignment="Right" CornerRadius="9" Padding="10,3"
+                                                    Background="{Binding StatusBackground}">
+                                                <TextBlock Text="{Binding StatusDisplay}" FontSize="10" FontWeight="Bold"
+                                                           Foreground="{Binding StatusForeground}"/>
+                                            </Border>
+                                        </Grid>
+                                        <UniformGrid Columns="2" Rows="2">
+                                            <StackPanel Margin="0,0,8,8">
+                                                <TextBlock Text="Amount" FontSize="10" Foreground="#94A3B8"/>
+                                                <TextBlock Text="{Binding AmountText}" FontSize="13" Foreground="#0F172A"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="0,0,0,8">
+                                                <TextBlock Text="Fund Source" FontSize="10" Foreground="#94A3B8"/>
+                                                <TextBlock Text="{Binding FundSourceText}" FontSize="13" Foreground="#0F172A"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="0,0,8,0">
+                                                <TextBlock Text="Date Released" FontSize="10" Foreground="#94A3B8"/>
+                                                <TextBlock Text="{Binding DateReleasedText}" FontSize="13" Foreground="#0F172A"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock Text="Remarks" FontSize="10" Foreground="#94A3B8"/>
+                                                <TextBlock Text="{Binding RemarksText}" FontSize="13" Foreground="#0F172A"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Border Grid.Row="2"
+                    BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Background="White"
+                    helpers:Adaptive.UseAdaptiveForeground="True" Padding="16,12">
+                <Button Content="Close"
+                        Command="{Binding CloseCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        HorizontalAlignment="Right" Width="90"/>
+            </Border>
+
+        </Grid>
+    </materialDesign:DialogHost>
+</Window>

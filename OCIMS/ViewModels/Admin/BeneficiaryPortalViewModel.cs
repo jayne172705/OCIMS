@@ -18,6 +18,7 @@ namespace eSureHi.ViewModels.Admin
         private string _newPassword = string.Empty;
         private string _statusMessage = string.Empty;
         private bool _isBusy;
+        private bool _hasActiveClaim;
 
         public Beneficiary? Beneficiary { get => _beneficiary; set => SetProperty(ref _beneficiary, value); }
         public string Email { get => _email; set => SetProperty(ref _email, value); }
@@ -25,11 +26,14 @@ namespace eSureHi.ViewModels.Admin
         public string NewPassword { get => _newPassword; set => SetProperty(ref _newPassword, value); }
         public string StatusMessage { get => _statusMessage; set => SetProperty(ref _statusMessage, value); }
         public bool IsBusy { get => _isBusy; set => SetProperty(ref _isBusy, value); }
+        public bool HasActiveClaim { get => _hasActiveClaim; set => SetProperty(ref _hasActiveClaim, value); }
+        public string ActiveClaimStatusText => "You already have a claim in progress. You can file a new one once it's resolved.";
         public string DisplayName => Beneficiary?.FullName ?? AuthService.Instance.CurrentUser?.Username ?? "Beneficiary";
         public ObservableCollection<Claim> Claims { get; } = new();
 
         public RelayCommand RefreshCommand { get; }
         public RelayCommand SubmitClaimCommand { get; }
+        public RelayCommand ViewDistributionStatusCommand { get; }
         public RelayCommand SaveEmailCommand { get; }
         public RelayCommand ChangePasswordCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
@@ -38,6 +42,7 @@ namespace eSureHi.ViewModels.Admin
         {
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
             SubmitClaimCommand = new RelayCommand(OpenSubmitClaim);
+            ViewDistributionStatusCommand = new RelayCommand(OpenDistributionStatus);
             SaveEmailCommand = new RelayCommand(async () => await SaveEmailAsync());
             ChangePasswordCommand = new RelayCommand(async () => await ChangePasswordAsync());
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
@@ -71,6 +76,9 @@ namespace eSureHi.ViewModels.Admin
                     .ToListAsync();
                 foreach (var claim in claims)
                     Claims.Add(claim);
+
+                HasActiveClaim = await db.Claims.AnyAsync(c => c.BenId == benId &&
+                    c.ClaimStatus != "Rejected" && c.ClaimStatus != "Paid");
             }
             catch (Exception ex)
             {
@@ -91,8 +99,23 @@ namespace eSureHi.ViewModels.Admin
                 return;
             }
 
-            var dialog = new Views.Admin.Dialogs.ClaimFormDialog(beneficiaryId: benId.Value);
+            var dialog = new Views.Admin.Dialogs.ClaimVerificationDialog(benId.Value);
             dialog.SetSaveCallback(async () => await LoadAsync());
+            if (App.ActiveShell is not null && App.ActiveShell != dialog)
+                dialog.Owner = App.ActiveShell;
+            dialog.ShowDialog();
+        }
+
+        private void OpenDistributionStatus()
+        {
+            var benId = AuthService.Instance.CurrentUser?.BenId;
+            if (benId is null)
+            {
+                StatusMessage = "Your account is not linked to a beneficiary record.";
+                return;
+            }
+
+            var dialog = new Views.Admin.Dialogs.DistributionStatusDialog(benId.Value);
             if (App.ActiveShell is not null && App.ActiveShell != dialog)
                 dialog.Owner = App.ActiveShell;
             dialog.ShowDialog();

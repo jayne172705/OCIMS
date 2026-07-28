@@ -1,0 +1,416 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.ClaimVerificationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Insurance Claim Verification"
+        Width="820" Height="740"
+        MinWidth="720" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Window.Resources>
+        <helpers:QRCodeConverter x:Key="QRCodeConverter"/>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="48" ResizeBorderThickness="5"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <materialDesign:DialogHost Identifier="ClaimVerificationDialogHost" CloseOnClickAway="False">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="#2E7D32" helpers:Adaptive.UseAdaptiveForeground="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="20,0">
+                        <materialDesign:PackIcon Kind="ShieldPlus"
+                                                 Width="20" Height="20"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,10,0"/>
+                        <TextBlock Text="Insurance Claim Verification"
+                                   FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}" Width="48" Height="44"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Body -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
+                <StackPanel>
+
+                    <!-- ID card preview header -->
+                    <Border CornerRadius="8" Padding="18,16" Margin="0,0,0,14">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#1B5E20" Offset="0"/>
+                                <GradientStop Color="#43A047" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#FFFFFF26" CornerRadius="8"
+                                    BorderBrush="#FFFFFF66" BorderThickness="1.5"
+                                    Width="72" Height="88" VerticalAlignment="Center" Margin="0,0,14,0">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountBoxOutline" Width="30" Height="30"
+                                                             Foreground="#D6EFD8" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="PHOTO" FontSize="8" FontWeight="Bold"
+                                               Foreground="#D6EFD8" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="eSureHi+ Digital ID" FontSize="11" Foreground="#D6EFD8"/>
+                                <TextBlock Text="{Binding ApplicantName}" FontSize="22" FontWeight="Bold"
+                                           Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding SelectedBeneficiary.BeneficiaryId, StringFormat='Insurance ID: {0}'}"
+                                           FontSize="12" Foreground="#E8F5E9" Margin="0,2,0,0"/>
+                                <TextBlock Text="{Binding SelectedBeneficiary.DateOfBirth, StringFormat='DOB: {0:MMM dd, yyyy}'}"
+                                           FontSize="12" Foreground="#E8F5E9"/>
+                            </StackPanel>
+                            <Border Grid.Column="2" Background="White" CornerRadius="6" Padding="6" VerticalAlignment="Center">
+                                <Image Source="{Binding SelectedBeneficiary.BeneficiaryId, Converter={StaticResource QRCodeConverter}}"
+                                       Width="72" Height="72"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Scan via Camera + Digital ID -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding DigitalIdCode, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Scan ID here or enter code..."
+                                 materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                 materialDesign:TextFieldAssist.LeadingIcon="BarcodeScan"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="46" FontSize="12" MinWidth="220">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding ScanDigitalIdCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Grid.Column="2"
+                                Command="{Binding ScanCameraCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="46" Padding="14,0" MinWidth="150">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CameraOutline" Width="18" Height="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Scan via Camera"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Applicant Info -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
+                            Padding="14,12" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Applicant Info" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <UniformGrid Columns="3">
+                                <StackPanel Margin="0,0,8,0">
+                                    <TextBlock Text="Applicant Name" FontSize="10" Foreground="#94A3B8"/>
+                                    <TextBlock Text="{Binding ApplicantName}" FontSize="13" Foreground="#0F172A"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,0">
+                                    <TextBlock Text="Household Head" FontSize="10" Foreground="#94A3B8"/>
+                                    <TextBlock Text="{Binding SelectedEmployee.FullName}" FontSize="13" Foreground="#0F172A"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Family Role" FontSize="10" Foreground="#94A3B8"/>
+                                    <TextBlock Text="{Binding FamilyRole}" FontSize="13" Foreground="#0F172A"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Household Status -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
+                            Padding="14,12" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock Text="Household Status" FontSize="13" FontWeight="SemiBold"/>
+                                <Border HorizontalAlignment="Right" CornerRadius="9" Padding="8,3" Background="#DCFCE7">
+                                    <TextBlock Text="{Binding HouseholdStatusBadge}" FontSize="10" FontWeight="Bold" Foreground="#166534"/>
+                                </Border>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding FamilyMembers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#EEF2F7" BorderThickness="0,0,0,1" Padding="0,6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding FullName}" FontSize="13" Foreground="#0F172A"/>
+                                                    <TextBlock Text="{Binding FamilyRole}" FontSize="10" Foreground="#94A3B8"/>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" VerticalAlignment="Center" CornerRadius="9" Padding="8,3"
+                                                        Background="{Binding RegistrationStatusBackground}">
+                                                    <TextBlock Text="{Binding RegistrationStatus}" FontSize="10" FontWeight="Bold"
+                                                               Foreground="{Binding RegistrationStatusForeground}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Admission + Discharge dates -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <DatePicker Grid.Column="0"
+                                    SelectedDate="{Binding AdmissionDate}"
+                                    materialDesign:HintAssist.Hint="Admission Date *"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    Height="46" FontSize="13"/>
+                        <DatePicker Grid.Column="2"
+                                    SelectedDate="{Binding DischargeDate}"
+                                    materialDesign:HintAssist.Hint="Discharge Date *"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    Height="46" FontSize="13"/>
+                    </Grid>
+
+                    <!-- Claim Breakdown -->
+                    <Border Background="#F8FAFC" BorderBrush="#DDE4EF" BorderThickness="1"
+                            CornerRadius="4" Padding="14,12" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Claim Breakdown" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                            <!-- Daily allowance -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Daily Allowance" FontSize="12" FontWeight="Medium"/>
+                                    <TextBlock FontSize="10" Foreground="#64748B">
+                                        <Run Text="PHP 750/day ×"/>
+                                        <Run Text="{Binding CoveredAllowanceDays, Mode=OneWay}"/>
+                                        <Run Text="day(s), max 5"/>
+                                    </TextBlock>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                           Text="{Binding DailyAllowanceAmount, Mode=OneWay, StringFormat='PHP {0:N2}'}"/>
+                            </Grid>
+
+                            <!-- Requested Amount (Excess Bill) -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Requested Amount (Excess Bill)" FontSize="12" FontWeight="Medium"/>
+                                    <TextBlock Text="covered up to PHP 20,000" FontSize="10" Foreground="#64748B"/>
+                                </StackPanel>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding ExcessBillAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                         materialDesign:HintAssist.Hint="Amount (₱)"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Height="46" FontSize="12" Margin="8,0"/>
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                           Text="{Binding ExcessBillCovered, Mode=OneWay, StringFormat='Final Covered: PHP {0:N2}'}"/>
+                            </Grid>
+
+                            <!-- Requested Amount (Outside Diagnostics) -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Requested Amount (Outside Diagnostics)" FontSize="12" FontWeight="Medium"/>
+                                    <TextBlock Text="50% covered, up to PHP 20,000" FontSize="10" Foreground="#64748B"/>
+                                </StackPanel>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding OutsideDiagnosticsAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                         materialDesign:HintAssist.Hint="Amount (₱)"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Height="46" FontSize="12" Margin="8,0"/>
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                           Text="{Binding DiagnosticsCovered, Mode=OneWay, StringFormat='Final Covered: PHP {0:N2}'}"/>
+                            </Grid>
+
+                            <Border BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Padding="0,8,0,0">
+                                <Grid>
+                                    <TextBlock Text="Total Final Covered Amount" FontSize="13" FontWeight="Bold" Foreground="#166534"/>
+                                    <TextBlock HorizontalAlignment="Right" FontSize="15" FontWeight="Bold" Foreground="#166534"
+                                               Text="{Binding TotalCovered, Mode=OneWay, StringFormat='PHP {0:N2}'}"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Hospital + Physician -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding HospitalClinic, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Hospital / Clinic *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="46" FontSize="13" MinWidth="200"/>
+                        <TextBox Grid.Column="2"
+                                 Text="{Binding AttendingPhysician, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Attending Physician"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="46" FontSize="13" MinWidth="200"/>
+                    </Grid>
+
+                    <!-- Attachments -->
+                    <TextBlock Text="Attachments" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Command="{Binding AddHospitalBillCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                BorderBrush="{StaticResource PrimaryBrush}"
+                                Height="34" Padding="12,0" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileDocumentOutline"
+                                                         Width="16" Height="16"
+                                                         Margin="0,0,6,0"
+                                                         VerticalAlignment="Center"/>
+                                <TextBlock Text="Hospital Bill" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding AddOfficialReceiptCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                BorderBrush="{StaticResource PrimaryBrush}"
+                                Height="34" Padding="12,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ReceiptTextOutline"
+                                                         Width="16" Height="16"
+                                                         Margin="0,0,6,0"
+                                                         VerticalAlignment="Center"/>
+                                <TextBlock Text="Official Receipt" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="Attach the hospital bill and official receipt. Images or PDF only, 5 MB max per file."
+                               FontSize="11" Margin="0,0,0,8"/>
+
+                    <Border BorderBrush="#DDE4EF" BorderThickness="1"
+                            CornerRadius="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
+                        <ItemsControl ItemsSource="{Binding Documents}" Margin="8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#DDE4EF" BorderThickness="0,0,0,1" Padding="8,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Kind="FilePdfBox"
+                                                Width="24" Height="24"
+                                                Foreground="#EF9A9A"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,10,0"/>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FileName}" FontSize="13" FontWeight="Medium"/>
+                                                <TextBlock FontSize="11">
+                                                    <Run Text="{Binding DocType}"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding SizeKb}"/>
+                                                    <Run Text="KB"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Button Grid.Column="2"
+                                                    Command="{Binding DataContext.RemoveDocumentCommand,
+                                                        RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Foreground="{StaticResource ErrorBrush}"
+                                                    Width="30" Height="30">
+                                                <materialDesign:PackIcon Kind="Close" Width="14" Height="14"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Border Grid.Row="2"
+                    BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Background="White"
+                    helpers:Adaptive.UseAdaptiveForeground="True" Padding="16,12">
+                <Grid>
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{StaticResource ErrorBrush}"
+                               FontSize="12" TextWrapping="Wrap"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding ErrorMessage,
+                                   Converter={StaticResource StringToVisibilityConverter}}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancel"
+                                Command="{Binding CancelCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,0,8,0" Width="90"/>
+                        <Button Command="{Binding SaveCommand}"
+                                IsEnabled="{Binding IsBusy,
+                                    Converter={StaticResource InverseBoolConverter}}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Width="150">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave"
+                                                         Width="16" Height="16"
+                                                         Margin="0,0,6,0"
+                                                         VerticalAlignment="Center"/>
+                                <TextBlock Text="File a Claim" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </materialDesign:DialogHost>
+</Window>
