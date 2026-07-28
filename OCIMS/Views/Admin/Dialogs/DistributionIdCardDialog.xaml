@@ -125,6 +125,12 @@
                             CommandParameter="{x:Null}"
                             Style="{StaticResource MaterialDesignFlatButton}"
                             Margin="0,0,8,0"/>
+                    <Button Content="REJECT"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            CommandParameter="Reject"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="#B91C1C" BorderBrush="#B91C1C"
+                            Margin="0,0,8,0"/>
                     <Button Content="MOVE TO ON HOLD"
                             Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
                             CommandParameter="Hold"

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using eSureHi.Data;
 using eSureHi.Models;
+using eSureHi.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace eSureHi.ViewModels.Admin
@@ -80,64 +81,12 @@ namespace eSureHi.ViewModels.Admin
             OnPropertyChanged(nameof(Relationship));
             OnPropertyChanged(nameof(DateOfBirth));
 
-            // ── Family + address via the CRS cache (keyed on civil-registry id) ──
-            string? familyId = null;
-            if (!string.IsNullOrWhiteSpace(beneficiary.CivilRegistryId))
-            {
-                var cacheRow = await db.CrsBeneficiaryCache
-                    .FirstOrDefaultAsync(c => c.CivilRegistryId == beneficiary.CivilRegistryId);
-                if (cacheRow != null)
-                {
-                    familyId = cacheRow.FamilyId;
-                    Address = string.IsNullOrWhiteSpace(cacheRow.Address) ? "—" : cacheRow.Address!;
-                    OnPropertyChanged(nameof(Address));
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(familyId))
-            {
-                var familyMembers = await db.CrsBeneficiaryCache
-                    .Where(c => c.FamilyId == familyId)
-                    .ToListAsync();
-
-                var civilRegistryIds = familyMembers
-                    .Where(m => !string.IsNullOrWhiteSpace(m.CivilRegistryId))
-                    .Select(m => m.CivilRegistryId)
-                    .ToList();
-
-                var activeBeneficiaries = await db.Beneficiaries
-                    .Where(b => b.IsActive && civilRegistryIds.Contains(b.CivilRegistryId))
-                    .Select(b => new { b.CivilRegistryId, b.IsPrimary })
-                    .ToListAsync();
-
-                foreach (var member in familyMembers
-                             .OrderBy(m => m.IsHouseholdHead ? 0 : 1)
-                             .ThenBy(m => m.FullName))
-                {
-                    var status = "Not Registered";
-                    var bg = "#F1F5F9";
-                    var fg = "#64748B";
-
-                    if (!string.IsNullOrWhiteSpace(member.CivilRegistryId))
-                    {
-                        var ben = activeBeneficiaries.FirstOrDefault(b => b.CivilRegistryId == member.CivilRegistryId);
-                        if (ben != null)
-                        {
-                            if (ben.IsPrimary) { status = "Registered Member"; bg = "#DCFCE7"; fg = "#166534"; }
-                            else { status = "Dependent"; bg = "#DBEAFE"; fg = "#1E40AF"; }
-                        }
-                    }
-
-                    FamilyMembers.Add(new FamilyMemberDisplay
-                    {
-                        FullName = member.FullName ?? "Unknown",
-                        FamilyRole = string.IsNullOrWhiteSpace(member.FamilyRole) ? "MEMBER" : member.FamilyRole!.ToUpper(),
-                        RegistrationStatus = status,
-                        RegistrationStatusBackground = bg,
-                        RegistrationStatusForeground = fg
-                    });
-                }
-            }
+            // ── Family + address via the CRS cache (shared lookup logic) ──
+            var snapshot = await HouseholdLookupService.GetHouseholdSnapshotAsync(db, beneficiary);
+            Address = snapshot.Address ?? "—";
+            OnPropertyChanged(nameof(Address));
+            foreach (var member in snapshot.Members)
+                FamilyMembers.Add(member);
 
             // ── Release history + monthly-limit check ──
             var releases = await db.DistributionRecords
