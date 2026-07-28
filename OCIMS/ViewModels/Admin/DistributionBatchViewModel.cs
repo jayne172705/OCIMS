@@ -216,24 +216,33 @@ namespace eSureHi.ViewModels.Admin
 
         private async Task LoadDataAsync()
         {
-            var funds = await _dbContext.SourceFunds.ToListAsync();
-            SourceFunds.Clear();
-            foreach (var fund in funds)
+            try
             {
-                SourceFunds.Add(fund);
-            }
+                var funds = await _dbContext.SourceFunds.ToListAsync();
+                SourceFunds.Clear();
+                foreach (var fund in funds)
+                {
+                    SourceFunds.Add(fund);
+                }
 
-            TotalFunds = funds
-                .Where(f => f.Status == "Active")
-                .Sum(f => f.AllocatedAmount - f.UsedAmount);
+                TotalFunds = funds
+                    .Where(f => f.Status == "Active")
+                    .Sum(f => f.AllocatedAmount - f.UsedAmount);
 
-            if (IsAdminHistoryMode)
-            {
-                await LoadHistoryAsync();
+                if (IsAdminHistoryMode)
+                {
+                    await LoadHistoryAsync();
+                }
+                else
+                {
+                    await PreloadBeneficiariesAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await PreloadBeneficiariesAsync();
+                // Loaded via the view's Loaded trigger under AsyncRelayCommand, which has no
+                // error wrapper — without this catch a DB outage shows an empty board silently.
+                SetStatus($"Could not load the distribution board — {ex.Message}", "AlertCircle", "#991B1B");
             }
         }
 
@@ -267,37 +276,46 @@ namespace eSureHi.ViewModels.Admin
 
         private async Task PreloadBeneficiariesAsync()
         {
-            // Get beneficiary IDs already fully released in a past confirmed batch
-            var alreadyReleasedIds = await _dbContext.DistributionRecords
-                .Where(r => r.Status == "Released")
-                .Select(r => r.BeneficiaryId)
-                .Distinct()
-                .ToListAsync();
-
-            // The queue lists every active beneficiary still awaiting release. Program is
-            // batch metadata captured at Confirm time, not a board filter.
-            var beneficiaries = await _dbContext.Beneficiaries
-                .Where(b => b.IsActive && !alreadyReleasedIds.Contains(b.BenId))
-                .OrderByDescending(b => b.CreatedAt)
-                .ToListAsync();
-
-            UnreleasedRecords.Clear();
-            ReleasedRecords.Clear();
-            PendingRecords.Clear();
-            RejectedRecords.Clear();
-
-            foreach (var b in beneficiaries)
+            try
             {
-                var record = new DistributionRecord
+                // Get beneficiary IDs already fully released in a past confirmed batch
+                var alreadyReleasedIds = await _dbContext.DistributionRecords
+                    .Where(r => r.Status == "Released")
+                    .Select(r => r.BeneficiaryId)
+                    .Distinct()
+                    .ToListAsync();
+
+                // The queue lists every active beneficiary still awaiting release. Program is
+                // batch metadata captured at Confirm time, not a board filter.
+                var beneficiaries = await _dbContext.Beneficiaries
+                    .Where(b => b.IsActive && !alreadyReleasedIds.Contains(b.BenId))
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ToListAsync();
+
+                UnreleasedRecords.Clear();
+                ReleasedRecords.Clear();
+                PendingRecords.Clear();
+                RejectedRecords.Clear();
+
+                foreach (var b in beneficiaries)
                 {
-                    BeneficiaryId = b.BenId,
-                    Beneficiary = b,
-                    Status = "Unreleased",
-                    Remarks = "Waiting to claim"
-                };
-                UnreleasedRecords.Add(new DistributionRecordViewModel(record));
+                    var record = new DistributionRecord
+                    {
+                        BeneficiaryId = b.BenId,
+                        Beneficiary = b,
+                        Status = "Unreleased",
+                        Remarks = "Waiting to claim"
+                    };
+                    UnreleasedRecords.Add(new DistributionRecordViewModel(record));
+                }
+                UpdateCounts();
             }
-            UpdateCounts();
+            catch (Exception ex)
+            {
+                // Also reachable directly through PreloadBeneficiariesCommand, so it needs
+                // its own guard rather than relying on LoadDataAsync's.
+                SetStatus($"Could not load the beneficiary queue — {ex.Message}", "AlertCircle", "#991B1B");
+            }
         }
 
         private async Task SearchAsync()
@@ -409,16 +427,37 @@ namespace eSureHi.ViewModels.Admin
                 return;
             }
 
-            ChangeStatus(record, "Released", "Claimed");
+            // Snapshot so a failed save can put the record back exactly as it was —
+            // the board must never show Released when the database still says Pending.
+            var originalStatus = record.Status;
+            var originalRemarks = record.Remarks ?? string.Empty;
+            var originalProcessedAt = record.Model.ProcessedAt;
 
             var batch = record.Model.Batch;
-            if (batch?.SourceFundId != null && batch.AmountPerBeneficiary > 0)
+            SourceFund? fund = null;
+            try
             {
-                var fund = await _dbContext.SourceFunds.FindAsync(batch.SourceFundId);
-                if (fund != null) fund.UsedAmount += batch.AmountPerBeneficiary;
+                ChangeStatus(record, "Released", "Claimed");
+
+                if (batch?.SourceFundId != null && batch.AmountPerBeneficiary > 0)
+                {
+                    fund = await _dbContext.SourceFunds.FindAsync(batch.SourceFundId);
+                    if (fund != null) fund.UsedAmount += batch.AmountPerBeneficiary;
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Undo the debit and the status flip so the shared context holds no
+                // stale changes that a later, unrelated SaveChanges could commit.
+                if (fund != null && batch != null) fund.UsedAmount -= batch.AmountPerBeneficiary;
+                ChangeStatus(record, originalStatus, originalRemarks);
+                record.Model.ProcessedAt = originalProcessedAt;
+                SetStatus($"Approve failed — nothing was saved. {ex.Message}", "AlertCircle", "#991B1B");
+                return;
             }
 
-            await _dbContext.SaveChangesAsync();
             await RefreshTotalFundsAsync();
 
             SetStatus($"✓ Approved — {record.BeneficiaryName} released.", "CheckCircle", "#166534");
@@ -447,17 +486,40 @@ namespace eSureHi.ViewModels.Admin
                 ? "Rejected by reviewer."
                 : rejectVm.Reason.Trim();
 
-            ChangeStatus(record, "Rejected", reason);
-            await _dbContext.SaveChangesAsync();
+            // Snapshot for rollback — same contract as ApproveRecordAsync.
+            var originalStatus = record.Status;
+            var originalRemarks = record.Remarks ?? string.Empty;
+            var originalProcessedAt = record.Model.ProcessedAt;
+
+            try
+            {
+                ChangeStatus(record, "Rejected", reason);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                ChangeStatus(record, originalStatus, originalRemarks);
+                record.Model.ProcessedAt = originalProcessedAt;
+                SetStatus($"Reject failed — nothing was saved. {ex.Message}", "AlertCircle", "#991B1B");
+                return;
+            }
 
             SetStatus($"✕ Rejected — {record.BeneficiaryName}. {reason}", "CloseCircle", "#B91C1C");
         }
 
         private async Task RefreshTotalFundsAsync()
         {
-            TotalFunds = await _dbContext.SourceFunds
-                .Where(f => f.Status == "Active")
-                .SumAsync(f => f.AllocatedAmount - f.UsedAmount);
+            try
+            {
+                TotalFunds = await _dbContext.SourceFunds
+                    .Where(f => f.Status == "Active")
+                    .SumAsync(f => f.AllocatedAmount - f.UsedAmount);
+            }
+            catch
+            {
+                // Cosmetic stat only; the approve/reject that triggered the refresh already
+                // saved. A stale total beats reporting a phantom failure.
+            }
         }
 
         private void UndoRecord(DistributionRecordViewModel? record)
@@ -545,23 +607,41 @@ namespace eSureHi.ViewModels.Admin
                 AmountPerBeneficiary = AmountPerBeneficiary
             };
 
-            _dbContext.DistributionBatches.Add(batch);
-
-            var fund = await _dbContext.SourceFunds.FindAsync(SelectedSourceFundId);
-
             var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).Concat(RejectedRecords).ToList();
-            foreach (var r in allRecords)
+            SourceFund? fund = null;
+            try
             {
-                r.Model.Batch = batch;
-                _dbContext.DistributionRecords.Add(r.Model);
+                _dbContext.DistributionBatches.Add(batch);
 
-                if (r.Status == "Released" && fund != null)
+                fund = await _dbContext.SourceFunds.FindAsync(SelectedSourceFundId);
+
+                foreach (var r in allRecords)
                 {
-                    fund.UsedAmount += AmountPerBeneficiary;
-                }
-            }
+                    r.Model.Batch = batch;
+                    _dbContext.DistributionRecords.Add(r.Model);
 
-            await _dbContext.SaveChangesAsync();
+                    if (r.Status == "Released" && fund != null)
+                    {
+                        fund.UsedAmount += AmountPerBeneficiary;
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Nothing persisted. Detach so the poisoned adds can't ride along with a
+                // later save; the board keeps the registrar's decisions so they can retry.
+                _dbContext.ChangeTracker.Clear();
+                if (fund != null)
+                {
+                    var releasedCount = allRecords.Count(r => r.Status == "Released");
+                    fund.UsedAmount -= AmountPerBeneficiary * releasedCount;
+                }
+                SetStatus($"Confirm Batch failed — nothing was saved. Your board is unchanged; please retry. {ex.Message}",
+                    "AlertCircle", "#991B1B");
+                return;
+            }
 
             // Sync to GGMS
             bool ggmsSuccess = true;
@@ -574,35 +654,45 @@ namespace eSureHi.ViewModels.Admin
                 foreach (var r in releasedItems)
                 {
                     var beneficiary = r.Model.Beneficiary!;
-                    
-                    // Fetch middle name from crs_beneficiary_cache
-                    var middleName = await _dbContext.CrsBeneficiaryCache
-                        .Where(c => c.BeneficiaryId == beneficiary.BeneficiaryId)
-                        .Select(c => c.MiddleName)
-                        .FirstOrDefaultAsync();
 
-                    var (success, msg) = await eSureHi.Services.GgmsService.RecordDistributionReleaseAsync(
-                        distributionRecordId: r.Model.RecordId,
-                        beneficiaryIdentity: beneficiary.BeneficiaryId,
-                        civilRegistryId: beneficiary.CivilRegistryId,
-                        amountReleased: AmountPerBeneficiary,
-                        programType: ProjectTitle,
-                        firstName: beneficiary.FirstName,
-                        middleName: middleName,
-                        lastName: beneficiary.LastName,
-                        fullName: beneficiary.FullName,
-                        batchName: ProjectTitle,
-                        sourceOfFunds: fund.FundName
-                    );
-
-                    if (success)
+                    // Per-record guard: the batch is already saved locally, so one failed
+                    // sync (or cache lookup) must not silently abandon the rest of the loop.
+                    try
                     {
-                        syncCount++;
+                        // Fetch middle name from crs_beneficiary_cache
+                        var middleName = await _dbContext.CrsBeneficiaryCache
+                            .Where(c => c.BeneficiaryId == beneficiary.BeneficiaryId)
+                            .Select(c => c.MiddleName)
+                            .FirstOrDefaultAsync();
+
+                        var (success, msg) = await eSureHi.Services.GgmsService.RecordDistributionReleaseAsync(
+                            distributionRecordId: r.Model.RecordId,
+                            beneficiaryIdentity: beneficiary.BeneficiaryId,
+                            civilRegistryId: beneficiary.CivilRegistryId,
+                            amountReleased: AmountPerBeneficiary,
+                            programType: ProjectTitle,
+                            firstName: beneficiary.FirstName,
+                            middleName: middleName,
+                            lastName: beneficiary.LastName,
+                            fullName: beneficiary.FullName,
+                            batchName: ProjectTitle,
+                            sourceOfFunds: fund.FundName
+                        );
+
+                        if (success)
+                        {
+                            syncCount++;
+                        }
+                        else
+                        {
+                            ggmsSuccess = false;
+                            ggmsErrors += $"\n- {beneficiary.FullName}: {msg}";
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
                         ggmsSuccess = false;
-                        ggmsErrors += $"\n- {beneficiary.FullName}: {msg}";
+                        ggmsErrors += $"\n- {beneficiary.FullName}: {ex.Message}";
                     }
                 }
             }
