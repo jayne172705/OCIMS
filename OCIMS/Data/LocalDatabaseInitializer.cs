@@ -125,7 +125,8 @@ namespace eSureHi.Data
                     beneficiary_id INTEGER NOT NULL,
                     status TEXT NOT NULL DEFAULT 'Unreleased',
                     remarks TEXT NULL,
-                    processed_at TEXT NULL
+                    processed_at TEXT NULL,
+                    fund_debited INTEGER NOT NULL DEFAULT 0
                 );");
 
             await db.Database.ExecuteSqlRawAsync(@"
@@ -139,6 +140,9 @@ namespace eSureHi.Data
             await db.Database.ExecuteSqlRawAsync(@"
                 CREATE INDEX IF NOT EXISTS ix_distribution_records_beneficiary_id
                 ON distribution_records (beneficiary_id);");
+
+            // Existing local DBs created before the double-debit guard need the column added.
+            await EnsureSqliteColumnAsync(db, "distribution_records", "fund_debited", "INTEGER NOT NULL DEFAULT 0");
         }
 
         private static async Task EnsurePaymentsTableAsync(eSureHiDbContext db)

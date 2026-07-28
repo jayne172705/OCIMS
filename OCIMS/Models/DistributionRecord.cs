@@ -26,6 +26,12 @@ namespace eSureHi.Models
         [Column("processed_at")]
         public DateTime? ProcessedAt { get; set; }
 
+        // True once this record's share has been debited from a source fund — set at
+        // whichever site actually charges the fund (Confirm Batch or Admin approval).
+        // Persisted so the guard holds across sessions, not just within one board.
+        [Column("fund_debited")]
+        public bool FundDebited { get; set; }
+
         [ForeignKey("BatchId")]
         public DistributionBatch? Batch { get; set; }
 

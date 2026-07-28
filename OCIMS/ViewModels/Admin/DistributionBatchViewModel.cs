@@ -30,11 +30,15 @@ namespace eSureHi.ViewModels.Admin
 
         /// <summary>
         /// True once this record's share has been debited from a source fund — either at
-        /// Confirm Batch time (registrar) or on Admin approval. Both debit sites check it
-        /// so the same release can never be charged twice (e.g. a second Confirm Batch in
-        /// the same session re-walking records that were already debited).
+        /// Confirm Batch time (registrar) or on Admin approval. Persisted on the model
+        /// (distribution_records.fund_debited) so the guard holds across sessions: a batch
+        /// confirmed in one session can't be re-charged when Admin approves it in another.
         /// </summary>
-        public bool FundDebited { get; set; }
+        public bool FundDebited
+        {
+            get => _model.FundDebited;
+            set => _model.FundDebited = value;
+        }
 
         public string Status
         {
