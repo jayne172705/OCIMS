@@ -28,6 +28,14 @@ namespace eSureHi.ViewModels.Admin
         public string BeneficiaryId => _model.Beneficiary?.BeneficiaryId ?? _model.BeneficiaryId.ToString();
         public DateTime? ProcessedAt => _model.ProcessedAt;
 
+        /// <summary>
+        /// True once this record's share has been debited from a source fund — either at
+        /// Confirm Batch time (registrar) or on Admin approval. Both debit sites check it
+        /// so the same release can never be charged twice (e.g. a second Confirm Batch in
+        /// the same session re-walking records that were already debited).
+        /// </summary>
+        public bool FundDebited { get; set; }
+
         public string Status
         {
             get => _model.Status;
@@ -435,14 +443,20 @@ namespace eSureHi.ViewModels.Admin
 
             var batch = record.Model.Batch;
             SourceFund? fund = null;
+            bool debitedHere = false;
             try
             {
                 ChangeStatus(record, "Released", "Claimed");
 
-                if (batch?.SourceFundId != null && batch.AmountPerBeneficiary > 0)
+                if (!record.FundDebited && batch?.SourceFundId != null && batch.AmountPerBeneficiary > 0)
                 {
                     fund = await _dbContext.SourceFunds.FindAsync(batch.SourceFundId);
-                    if (fund != null) fund.UsedAmount += batch.AmountPerBeneficiary;
+                    if (fund != null)
+                    {
+                        fund.UsedAmount += batch.AmountPerBeneficiary;
+                        record.FundDebited = true;
+                        debitedHere = true;
+                    }
                 }
 
                 await _dbContext.SaveChangesAsync();
@@ -451,7 +465,11 @@ namespace eSureHi.ViewModels.Admin
             {
                 // Undo the debit and the status flip so the shared context holds no
                 // stale changes that a later, unrelated SaveChanges could commit.
-                if (fund != null && batch != null) fund.UsedAmount -= batch.AmountPerBeneficiary;
+                if (debitedHere && fund != null && batch != null)
+                {
+                    fund.UsedAmount -= batch.AmountPerBeneficiary;
+                    record.FundDebited = false;
+                }
                 ChangeStatus(record, originalStatus, originalRemarks);
                 record.Model.ProcessedAt = originalProcessedAt;
                 SetStatus($"Approve failed — nothing was saved. {ex.Message}", "AlertCircle", "#991B1B");
@@ -609,6 +627,7 @@ namespace eSureHi.ViewModels.Admin
 
             var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).Concat(RejectedRecords).ToList();
             SourceFund? fund = null;
+            var debitedRecords = new System.Collections.Generic.List<DistributionRecordViewModel>();
             try
             {
                 _dbContext.DistributionBatches.Add(batch);
@@ -620,9 +639,13 @@ namespace eSureHi.ViewModels.Admin
                     r.Model.Batch = batch;
                     _dbContext.DistributionRecords.Add(r.Model);
 
-                    if (r.Status == "Released" && fund != null)
+                    // FundDebited guards against double-charging a release that was already
+                    // debited (Admin approval, or a prior Confirm attempt in this session).
+                    if (r.Status == "Released" && fund != null && !r.FundDebited)
                     {
                         fund.UsedAmount += AmountPerBeneficiary;
+                        r.FundDebited = true;
+                        debitedRecords.Add(r);
                     }
                 }
 
@@ -635,8 +658,8 @@ namespace eSureHi.ViewModels.Admin
                 _dbContext.ChangeTracker.Clear();
                 if (fund != null)
                 {
-                    var releasedCount = allRecords.Count(r => r.Status == "Released");
-                    fund.UsedAmount -= AmountPerBeneficiary * releasedCount;
+                    fund.UsedAmount -= AmountPerBeneficiary * debitedRecords.Count;
+                    foreach (var r in debitedRecords) r.FundDebited = false;
                 }
                 SetStatus($"Confirm Batch failed — nothing was saved. Your board is unchanged; please retry. {ex.Message}",
                     "AlertCircle", "#991B1B");
