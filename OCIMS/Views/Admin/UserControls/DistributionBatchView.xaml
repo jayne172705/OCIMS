@@ -540,7 +540,7 @@
                                 <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
                                     <StackPanel>
                                         <TextBlock Text="No released records yet." FontSize="12" Foreground="#94A3B8" Margin="4,12"
-                                                   Visibility="{Binding HasReleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Inverse}"/>
+                                                   Visibility="{Binding HasReleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}"/>
                                         <ItemsControl ItemsSource="{Binding ReleasedRecords}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
@@ -591,7 +591,7 @@
                             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
                                     <TextBlock Text="No records pending review." FontSize="12" Foreground="#94A3B8" Margin="4,12"
-                                               Visibility="{Binding HasPendingRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Inverse}"/>
+                                               Visibility="{Binding HasPendingRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}"/>
                                     <ItemsControl ItemsSource="{Binding PendingRecords}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
