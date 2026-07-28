@@ -22,7 +22,11 @@
         <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
             <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="CashMultiple"
                                              Width="24" Height="24"
                                              Foreground="{StaticResource PrimaryBrush}"
@@ -38,7 +42,7 @@
                         </TextBlock>
                     </Border>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
                             HorizontalAlignment="Right" VerticalAlignment="Center">
 
                     <Button Command="{Binding SearchAnotherCommand}"
@@ -186,11 +190,11 @@
                 Padding="16,10" Margin="0,8,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2.2*" MinWidth="220"/>
                     <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="1*" MinWidth="150"/>
                     <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="1.1*" MinWidth="160"/>
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -227,17 +231,17 @@
                           SelectedItem="{Binding StatusFilter}"
                           materialDesign:HintAssist.Hint="Status"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <DatePicker Grid.Column="4"
                             SelectedDate="{Binding MonthFilter}"
                             materialDesign:HintAssist.Hint="Filter by Month"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="50" FontSize="12"/>
+                            Height="46" FontSize="12"/>
 
                 <Button Grid.Column="6"
                         Command="{Binding ClearFilterCommand}"
-                        Style="{StaticResource MaterialDesignFlatButton}" Height="50">
+                        Style="{StaticResource MaterialDesignFlatButton}" Height="46">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"/>

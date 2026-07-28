@@ -17,7 +17,11 @@
         <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
             <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="ClipboardList"
                                              Width="24" Height="24"
                                              Foreground="{StaticResource PrimaryBrush}"
@@ -42,7 +46,7 @@
                         </TextBlock>
                     </Border>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
             HorizontalAlignment="Right" VerticalAlignment="Center">
 
                     <Button Command="{Binding RefreshCommand}"
@@ -99,19 +103,19 @@
                 Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="1.7*" MinWidth="190"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="1.1*" MinWidth="130"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="1*" MinWidth="120"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="0.9*" MinWidth="110"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="0.9*" MinWidth="110"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="0.9*" MinWidth="110"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="0.75*" MinWidth="90"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -122,14 +126,14 @@
                          materialDesign:TextFieldAssist.HasLeadingIcon="True"
                          materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="50" FontSize="12"/>
+                         Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="2"
                           ItemsSource="{Binding StatusOptions}"
                           SelectedItem="{Binding StatusFilter}"
                           materialDesign:HintAssist.Hint="Status"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <!-- Type (All/PendingOnly modes) -->
                 <ComboBox Grid.Column="4"
@@ -137,7 +141,7 @@
                           SelectedItem="{Binding TypeFilter}"
                           materialDesign:HintAssist.Hint="Type"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"
+                          Height="46" FontSize="12"
                           Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
 
                 <!-- Group (Group Claim mode only) -->
@@ -146,20 +150,20 @@
                           SelectedItem="{Binding GroupFilter}"
                           materialDesign:HintAssist.Hint="Group"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"
+                          Height="46" FontSize="12"
                           Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <DatePicker Grid.Column="6"
                             SelectedDate="{Binding DateFrom}"
                             materialDesign:HintAssist.Hint="From"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="50" FontSize="12"/>
+                            Height="46" FontSize="12"/>
 
                 <DatePicker Grid.Column="8"
                             SelectedDate="{Binding DateTo}"
                             materialDesign:HintAssist.Hint="To"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="50" FontSize="12"/>
+                            Height="46" FontSize="12"/>
 
                 <!-- Month / Year (Group Claim mode only) -->
                 <ComboBox Grid.Column="10"
@@ -167,7 +171,7 @@
                           SelectedItem="{Binding MonthFilter}"
                           materialDesign:HintAssist.Hint="Month"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"
+                          Height="46" FontSize="12"
                           Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <ComboBox Grid.Column="12"
@@ -175,13 +179,13 @@
                           SelectedItem="{Binding YearFilter}"
                           materialDesign:HintAssist.Hint="Year"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"
+                          Height="46" FontSize="12"
                           Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <Button Grid.Column="14"
                         Command="{Binding ClearFilterCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        Foreground="#64748B" Height="50">
+                        Foreground="#64748B" Height="46">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"/>

@@ -21,7 +21,11 @@
         <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
             <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="FolderOpen"
                                              Width="24" Height="24"
                                              Foreground="{StaticResource PrimaryBrush}"
@@ -37,8 +41,8 @@
                         </TextBlock>
                     </Border>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                            VerticalAlignment="Center">
 
                     <!-- Open File -->
                     <Button Command="{Binding OpenFileCommand}"
@@ -138,9 +142,9 @@
                 Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="280"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="2.2*" MinWidth="220"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="1.6*" MinWidth="180"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -151,7 +155,7 @@
                          materialDesign:TextFieldAssist.HasLeadingIcon="True"
                          materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="50" FontSize="12"/>
+                         Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="2"
                           ItemsSource="{Binding DocumentTypes}"
@@ -159,12 +163,12 @@
                           DisplayMemberPath="TypeName"
                           materialDesign:HintAssist.Hint="All Document Types"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <Button Grid.Column="4"
                         Command="{Binding ClearFilterCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        Foreground="{StaticResource PrimaryBrush}" Height="50">
+                        Foreground="{StaticResource PrimaryBrush}" Height="46">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"/>

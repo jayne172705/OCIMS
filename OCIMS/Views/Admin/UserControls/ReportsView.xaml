@@ -83,12 +83,12 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="1.6*" MinWidth="200"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="1*" MinWidth="150"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*" MinWidth="150"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
@@ -98,21 +98,21 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
 
                             <ComboBox Grid.Column="2"
                                       ItemsSource="{Binding PolicyTypeFilter}"
                                       SelectedItem="{Binding CoveragePolicyType}"
                                       materialDesign:HintAssist.Hint="Policy Type"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
 
                             <ComboBox Grid.Column="4"
                                       ItemsSource="{Binding AssignmentStatusOptions}"
                                       SelectedItem="{Binding CoverageStatus}"
                                       materialDesign:HintAssist.Hint="Status"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
 
                             <StackPanel Grid.Column="6" Orientation="Horizontal">
                                 <Border Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True" CornerRadius="10"
@@ -309,10 +309,10 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
-                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1.6*" MinWidth="200"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
@@ -321,7 +321,7 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
                             <CheckBox Grid.Column="2"
                                       IsChecked="{Binding ClaimsWithOnly}"
                                       Content="With claims only"
@@ -579,14 +579,14 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="1.4*" MinWidth="180"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="1*" MinWidth="130"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="1*" MinWidth="140"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*" MinWidth="140"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
@@ -595,23 +595,23 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="2"
                                       ItemsSource="{Binding PremiumStatusOptions}"
                                       SelectedItem="{Binding PremiumStatus}"
                                       materialDesign:HintAssist.Hint="Status"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <DatePicker Grid.Column="4"
                                         SelectedDate="{Binding PremiumMonthFrom}"
                                         materialDesign:HintAssist.Hint="From Month"
                                         Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                                        Height="50" FontSize="12"/>
+                                        Height="46" FontSize="12"/>
                             <DatePicker Grid.Column="6"
                                         SelectedDate="{Binding PremiumMonthTo}"
                                         materialDesign:HintAssist.Hint="To Month"
                                         Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                                        Height="50" FontSize="12"/>
+                                        Height="46" FontSize="12"/>
                             <StackPanel Grid.Column="8" Orientation="Horizontal">
                                 <Button Command="{Binding RefreshPremiumCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -832,12 +832,12 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="1.6*" MinWidth="200"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="1*" MinWidth="150"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="120"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*" MinWidth="120"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
@@ -846,19 +846,19 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="2"
                                       ItemsSource="{Binding BenefitTypeOptions}"
                                       SelectedItem="{Binding BenefitType}"
                                       materialDesign:HintAssist.Hint="Benefit Type"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="4"
                                       ItemsSource="{Binding YearOptions}"
                                       SelectedItem="{Binding BenefitYear}"
                                       materialDesign:HintAssist.Hint="Year"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <StackPanel Grid.Column="6" Orientation="Horizontal">
                                 <Button Command="{Binding RefreshBenefitCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -1086,16 +1086,16 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="1.6*" MinWidth="180"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="1*" MinWidth="120"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="1*" MinWidth="120"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="1*" MinWidth="110"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*" MinWidth="100"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
@@ -1104,31 +1104,31 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="2"
                                       ItemsSource="{Binding PaymentStatusOptions}"
                                       SelectedItem="{Binding MonthlyPaymentStatus}"
                                       materialDesign:HintAssist.Hint="Status"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="4"
                                       ItemsSource="{Binding PaymentGroupOptions}"
                                       SelectedItem="{Binding MonthlyPaymentGroup}"
                                       materialDesign:HintAssist.Hint="Group"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="6"
                                       ItemsSource="{Binding MonthOptions}"
                                       SelectedItem="{Binding MonthlyPaymentMonth}"
                                       materialDesign:HintAssist.Hint="Month"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="8"
                                       ItemsSource="{Binding YearOptions}"
                                       SelectedItem="{Binding MonthlyPaymentYear}"
                                       materialDesign:HintAssist.Hint="Year"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <StackPanel Grid.Column="10" Orientation="Horizontal">
                                 <Button Command="{Binding RefreshMonthlyPaymentCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -1336,14 +1336,14 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="1.6*" MinWidth="200"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="1*" MinWidth="140"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="1*" MinWidth="120"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*" MinWidth="100"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
@@ -1352,25 +1352,25 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="2"
                                       ItemsSource="{Binding ClaimStatusOptions}"
                                       SelectedItem="{Binding MonthlyClaimsStatus}"
                                       materialDesign:HintAssist.Hint="Status"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="4"
                                       ItemsSource="{Binding MonthOptions}"
                                       SelectedItem="{Binding MonthlyClaimsMonth}"
                                       materialDesign:HintAssist.Hint="Month"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="6"
                                       ItemsSource="{Binding YearOptions}"
                                       SelectedItem="{Binding MonthlyClaimsYear}"
                                       materialDesign:HintAssist.Hint="Year"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <StackPanel Grid.Column="8" Orientation="Horizontal">
                                 <Button Command="{Binding RefreshMonthlyClaimsCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -1589,12 +1589,12 @@
                             Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="1.6*" MinWidth="200"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="1*" MinWidth="150"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*" MinWidth="150"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
@@ -1603,19 +1603,19 @@
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="50" FontSize="12"/>
+                                     Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="2"
                                       ItemsSource="{Binding MemberProgramOptions}"
                                       SelectedItem="{Binding MemberReportsProgram}"
                                       materialDesign:HintAssist.Hint="Program"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <ComboBox Grid.Column="4"
                                       ItemsSource="{Binding MemberStatusOptions}"
                                       SelectedItem="{Binding MemberReportsStatus}"
                                       materialDesign:HintAssist.Hint="Status"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Height="50" FontSize="12"/>
+                                      Height="46" FontSize="12"/>
                             <StackPanel Grid.Column="6" Orientation="Horizontal">
                                 <Button Command="{Binding RefreshMemberReportsCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"

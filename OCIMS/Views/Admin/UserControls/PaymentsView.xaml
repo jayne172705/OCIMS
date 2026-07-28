@@ -17,18 +17,24 @@
         <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
             <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="CashMultiple"
                                              Width="24" Height="24"
                                              Foreground="{StaticResource PrimaryBrush}"
                                              VerticalAlignment="Center"
                                              Margin="0,0,10,0"/>
                     <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
                         <TextBlock Text="{Binding PageSummaryText}"
                                    FontSize="11"
                                    Foreground="{StaticResource MutedTextBrush}"
-                                   Margin="0,2,0,0"/>
+                                   Margin="0,2,0,0"
+                                   TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                     <Border Background="White"
                             BorderBrush="#1B5E20"
@@ -42,7 +48,7 @@
                         </TextBlock>
                     </Border>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
                             HorizontalAlignment="Right" VerticalAlignment="Center">
 
                     <Button Command="{Binding PrintLedgerCommand}"
@@ -97,20 +103,20 @@
                 Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="1.6*" MinWidth="200"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="0.9*" MinWidth="150"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="0.9*" MinWidth="150"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="0.85*" MinWidth="130"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="0.85*" MinWidth="130"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="0.8*" MinWidth="120"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="0.7*" MinWidth="100"/>
+                    <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -120,52 +126,52 @@
                          materialDesign:TextFieldAssist.HasLeadingIcon="True"
                          materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="50" FontSize="12"/>
+                         Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="2"
                           ItemsSource="{Binding StatusOptions}"
                           SelectedItem="{Binding StatusFilter}"
                           materialDesign:HintAssist.Hint="Status"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="4"
                           ItemsSource="{Binding GroupOptions}"
                           SelectedItem="{Binding GroupFilter}"
                           materialDesign:HintAssist.Hint="Group"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <DatePicker Grid.Column="6"
                             SelectedDate="{Binding DateFrom}"
                             materialDesign:HintAssist.Hint="From"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="50" FontSize="12"/>
+                            Height="46" FontSize="12"/>
 
                 <DatePicker Grid.Column="8"
                             SelectedDate="{Binding DateTo}"
                             materialDesign:HintAssist.Hint="To"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="50" FontSize="12"/>
+                            Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="10"
                           ItemsSource="{Binding MonthOptions}"
                           SelectedItem="{Binding MonthFilter}"
                           materialDesign:HintAssist.Hint="Month"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="12"
                           ItemsSource="{Binding YearOptions}"
                           SelectedItem="{Binding YearFilter}"
                           materialDesign:HintAssist.Hint="Year"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <Button Grid.Column="14"
                         Command="{Binding ClearFilterCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        Foreground="#64748B" Height="50">
+                        Foreground="#64748B" Height="46">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"/>

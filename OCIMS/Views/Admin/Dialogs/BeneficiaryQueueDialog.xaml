@@ -103,39 +103,47 @@
             <!-- Filters -->
             <Border Grid.Row="1" Background="White" Padding="20,12" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
                 <Grid>
-                    <StackPanel Orientation="Horizontal">
-                        <StackPanel Margin="0,0,12,0">
-                            <TextBlock Text="Current Status" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,5"/>
-                            <ComboBox ItemsSource="{Binding Statuses}"
-                                      SelectedItem="{Binding SelectedStatus}"
-                                      Width="180"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      FontSize="13"
-                                      Padding="10,8"/>
-                        </StackPanel>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*" MinWidth="150"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="2*" MinWidth="220"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                        <StackPanel>
-                            <TextBlock Text="Search Beneficiary" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,5"/>
-                            <Grid Width="350">
-                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                         materialDesign:HintAssist.Hint="Name or Beneficiary #"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         FontSize="13"
-                                         Padding="36,8,12,8"/>
-                                <materialDesign:PackIcon Kind="Search" 
-                                                         Width="18" Height="18" 
-                                                         Foreground="#94A3B8" 
-                                                         VerticalAlignment="Center" 
-                                                         Margin="12,0,0,0"/>
-                            </Grid>
-                        </StackPanel>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Current Status" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding Statuses}"
+                                  SelectedItem="{Binding SelectedStatus}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  materialDesign:HintAssist.Hint="Current Status"
+                                  Height="46"
+                                  FontSize="13"
+                                  Padding="10,8"/>
                     </StackPanel>
 
-                    <Button Command="{Binding RefreshCommand}"
-                            HorizontalAlignment="Right"
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Search Beneficiary" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,5"/>
+                        <Grid>
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Name or Beneficiary #"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Height="46"
+                                     FontSize="13"
+                                     Padding="36,8,12,8"/>
+                            <materialDesign:PackIcon Kind="Search"
+                                                     Width="18" Height="18"
+                                                     Foreground="#94A3B8"
+                                                     VerticalAlignment="Center"
+                                                     Margin="12,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <Button Grid.Column="4"
+                            Command="{Binding RefreshCommand}"
                             VerticalAlignment="Bottom"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Height="38"
+                            Height="46"
                             Padding="12,0">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0"/>
@@ -177,8 +185,8 @@
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
-                                    <TextBlock Text="{Binding FullName}" FontWeight="Bold" FontSize="14" Foreground="#0F172A"/>
-                                    <TextBlock Text="{Binding Barangay}" FontSize="12" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding FullName}" FontWeight="Bold" FontSize="14" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Barangay}" FontSize="12" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="12,0">

@@ -18,8 +18,12 @@
                 
                 <Border Background="#15314F" Padding="20,16">
                     <Grid>
-                        <TextBlock Text="{Binding SelectedGroupFundName, StringFormat='Beneficiaries: {0}'}" FontSize="18" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding SelectedGroupFundName, StringFormat='Beneficiaries: {0}'}" FontSize="18" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Command="{Binding AddGroupBeneficiaryCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="White" Margin="0,0,10,0">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="AccountPlus" Width="18" Height="18" Margin="0,0,4,0"/>
@@ -54,19 +58,24 @@
 
         <Border Grid.Row="0" Background="White" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
             <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="Wallet" Width="24" Height="24"
                                              Foreground="{StaticResource PrimaryBrush}"
                                              Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding PageTitle}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding PageTitle}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                     <TextBlock Text="{Binding PageSubtitle}"
                                FontSize="12"
                                Foreground="{StaticResource MutedTextBrush}"
                                VerticalAlignment="Center"
-                               Margin="14,2,0,0"/>
+                               Margin="14,2,0,0"
+                               TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Button Command="{Binding NewCommand}"
                             Visibility="{Binding CanEditSourceFunds, Converter={StaticResource BoolToVisibilityConverter}}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -184,7 +193,8 @@
                                  materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                  materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Height="48"/>
+                                 MinWidth="200"
+                                 Height="46"/>
                         <Button Grid.Column="1"
                                 Command="{Binding ClearSearchCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -430,26 +440,26 @@
                         <TextBox Text="{Binding FundName, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="Source name"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Height="50"
+                                 Height="46"
                                  Margin="0,0,0,12"/>
 
                         <ComboBox ItemsSource="{Binding FundTypes}"
                                   SelectedItem="{Binding FundType}"
                                   materialDesign:HintAssist.Hint="Source type"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                  Height="50"
+                                  Height="46"
                                   Margin="0,0,0,12"/>
 
                         <TextBox Text="{Binding AllocatedAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
                                  materialDesign:HintAssist.Hint="Configured allocation"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Height="50"
+                                 Height="46"
                                  Margin="0,0,0,12"/>
 
                         <TextBox Text="{Binding GgmsOfficeCode, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="GGMS office code"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Height="50"
+                                 Height="46"
                                  Margin="0,0,0,12"/>
 
                         <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
@@ -600,7 +610,11 @@
                 </Grid.RowDefinitions>
 
                 <Grid Margin="18,16,18,10">
-                    <StackPanel>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
                         <TextBlock Text="Group Funds - All Groups"
                                    FontSize="18"
                                    FontWeight="SemiBold"
@@ -610,11 +624,13 @@
                                    Foreground="#657B96"
                                    Margin="0,4,0,0"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding GroupFundCount, StringFormat={}{0} fund(s) total}"
-                               HorizontalAlignment="Center"
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding GroupFundCount, StringFormat={}{0} fund(s) total}"
+                               HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                FontSize="13"
-                               Foreground="#657B96"/>
+                               Foreground="#657B96"
+                               Margin="12,0,0,0"/>
                 </Grid>
 
                 <UniformGrid Grid.Row="1" Columns="3" Margin="13,8,13,10">

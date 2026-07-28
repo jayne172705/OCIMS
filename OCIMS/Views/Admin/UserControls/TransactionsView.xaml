@@ -22,7 +22,11 @@
         <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
             <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="SwapHorizontal"
                                              Width="24" Height="24"
                                              Foreground="{StaticResource PrimaryBrush}"
@@ -38,7 +42,7 @@
                         </TextBlock>
                     </Border>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
                             HorizontalAlignment="Right" VerticalAlignment="Center">
 
                     <!-- View Button -->
@@ -132,13 +136,13 @@
                 Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240"/>
+                    <ColumnDefinition Width="2*" MinWidth="220"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="1.1*" MinWidth="140"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="1.1*" MinWidth="140"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="1*" MinWidth="120"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -149,32 +153,32 @@
                          materialDesign:TextFieldAssist.HasLeadingIcon="True"
                          materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="50" FontSize="12"/>
+                         Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="2"
                           ItemsSource="{Binding TypeOptions}"
                           SelectedItem="{Binding TypeFilter}"
                           materialDesign:HintAssist.Hint="Type"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="4"
                           ItemsSource="{Binding StatusOptions}"
                           SelectedItem="{Binding StatusFilter}"
                           materialDesign:HintAssist.Hint="Status"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <ComboBox Grid.Column="6"
                           ItemsSource="{Binding PriorityOptions}"
                           SelectedItem="{Binding PriorityFilter}"
                           materialDesign:HintAssist.Hint="Priority"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="50" FontSize="12"/>
+                          Height="46" FontSize="12"/>
 
                 <Button Grid.Column="8"
                         Command="{Binding ClearFilterCommand}"
-                        Style="{StaticResource MaterialDesignFlatButton}" Height="50">
+                        Style="{StaticResource MaterialDesignFlatButton}" Height="46">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"/>

@@ -418,8 +418,8 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="560"/>
+                            <ColumnDefinition Width="1.1*" MinWidth="260"/>
+                            <ColumnDefinition Width="1.4*" MinWidth="380" MaxWidth="560"/>
                         </Grid.ColumnDefinitions>
 
                         <StackPanel>
