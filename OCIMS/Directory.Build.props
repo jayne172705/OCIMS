@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!-- Separate intermediate and output paths for CLI builds disabled due to WPF markup compiler bugs with custom BaseIntermediateOutputPath -->
+    <!--
+    <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
+    <BaseIntermediateOutputPath Condition="'$(BuildingInsideVisualStudio)' == 'false'">$(MSBuildThisFileDirectory)obj_cli\</BaseIntermediateOutputPath>
+    <OutputPath Condition="'$(BuildingInsideVisualStudio)' == 'false'">$(MSBuildThisFileDirectory)bin_cli\</OutputPath>
+    -->
+  </PropertyGroup>
+</Project>

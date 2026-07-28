@@ -2,7 +2,7 @@
 
 <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <AssemblyName>eSureHi</AssemblyName>
     <RootNamespace>eSureHi</RootNamespace>
     <Platforms>AnyCPU;x64</Platforms>
@@ -13,6 +13,7 @@
     <ApplicationIcon>Assets\eSureHi.ico</ApplicationIcon>
     <Version>1.0.0</Version>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj_audit\**;obj\IDE\**</DefaultItemExcludes>
+    <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
 </PropertyGroup>
 
   <ItemGroup>
@@ -78,6 +79,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <Content Include="Assets\Sulop_Municipal_Hall_Active.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -88,6 +93,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Assets\Sulop_Municipal_Hall.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Sulop_Municipal_Hall_Active.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
