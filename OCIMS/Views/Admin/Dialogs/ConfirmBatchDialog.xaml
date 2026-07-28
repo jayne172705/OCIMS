@@ -1,0 +1,75 @@
+<UserControl x:Class="eSureHi.Views.Admin.Dialogs.ConfirmBatchDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             MaxWidth="520" Width="520">
+
+    <Border Background="White" CornerRadius="8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" CornerRadius="8,8,0,0" Padding="20,16" Background="#166534">
+                <StackPanel>
+                    <TextBlock Text="Confirm Distribution Batch" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Set the program, fund source, and amount before saving this batch."
+                               FontSize="12" Foreground="#D6EFD8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Body -->
+            <StackPanel Grid.Row="1" Margin="20,18">
+                <TextBlock Text="Program" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding Programs}"
+                          SelectedItem="{Binding SelectedProgram, Mode=TwoWay}"
+                          materialDesign:HintAssist.Hint="Select program"
+                          Height="46" Margin="0,0,0,14"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                <TextBlock Text="Source of Fund" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding SourceFunds}"
+                          SelectedValue="{Binding SelectedSourceFundId, Mode=TwoWay}"
+                          SelectedValuePath="SourceFundId"
+                          DisplayMemberPath="FundName"
+                          materialDesign:HintAssist.Hint="Select fund source"
+                          Height="46" Margin="0,0,0,4"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                <TextBlock Text="{Binding RemainingFundBalance, StringFormat='₱{0:N2} remaining in this fund'}"
+                           FontSize="11" Foreground="#94A3B8" Margin="0,0,0,14"/>
+
+                <TextBlock Text="Amount Per Beneficiary" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding AmountPerBeneficiary, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
+                         materialDesign:HintAssist.Hint="0.00"
+                         Height="46" Margin="0,0,0,14"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                <TextBlock Text="Batch Title" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding ProjectTitle, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="e.g. Job Order Q3 Release"
+                         Height="46"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+            </StackPanel>
+
+            <!-- Actions -->
+            <Border Grid.Row="2" Padding="16,12" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,8,8">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="CANCEL"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            CommandParameter="{x:Null}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="CONFIRM BATCH"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                            CommandParameter="Confirm"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#166534" BorderBrush="#166534" Foreground="White"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

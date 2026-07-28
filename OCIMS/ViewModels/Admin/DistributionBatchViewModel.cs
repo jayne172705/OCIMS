@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using eSureHi.Data;
 using eSureHi.Models;
+using eSureHi.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
@@ -52,9 +53,47 @@ namespace eSureHi.ViewModels.Admin
         }
     }
 
+    /// <summary>
+    /// Registrar works an unsaved queue of people still to process; Admin reviews
+    /// already-persisted outcomes. The two modes read from different sources.
+    /// </summary>
+    public enum DistributionBoardMode
+    {
+        Registrar,
+        AdminHistory
+    }
+
     public class DistributionBatchViewModel : ObservableObject
     {
         private readonly eSureHiDbContext _dbContext;
+
+        public DistributionBoardMode Mode { get; }
+        public bool IsRegistrarMode => Mode == DistributionBoardMode.Registrar;
+        public bool IsAdminHistoryMode => Mode == DistributionBoardMode.AdminHistory;
+
+        public bool ShowReleasedColumn => IsAdminHistoryMode;
+        public bool ShowUnreleasedColumn => IsRegistrarMode;
+
+        // Both boards surface Rejected: the registrar needs to see Admin's decision come
+        // back, and Admin needs rejected records to stay visible after they leave Pending.
+        public bool ShowRejectedColumn => true;
+        public bool ShowBatchActions => IsRegistrarMode;
+        public bool ShowDragDropHint => IsRegistrarMode;
+
+        // Searching and scanning drive the registrar's queue. Admin reviews a persisted
+        // snapshot and never scans, so the whole search/scan cluster is registrar-only.
+        public bool ShowSearchAndScan => IsRegistrarMode;
+
+        /// <summary>
+        /// Per-row Approve/Reject buttons on the Pending column. Admin-side only, and
+        /// gated on the same review permission that governs claims and member approvals.
+        /// Deliberately separate from <see cref="ShowBatchActions"/> so this never
+        /// reintroduces Confirm/Rename/Reuse/Delete for Admin.
+        /// </summary>
+        public bool ShowAdminRowActions => IsAdminHistoryMode && PermissionService.CanApproveWorkflow;
+
+        private decimal _totalFunds;
+        public decimal TotalFunds { get => _totalFunds; set => SetProperty(ref _totalFunds, value); }
 
         private string _projectCode = string.Empty;
         public string ProjectCode { get => _projectCode; set => SetProperty(ref _projectCode, value); }
@@ -93,17 +132,14 @@ namespace eSureHi.ViewModels.Admin
             "Job Order", "Casual", "Regular", "Captain"
         };
 
+        // Captured in the Confirm Batch dialog; labels the batch and feeds the GGMS
+        // programType. Changing it must never reload the board — that would discard
+        // release/hold/reject decisions the registrar has already made.
         private string _selectedProgram = "Job Order";
         public string SelectedProgram
         {
             get => _selectedProgram;
-            set
-            {
-                if (SetProperty(ref _selectedProgram, value))
-                {
-                    _ = PreloadBeneficiariesAsync();
-                }
-            }
+            set => SetProperty(ref _selectedProgram, value);
         }
 
         private string _searchQuery = string.Empty;
@@ -124,11 +160,20 @@ namespace eSureHi.ViewModels.Admin
         public ObservableCollection<DistributionRecordViewModel> ReleasedRecords { get; } = new();
         public ObservableCollection<DistributionRecordViewModel> PendingRecords { get; } = new();
         public ObservableCollection<DistributionRecordViewModel> UnreleasedRecords { get; } = new();
+        public ObservableCollection<DistributionRecordViewModel> RejectedRecords { get; } = new();
+
+        // Drive the per-column empty-state illustrations.
+        public bool HasReleasedRecords => ReleasedRecords.Count > 0;
+        public bool HasUnreleasedRecords => UnreleasedRecords.Count > 0;
+        public bool HasPendingRecords => PendingRecords.Count > 0;
+        public bool HasRejectedRecords => RejectedRecords.Count > 0;
 
         public IAsyncRelayCommand LoadDataCommand { get; }
         public IAsyncRelayCommand SearchCommand { get; }
         public IAsyncRelayCommand PreloadBeneficiariesCommand { get; }
         public IRelayCommand<DistributionRecordViewModel> UndoRecordCommand { get; }
+        public IAsyncRelayCommand<DistributionRecordViewModel> ApproveRecordCommand { get; }
+        public IAsyncRelayCommand<DistributionRecordViewModel> RejectRecordCommand { get; }
         public IAsyncRelayCommand ConfirmBatchCommand { get; }
         public IAsyncRelayCommand ScanCameraCommand { get; }
         
@@ -138,15 +183,28 @@ namespace eSureHi.ViewModels.Admin
         public IRelayCommand DeleteBatchCommand { get; }
         public IRelayCommand ViewFundCommand { get; }
 
-        public DistributionBatchViewModel(eSureHiDbContext dbContext)
+        public DistributionBatchViewModel(eSureHiDbContext dbContext, DistributionBoardMode? mode = null)
         {
             _dbContext = dbContext;
+            Mode = mode ?? (PermissionService.IsUserRegistrar(AuthService.Instance.CurrentUser?.Role)
+                ? DistributionBoardMode.Registrar
+                : DistributionBoardMode.AdminHistory);
 
             LoadDataCommand = new AsyncRelayCommand(LoadDataAsync);
             SearchCommand = new AsyncRelayCommand(SearchAsync);
             PreloadBeneficiariesCommand = new AsyncRelayCommand(PreloadBeneficiariesAsync);
-            
+
             UndoRecordCommand = new RelayCommand<DistributionRecordViewModel>(UndoRecord);
+
+            // Mirrors the per-row review pattern used by PaymentsViewModel: the record must
+            // actually be Pending, and the operator must hold the review permission.
+            ApproveRecordCommand = new AsyncRelayCommand<DistributionRecordViewModel>(
+                ApproveRecordAsync,
+                r => r?.Status == "Pending" && PermissionService.CanApproveWorkflow);
+            RejectRecordCommand = new AsyncRelayCommand<DistributionRecordViewModel>(
+                RejectRecordAsync,
+                r => r?.Status == "Pending" && PermissionService.CanReject);
+
             ConfirmBatchCommand = new AsyncRelayCommand(ConfirmBatchAsync);
             ScanCameraCommand = new AsyncRelayCommand(ScanCameraAsync);
 
@@ -165,7 +223,46 @@ namespace eSureHi.ViewModels.Admin
                 SourceFunds.Add(fund);
             }
 
-            await PreloadBeneficiariesAsync();
+            TotalFunds = funds
+                .Where(f => f.Status == "Active")
+                .Sum(f => f.AllocatedAmount - f.UsedAmount);
+
+            if (IsAdminHistoryMode)
+            {
+                await LoadHistoryAsync();
+            }
+            else
+            {
+                await PreloadBeneficiariesAsync();
+            }
+        }
+
+        /// <summary>
+        /// Admin mode: read-only snapshot of persisted records, loaded once on page open.
+        /// </summary>
+        private async Task LoadHistoryAsync()
+        {
+            var records = await _dbContext.DistributionRecords
+                .Include(r => r.Batch)
+                .Include(r => r.Beneficiary)
+                .Where(r => r.Status == "Released" || r.Status == "Pending" || r.Status == "Rejected")
+                .OrderByDescending(r => r.ProcessedAt)
+                .ToListAsync();
+
+            ReleasedRecords.Clear();
+            PendingRecords.Clear();
+            UnreleasedRecords.Clear();
+            RejectedRecords.Clear();
+
+            foreach (var r in records)
+            {
+                var vm = new DistributionRecordViewModel(r);
+                if (r.Status == "Released") ReleasedRecords.Add(vm);
+                else if (r.Status == "Rejected") RejectedRecords.Add(vm);
+                else PendingRecords.Add(vm);
+            }
+
+            UpdateCounts();
         }
 
         private async Task PreloadBeneficiariesAsync()
@@ -177,16 +274,17 @@ namespace eSureHi.ViewModels.Admin
                 .Distinct()
                 .ToListAsync();
 
+            // The queue lists every active beneficiary still awaiting release. Program is
+            // batch metadata captured at Confirm time, not a board filter.
             var beneficiaries = await _dbContext.Beneficiaries
-                .Where(b => b.IsActive
-                            && !alreadyReleasedIds.Contains(b.BenId)
-                            && b.SourceOfFunds == SelectedProgram)
+                .Where(b => b.IsActive && !alreadyReleasedIds.Contains(b.BenId))
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
             UnreleasedRecords.Clear();
             ReleasedRecords.Clear();
             PendingRecords.Clear();
+            RejectedRecords.Clear();
 
             foreach (var b in beneficiaries)
             {
@@ -208,11 +306,12 @@ namespace eSureHi.ViewModels.Admin
 
             var q = SearchQuery.Trim().ToLower();
 
-            var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).ToList();
+            var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).Concat(RejectedRecords).ToList();
 
-            var found = allRecords.FirstOrDefault(r =>
-                r.BeneficiaryName.ToLower().Contains(q) ||
-                r.BeneficiaryId.ToLower() == q);
+            var found = allRecords.FirstOrDefault(r => r.BeneficiaryId.ToLower() == q)
+                ?? allRecords.FirstOrDefault(r =>
+                    r.BeneficiaryName.ToLower().Contains(q) ||
+                    r.BeneficiaryId.ToLower().Contains(q));
 
             if (found == null)
             {
@@ -221,6 +320,14 @@ namespace eSureHi.ViewModels.Admin
             }
 
             SearchQuery = string.Empty;
+
+            // Admin mode is a read-only snapshot — locate only, never open the processing dialog.
+            if (IsAdminHistoryMode)
+            {
+                SetStatus($"{found.BeneficiaryName} — {found.Status}", "InformationOutline", "#1D4ED8");
+                return;
+            }
+
             await ShowIdCardAndProcessAsync(found);
         }
 
@@ -251,6 +358,14 @@ namespace eSureHi.ViewModels.Admin
                 ChangeStatus(found, "Pending", remark);
                 SetStatus($"⚠ {found.BeneficiaryName} moved to On Hold.", "AlertCircle", "#991B1B");
             }
+            else if (action == "Reject")
+            {
+                var remark = string.IsNullOrWhiteSpace(cardVm.HoldReason)
+                    ? "Rejected — not eligible for this distribution."
+                    : cardVm.HoldReason;
+                ChangeStatus(found, "Rejected", remark);
+                SetStatus($"✕ {found.BeneficiaryName} rejected.", "CloseCircle", "#B91C1C");
+            }
             else
             {
                 SetStatus($"Cancelled — {found.BeneficiaryName} left unchanged.", "InformationOutline", "#64748B");
@@ -280,6 +395,71 @@ namespace eSureHi.ViewModels.Admin
             }
         }
 
+        /// <summary>
+        /// Admin approves a Pending record: it becomes Released and the beneficiary's share
+        /// is debited from the fund that its batch was drawn against. The debit lives here
+        /// rather than at batch-confirm time because approval is what decides a release.
+        /// </summary>
+        private async Task ApproveRecordAsync(DistributionRecordViewModel? record)
+        {
+            if (record == null || record.Status != "Pending") return;
+            if (!PermissionService.CanApproveWorkflow)
+            {
+                SetStatus("You do not have permission to approve releases.", "LockOutline", "#991B1B");
+                return;
+            }
+
+            ChangeStatus(record, "Released", "Claimed");
+
+            var batch = record.Model.Batch;
+            if (batch?.SourceFundId != null && batch.AmountPerBeneficiary > 0)
+            {
+                var fund = await _dbContext.SourceFunds.FindAsync(batch.SourceFundId);
+                if (fund != null) fund.UsedAmount += batch.AmountPerBeneficiary;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            await RefreshTotalFundsAsync();
+
+            SetStatus($"✓ Approved — {record.BeneficiaryName} released.", "CheckCircle", "#166534");
+        }
+
+        /// <summary>
+        /// Admin rejects a Pending record — typically because a household member already
+        /// claimed. Captures a reason in a small confirm dialog (not the full ID card) and
+        /// moves the record straight out of Pending into Rejected.
+        /// </summary>
+        private async Task RejectRecordAsync(DistributionRecordViewModel? record)
+        {
+            if (record == null || record.Status != "Pending") return;
+            if (!PermissionService.CanReject)
+            {
+                SetStatus("You do not have permission to reject releases.", "LockOutline", "#991B1B");
+                return;
+            }
+
+            var rejectVm = new RejectRecordViewModel(record.BeneficiaryName);
+            var dialog = new RejectRecordDialog(rejectVm);
+            var verdict = await DialogHost.Show(dialog, "DistributionDialogHost") as string;
+            if (verdict != "Reject") return;
+
+            var reason = string.IsNullOrWhiteSpace(rejectVm.Reason)
+                ? "Rejected by reviewer."
+                : rejectVm.Reason.Trim();
+
+            ChangeStatus(record, "Rejected", reason);
+            await _dbContext.SaveChangesAsync();
+
+            SetStatus($"✕ Rejected — {record.BeneficiaryName}. {reason}", "CloseCircle", "#B91C1C");
+        }
+
+        private async Task RefreshTotalFundsAsync()
+        {
+            TotalFunds = await _dbContext.SourceFunds
+                .Where(f => f.Status == "Active")
+                .SumAsync(f => f.AllocatedAmount - f.UsedAmount);
+        }
+
         private void UndoRecord(DistributionRecordViewModel? record)
         {
             if (record != null)
@@ -296,6 +476,7 @@ namespace eSureHi.ViewModels.Admin
             if (record.Status == "Unreleased") UnreleasedRecords.Remove(record);
             else if (record.Status == "Pending") PendingRecords.Remove(record);
             else if (record.Status == "Released") ReleasedRecords.Remove(record);
+            else if (record.Status == "Rejected") RejectedRecords.Remove(record);
 
             record.Status = newStatus;
             record.Remarks = remarks;
@@ -304,6 +485,7 @@ namespace eSureHi.ViewModels.Admin
             if (newStatus == "Unreleased") UnreleasedRecords.Add(record);
             else if (newStatus == "Pending") PendingRecords.Add(record);
             else if (newStatus == "Released") ReleasedRecords.Add(record);
+            else if (newStatus == "Rejected") RejectedRecords.Add(record);
 
             UpdateCounts();
         }
@@ -313,6 +495,15 @@ namespace eSureHi.ViewModels.Admin
             OnPropertyChanged(nameof(ReleasedRecords));
             OnPropertyChanged(nameof(UnreleasedRecords));
             OnPropertyChanged(nameof(PendingRecords));
+            OnPropertyChanged(nameof(RejectedRecords));
+            OnPropertyChanged(nameof(HasReleasedRecords));
+            OnPropertyChanged(nameof(HasUnreleasedRecords));
+            OnPropertyChanged(nameof(HasPendingRecords));
+            OnPropertyChanged(nameof(HasRejectedRecords));
+
+            // A record that just left Pending must stop offering Approve/Reject.
+            ApproveRecordCommand.NotifyCanExecuteChanged();
+            RejectRecordCommand.NotifyCanExecuteChanged();
         }
 
         private void SetStatus(string message, string iconKind, string iconColor)
@@ -324,11 +515,26 @@ namespace eSureHi.ViewModels.Admin
 
         private async Task ConfirmBatchAsync()
         {
+            // Program / fund / amount are captured here rather than on the board header.
+            var dialog = new ConfirmBatchDialog(this);
+            var verdict = await DialogHost.Show(dialog, "DistributionDialogHost") as string;
+            if (verdict != "Confirm") return;
+
             if (SelectedSourceFundId == null)
             {
                 SetStatus("Please select a Source of Fund.", "AlertCircle", "#991B1B");
                 return;
             }
+
+            if (AmountPerBeneficiary <= 0)
+            {
+                SetStatus("Please enter an amount per beneficiary.", "AlertCircle", "#991B1B");
+                return;
+            }
+
+            // GGMS sync sends ProjectTitle as programType — fall back to the chosen program.
+            if (string.IsNullOrWhiteSpace(ProjectTitle))
+                ProjectTitle = SelectedProgram;
 
             var batch = new DistributionBatch
             {
@@ -343,7 +549,7 @@ namespace eSureHi.ViewModels.Admin
 
             var fund = await _dbContext.SourceFunds.FindAsync(SelectedSourceFundId);
 
-            var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).ToList();
+            var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).Concat(RejectedRecords).ToList();
             foreach (var r in allRecords)
             {
                 r.Model.Batch = batch;
