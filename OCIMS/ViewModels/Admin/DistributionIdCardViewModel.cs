@@ -60,71 +60,83 @@ namespace eSureHi.ViewModels.Admin
 
         public async Task LoadAsync()
         {
-            using var db = eSureHiDbContextFactory.Create();
-
-            var beneficiary = await db.Beneficiaries.FirstOrDefaultAsync(b => b.BenId == BenId);
-            if (beneficiary == null)
+            try
             {
-                SetVerdict(false, "Beneficiary record not found.", "#991B1B", "#FEE2E2");
-                HoldReason = "Beneficiary record not found.";
-                return;
+                using var db = eSureHiDbContextFactory.Create();
+
+                var beneficiary = await db.Beneficiaries.FirstOrDefaultAsync(b => b.BenId == BenId);
+                if (beneficiary == null)
+                {
+                    SetVerdict(false, "Beneficiary record not found.", "#991B1B", "#FEE2E2");
+                    HoldReason = "Beneficiary record not found.";
+                    return;
+                }
+
+                FullName = beneficiary.FullName;
+                BeneficiaryId = beneficiary.BeneficiaryId ?? beneficiary.BenId.ToString();
+                Program = string.IsNullOrWhiteSpace(beneficiary.SourceOfFunds) ? "—" : beneficiary.SourceOfFunds!;
+                Relationship = string.IsNullOrWhiteSpace(beneficiary.Relationship) ? "—" : beneficiary.Relationship!;
+                DateOfBirth = beneficiary.DateOfBirth?.ToString("MMM dd, yyyy") ?? "—";
+                OnPropertyChanged(nameof(FullName));
+                OnPropertyChanged(nameof(BeneficiaryId));
+                OnPropertyChanged(nameof(Program));
+                OnPropertyChanged(nameof(Relationship));
+                OnPropertyChanged(nameof(DateOfBirth));
+
+                // ── Family + address via the CRS cache (shared lookup logic) ──
+                var snapshot = await HouseholdLookupService.GetHouseholdSnapshotAsync(db, beneficiary);
+                Address = snapshot.Address ?? "—";
+                OnPropertyChanged(nameof(Address));
+                foreach (var member in snapshot.Members)
+                    FamilyMembers.Add(member);
+
+                // ── Release history + monthly-limit check ──
+                var releases = await db.DistributionRecords
+                    .Include(r => r.Batch)
+                    .Where(r => r.BeneficiaryId == BenId && r.Status == "Released")
+                    .OrderByDescending(r => r.ProcessedAt)
+                    .ToListAsync();
+
+                TotalReleases = releases.Count;
+
+                var now = DateTime.Now;
+                var monthStart = new DateTime(now.Year, now.Month, 1);
+                var thisMonth = releases
+                    .Where(r => r.ProcessedAt.HasValue && r.ProcessedAt.Value >= monthStart)
+                    .ToList();
+                ReleasesThisMonth = thisMonth.Count;
+
+                var last = releases.FirstOrDefault();
+                if (last != null)
+                {
+                    var when = last.ProcessedAt?.ToString("MMM dd, yyyy") ?? "unknown date";
+                    var batchName = last.Batch?.ProjectTitle ?? "a past batch";
+                    LastReleaseText = $"Last released {when} under \"{batchName}\"";
+                }
+
+                if (thisMonth.Any())
+                {
+                    var when = thisMonth.First().ProcessedAt?.ToString("MMM dd, yyyy") ?? "this month";
+                    HoldReason = $"Already released this month ({when}) — monthly limit reached.";
+                    SetVerdict(false,
+                        "ON HOLD — monthly release limit already reached.",
+                        "#991B1B", "#FEE2E2");
+                }
+                else
+                {
+                    SetVerdict(true,
+                        "ELIGIBLE — no release recorded this month.",
+                        "#166534", "#DCFCE7");
+                }
             }
-
-            FullName = beneficiary.FullName;
-            BeneficiaryId = beneficiary.BeneficiaryId ?? beneficiary.BenId.ToString();
-            Program = string.IsNullOrWhiteSpace(beneficiary.SourceOfFunds) ? "—" : beneficiary.SourceOfFunds!;
-            Relationship = string.IsNullOrWhiteSpace(beneficiary.Relationship) ? "—" : beneficiary.Relationship!;
-            DateOfBirth = beneficiary.DateOfBirth?.ToString("MMM dd, yyyy") ?? "—";
-            OnPropertyChanged(nameof(FullName));
-            OnPropertyChanged(nameof(BeneficiaryId));
-            OnPropertyChanged(nameof(Program));
-            OnPropertyChanged(nameof(Relationship));
-            OnPropertyChanged(nameof(DateOfBirth));
-
-            // ── Family + address via the CRS cache (shared lookup logic) ──
-            var snapshot = await HouseholdLookupService.GetHouseholdSnapshotAsync(db, beneficiary);
-            Address = snapshot.Address ?? "—";
-            OnPropertyChanged(nameof(Address));
-            foreach (var member in snapshot.Members)
-                FamilyMembers.Add(member);
-
-            // ── Release history + monthly-limit check ──
-            var releases = await db.DistributionRecords
-                .Include(r => r.Batch)
-                .Where(r => r.BeneficiaryId == BenId && r.Status == "Released")
-                .OrderByDescending(r => r.ProcessedAt)
-                .ToListAsync();
-
-            TotalReleases = releases.Count;
-
-            var now = DateTime.Now;
-            var monthStart = new DateTime(now.Year, now.Month, 1);
-            var thisMonth = releases
-                .Where(r => r.ProcessedAt.HasValue && r.ProcessedAt.Value >= monthStart)
-                .ToList();
-            ReleasesThisMonth = thisMonth.Count;
-
-            var last = releases.FirstOrDefault();
-            if (last != null)
+            catch (Exception ex)
             {
-                var when = last.ProcessedAt?.ToString("MMM dd, yyyy") ?? "unknown date";
-                var batchName = last.Batch?.ProjectTitle ?? "a past batch";
-                LastReleaseText = $"Last released {when} under \"{batchName}\"";
-            }
-
-            if (thisMonth.Any())
-            {
-                var when = thisMonth.First().ProcessedAt?.ToString("MMM dd, yyyy") ?? "this month";
-                HoldReason = $"Already released this month ({when}) — monthly limit reached.";
+                // Fail closed: if the history query didn't run, the monthly-limit check
+                // didn't run either, so the card must not offer Release.
+                HoldReason = "Could not verify release history — database unavailable.";
                 SetVerdict(false,
-                    "ON HOLD — monthly release limit already reached.",
+                    $"UNAVAILABLE — could not verify eligibility. {ex.Message}",
                     "#991B1B", "#FEE2E2");
-            }
-            else
-            {
-                SetVerdict(true,
-                    "ELIGIBLE — no release recorded this month.",
-                    "#166534", "#DCFCE7");
             }
         }
 

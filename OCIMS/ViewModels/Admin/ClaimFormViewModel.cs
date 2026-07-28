@@ -241,49 +241,63 @@ namespace eSureHi.ViewModels.Admin
         // ── Init Edit ──────────────────────────────────────────────────
         public async Task InitEditAsync(int claimId)
         {
-            IsEditMode = true;
-            _editClaimId = claimId;
+            try
+            {
+                using var db = eSureHiDbContextFactory.Create();
+                var c = await db.Claims
+                    .Include(x => x.Employee)
+                    .Include(x => x.Policy)
+                    .FirstOrDefaultAsync(x => x.ClaimId == claimId);
+                if (c is null) return;
 
-            using var db = eSureHiDbContextFactory.Create();
-            var c = await db.Claims
-                .Include(x => x.Employee)
-                .Include(x => x.Policy)
-                .FirstOrDefaultAsync(x => x.ClaimId == claimId);
-            if (c is null) return;
+                // Only flip into edit mode once the claim actually loaded — otherwise a
+                // failed load left an empty form whose Save would overwrite the real
+                // claim with defaults.
+                IsEditMode = true;
+                _editClaimId = claimId;
 
-            await LoadEmployeesAsync();
-            SelectedEmployee = _allEmployees.FirstOrDefault(e => e.EmpId == c.EmpId);
-            await LoadPoliciesForEmployeeAsync();
+                await LoadEmployeesAsync();
+                SelectedEmployee = _allEmployees.FirstOrDefault(e => e.EmpId == c.EmpId);
+                await LoadPoliciesForEmployeeAsync();
 
-            SelectedEmployeePolicy = EmployeePolicies
-                .FirstOrDefault(ep => ep.PolicyId == c.PolicyId);
-            ClaimType = c.ClaimType;
-            ClaimDate = c.ClaimDate.HasValue
-                                      ? c.ClaimDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-            IncidentDate = c.IncidentDate.HasValue
-                                      ? c.IncidentDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-            AdmissionDate = c.AdmissionDate.HasValue
-                                      ? c.AdmissionDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-            DischargeDate = c.DischargeDate.HasValue
-                                      ? c.DischargeDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-            AdmissionDays = c.AdmissionDays;
-            ExcessBillAmount = c.ExcessBillAmount;
-            OutsideDiagnosticsAmount = c.OutsideDiagnosticsAmount;
-            AmountClaimed = c.AmountClaimed;
-            HospitalClinic = c.HospitalClinic ?? string.Empty;
-            AttendingPhysician = c.AttendingPhysician ?? string.Empty;
-            IncidentDescription = c.IncidentDescription ?? string.Empty;
-            Remarks = c.Remarks ?? string.Empty;
+                SelectedEmployeePolicy = EmployeePolicies
+                    .FirstOrDefault(ep => ep.PolicyId == c.PolicyId);
+                ClaimType = c.ClaimType;
+                ClaimDate = c.ClaimDate.HasValue
+                                          ? c.ClaimDate.Value.ToDateTime(TimeOnly.MinValue) : null;
+                IncidentDate = c.IncidentDate.HasValue
+                                          ? c.IncidentDate.Value.ToDateTime(TimeOnly.MinValue) : null;
+                AdmissionDate = c.AdmissionDate.HasValue
+                                          ? c.AdmissionDate.Value.ToDateTime(TimeOnly.MinValue) : null;
+                DischargeDate = c.DischargeDate.HasValue
+                                          ? c.DischargeDate.Value.ToDateTime(TimeOnly.MinValue) : null;
+                AdmissionDays = c.AdmissionDays;
+                ExcessBillAmount = c.ExcessBillAmount;
+                OutsideDiagnosticsAmount = c.OutsideDiagnosticsAmount;
+                AmountClaimed = c.AmountClaimed;
+                HospitalClinic = c.HospitalClinic ?? string.Empty;
+                AttendingPhysician = c.AttendingPhysician ?? string.Empty;
+                IncidentDescription = c.IncidentDescription ?? string.Empty;
+                Remarks = c.Remarks ?? string.Empty;
 
-            var docs = await db.ClaimDocuments
-                .Where(d => d.ClaimId == claimId).ToListAsync();
-            foreach (var d in docs)
-                Documents.Add(new ClaimDocumentItem
-                {
-                    DocType = d.DocType,
-                    FileName = d.FileName,
-                    FilePath = d.FilePath
-                });
+                var docs = await db.ClaimDocuments
+                    .Where(d => d.ClaimId == claimId).ToListAsync();
+                foreach (var d in docs)
+                    Documents.Add(new ClaimDocumentItem
+                    {
+                        DocType = d.DocType,
+                        FileName = d.FileName,
+                        FilePath = d.FilePath
+                    });
+            }
+            catch (Exception ex)
+            {
+                // Called fire-and-forget from ClaimFormDialog — without this catch the
+                // exception vanished into the unobserved-task handler.
+                IsEditMode = false;
+                _editClaimId = 0;
+                ErrorMessage = $"Could not load the claim for editing: {ex.Message}";
+            }
         }
 
         public async Task InitForBeneficiaryAsync(int beneficiaryId)
@@ -337,26 +351,36 @@ namespace eSureHi.ViewModels.Admin
             if (!_lockedBeneficiaryId.HasValue)
                 return;
 
-            using var db = eSureHiDbContextFactory.Create();
-            var beneficiary = await db.Beneficiaries
-                .Include(b => b.Employee)
-                .FirstOrDefaultAsync(b => b.BenId == _lockedBeneficiaryId.Value);
-            if (beneficiary is null)
-                return;
+            try
+            {
+                using var db = eSureHiDbContextFactory.Create();
+                var beneficiary = await db.Beneficiaries
+                    .Include(b => b.Employee)
+                    .FirstOrDefaultAsync(b => b.BenId == _lockedBeneficiaryId.Value);
+                if (beneficiary is null)
+                    return;
 
-            SelectedEmployee = _allEmployees.FirstOrDefault(e => e.EmpId == beneficiary.EmpId) ?? beneficiary.Employee;
-            await LoadPoliciesForEmployeeAsync();
-            SelectedBeneficiary = Beneficiaries.FirstOrDefault(b => b.BenId == beneficiary.BenId);
+                SelectedEmployee = _allEmployees.FirstOrDefault(e => e.EmpId == beneficiary.EmpId) ?? beneficiary.Employee;
+                await LoadPoliciesForEmployeeAsync();
+                SelectedBeneficiary = Beneficiaries.FirstOrDefault(b => b.BenId == beneficiary.BenId);
 
-            ApplicantName = beneficiary.FullName;
-            var snapshot = await HouseholdLookupService.GetHouseholdSnapshotAsync(db, beneficiary);
-            IsHouseholdHead = snapshot.IsHouseholdHead;
-            FamilyMembers.Clear();
-            foreach (var m in snapshot.Members) FamilyMembers.Add(m);
-            OnPropertyChanged(nameof(ApplicantName));
-            OnPropertyChanged(nameof(IsHouseholdHead));
-            OnPropertyChanged(nameof(FamilyRole));
-            OnPropertyChanged(nameof(HouseholdStatusBadge));
+                ApplicantName = beneficiary.FullName;
+                var snapshot = await HouseholdLookupService.GetHouseholdSnapshotAsync(db, beneficiary);
+                IsHouseholdHead = snapshot.IsHouseholdHead;
+                FamilyMembers.Clear();
+                foreach (var m in snapshot.Members) FamilyMembers.Add(m);
+                OnPropertyChanged(nameof(ApplicantName));
+                OnPropertyChanged(nameof(IsHouseholdHead));
+                OnPropertyChanged(nameof(FamilyRole));
+                OnPropertyChanged(nameof(HouseholdStatusBadge));
+            }
+            catch (Exception ex)
+            {
+                // Reached fire-and-forget from ClaimVerificationDialog's constructor. If the
+                // claimant lock fails to apply, the self-service form must say so instead of
+                // opening with no claimant selected.
+                ErrorMessage = $"Could not load your beneficiary record: {ex.Message}";
+            }
         }
 
         // Opens the camera QR scanner (same pattern as DistributionBatchViewModel.ScanCameraAsync)

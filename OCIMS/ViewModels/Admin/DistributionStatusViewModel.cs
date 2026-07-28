@@ -30,10 +30,35 @@ namespace eSureHi.ViewModels.Admin
         public bool IsBusy { get => _isBusy; set => SetProperty(ref _isBusy, value); }
 
         private bool _hasRecords;
-        public bool HasRecords { get => _hasRecords; set => SetProperty(ref _hasRecords, value); }
+        public bool HasRecords
+        {
+            get => _hasRecords;
+            set
+            {
+                if (SetProperty(ref _hasRecords, value))
+                    OnPropertyChanged(nameof(ShowEmptyState));
+            }
+        }
 
         private string _errorMessage = string.Empty;
-        public string ErrorMessage { get => _errorMessage; set => SetProperty(ref _errorMessage, value); }
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set
+            {
+                if (SetProperty(ref _errorMessage, value))
+                {
+                    OnPropertyChanged(nameof(HasError));
+                    OnPropertyChanged(nameof(ShowEmptyState));
+                }
+            }
+        }
+
+        public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+        // The "no records yet" copy is only true when the query actually ran and came
+        // back empty — a load failure must show the error, not the empty state.
+        public bool ShowEmptyState => !HasRecords && !HasError;
 
         public RelayCommand CloseCommand { get; }
         public Action? CloseAction { get; set; }

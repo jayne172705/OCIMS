@@ -57,10 +57,16 @@
                     <TextBlock Text="Status of any distribution/relief batch you're part of. This is read-only — release actions are handled by program staff."
                                FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
+                    <!-- Load failures must not read as "you have no distributions". -->
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               FontSize="12" Foreground="#991B1B" TextWrapping="Wrap"
+                               HorizontalAlignment="Center" Margin="0,24,0,0"
+                               Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
                     <TextBlock Text="No distribution records found for your account yet."
                                FontSize="13" Foreground="#94A3B8"
                                HorizontalAlignment="Center" Margin="0,40,0,0"
-                               Visibility="{Binding HasRecords, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                               Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                     <ItemsControl ItemsSource="{Binding Records}">
                         <ItemsControl.ItemTemplate>
