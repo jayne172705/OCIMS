@@ -7,6 +7,34 @@
              xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
              Background="White">
 
+    <UserControl.Resources>
+        <helpers:BoolToVisibilityConverter x:Key="LocalBoolToVis"/>
+
+        <Style x:Key="ColumnHeaderLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="StatusColumnCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="9"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+        </Style>
+
+        <Style x:Key="PagerButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="Foreground" Value="#64748B"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+        </Style>
+    </UserControl.Resources>
+
     <b:Interaction.Triggers>
         <b:EventTrigger EventName="Loaded">
             <b:InvokeCommandAction Command="{Binding LoadDataCommand}"/>
@@ -14,277 +42,601 @@
     </b:Interaction.Triggers>
 
     <materialDesign:DialogHost Identifier="DistributionDialogHost" CloseOnClickAway="True">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Header -->
-                <RowDefinition Height="Auto"/> <!-- Batch Info & Actions -->
-                <RowDefinition Height="Auto"/> <!-- Search/Scan -->
-                <RowDefinition Height="*"/>    <!-- 3 Columns -->
-            </Grid.RowDefinitions>
+        <Grid Background="#F8FAFC">
+            
+            <!-- ==================== REGISTRAR MODE LAYOUT ==================== -->
+            <Grid Visibility="{Binding IsRegistrarMode, Converter={StaticResource LocalBoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Title + batch actions -->
+                    <RowDefinition Height="Auto"/> <!-- Total Funds / search / counters -->
+                    <RowDefinition Height="*"/>    <!-- Status columns -->
+                    <RowDefinition Height="Auto"/> <!-- Drag-drop hint -->
+                </Grid.RowDefinitions>
 
-            <!-- 1. Header Bar (Green) -->
-            <Border Background="#2E7D32" Padding="15,10">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Background" Value="#2E7D32"/>
-                    </Style>
-                </Border.Style>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <Button Style="{StaticResource MaterialDesignToolButton}" Foreground="White" Width="36" Height="36" Margin="0,0,10,0">
-                        <materialDesign:PackIcon Kind="ArrowLeft" Width="24" Height="24"/>
-                    </Button>
-                    
-                    <TextBlock Grid.Column="1" Text="Distribution Management" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    
-                    <Button Grid.Column="2" Style="{StaticResource MaterialDesignToolButton}" Foreground="White" Width="36" Height="36">
-                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
-                    </Button>
-                </Grid>
-            </Border>
-
-            <!-- 2. Batch Info Row & Action Buttons -->
-            <Border Grid.Row="1" Padding="20,15" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Batch Info -->
-                    <StackPanel>
-                        <TextBlock Text="{Binding ProjectTitle, TargetNullValue='New Distribution Batch'}" FontSize="24" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,5"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding ProjectDescription, TargetNullValue='Program Type'}" FontSize="14" Foreground="#475569" Margin="0,0,10,0"/>
-                            <TextBlock Text="•" FontSize="14" Foreground="#94A3B8" Margin="0,0,10,0"/>
-                            <TextBlock Text="{Binding AmountPerBeneficiary, StringFormat='₱{0:N2} / beneficiary'}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,10,0"/>
-                            <TextBlock Text="•" FontSize="14" Foreground="#94A3B8" Margin="0,0,10,0"/>
-                            <!-- Fund Name and Balance -->
-                            <TextBlock FontSize="14">
-                                <Hyperlink Command="{Binding ViewFundCommand}" TextDecorations="None" Foreground="#2E7D32">
-                                    <Run Text="{Binding SelectedSourceFundName, TargetNullValue='Select Fund'}"/>
-                                </Hyperlink>
-                                <Run Text=" "/>
-                                <Run Text="{Binding RemainingFundBalance, StringFormat='(₱{0:N2} remaining)'}" Foreground="#64748B"/>
-                            </TextBlock>
-                        </StackPanel>
-
-                        <!-- Program / track selector -->
-                        <Grid Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon Grid.Column="0" Kind="AccountSwitch" Width="18" Height="18" Foreground="#2E7D32" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Grid.Column="1" Text="Program:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <ComboBox Grid.Column="2" ItemsSource="{Binding Programs}"
-                                      SelectedItem="{Binding SelectedProgram, Mode=TwoWay}"
-                                      materialDesign:HintAssist.Hint="Program"
-                                      MinWidth="150" MaxWidth="260" Height="46"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
-                        </Grid>
-                    </StackPanel>
-                    
-                    <!-- Action Buttons -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                        <Button Content="Confirm Batch" Command="{Binding ConfirmBatchCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Foreground="White" Margin="0,0,8,0" Height="36"/>
-                        <Button Content="Rename" Command="{Binding RenameBatchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Height="36"/>
-                        <Button Content="Reuse Batch" Command="{Binding ReuseBatchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Height="36"/>
-                        <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Refresh" Margin="0,0,8,0" Width="36" Height="36">
-                            <materialDesign:PackIcon Kind="Refresh"/>
-                        </Button>
-                        <Button Content="Delete Batch" Command="{Binding DeleteBatchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#D32F2F" BorderBrush="#D32F2F" Height="36"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- 3. Search Bar & Status -->
-            <Border Grid.Row="2" Padding="20,15" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.6*" MinWidth="200"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="1.2*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBox Grid.Column="0" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                             materialDesign:HintAssist.Hint="Type Beneficiary ID / SC Code..."
-                             Height="46" FontSize="15"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             materialDesign:TextFieldAssist.HasClearButton="True">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
-                        </TextBox.InputBindings>
-                    </TextBox>
-
-                    <Button Grid.Column="2" Content="Process" Command="{Binding SearchCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Height="42"/>
-
-                    <Button Grid.Column="4" Command="{Binding ScanCameraCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="42" Foreground="#0F172A" BorderBrush="#CBD5E1">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Camera" Width="18" Height="18" Margin="0,0,6,0"/>
-                            <TextBlock Text="Scan via Camera"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Live Status Message -->
-                    <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="{Binding StatusIconKind}" Foreground="{Binding StatusIconColor}" Width="20" Height="20" Margin="0,0,8,0" Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
-                        <TextBlock Text="{Binding StatusMessage}" FontSize="15" FontWeight="Medium" Foreground="{Binding StatusIconColor}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
-
-                    <!-- Running Counter -->
-                    <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding ReleasedRecords.Count, StringFormat='{}{0} released'}" Foreground="#166534" FontWeight="SemiBold" Margin="0,0,15,0"/>
-                        <TextBlock Text="{Binding UnreleasedRecords.Count, StringFormat='{}{0} unreleased'}" Foreground="#9A3412" FontWeight="SemiBold" Margin="0,0,15,0"/>
-                        <TextBlock Text="{Binding PendingRecords.Count, StringFormat='{}{0} on hold'}" Foreground="#991B1B" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- 4. Three-Column Board -->
-            <Grid Grid.Row="3" Margin="15">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Column 1: Released -->
-                <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
+                <!-- 1. White header with title and Program selection -->
+                <Border Background="White" Padding="30,22" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Border Background="#DCFCE7" Padding="15,12" CornerRadius="6,6,0,0" BorderBrush="#BBF7D0" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Distribution Management" FontSize="26" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Manage batch distribution of beneficiaries"
+                                       FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Program Selector Card -->
+                        <Border Grid.Column="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16,8" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Released" FontWeight="Bold" Foreground="#166534" FontSize="15"/>
-                                <Border Background="#BBF7D0" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
-                                    <TextBlock Text="{Binding ReleasedRecords.Count}" Foreground="#166534" FontSize="12" FontWeight="Bold"/>
-                                </Border>
+                                <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20" Foreground="#166534" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Program:" FontWeight="Bold" Foreground="#0F172A" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <ComboBox ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram}"
+                                          Width="180" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"
+                                          Style="{StaticResource MaterialDesignComboBox}"
+                                          materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                                          BorderThickness="0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
-                        <ListView Grid.Row="1" ItemsSource="{Binding ReleasedRecords}" Margin="10" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="White" CornerRadius="6" Padding="12" Margin="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding BeneficiaryName}" FontWeight="Bold" FontSize="14" Foreground="#0F172A"/>
-                                                <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#64748B" Margin="0,2,0,0"/>
-                                                <TextBlock Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy h:mm tt}'}" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                            <Button Grid.Column="1" Command="{Binding DataContext.UndoRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconForegroundButton}" ToolTip="Undo Release" Width="28" Height="28" Padding="0" Foreground="#64748B">
-                                                <materialDesign:PackIcon Kind="Undo" Width="18" Height="18"/>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
                     </Grid>
                 </Border>
 
-                <!-- Column 2: Unreleased -->
-                <Border Grid.Column="2" Background="#F8FAFC" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
+                <!-- 2. Total Funds + Search + Scan + Counters -->
+                <Border Grid.Row="1" Background="White" CornerRadius="10" Margin="30,20,30,0"
+                        Padding="22,18" BorderBrush="#E2E8F0" BorderThickness="1">
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Border Background="#FFEDD5" Padding="15,12" CornerRadius="6,6,0,0" BorderBrush="#FED7AA" BorderThickness="0,0,0,1">
-                            <Grid>
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Unreleased" FontWeight="Bold" Foreground="#9A3412" FontSize="15"/>
-                                        <Border Background="#FED7AA" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
-                                            <TextBlock Text="{Binding UnreleasedRecords.Count}" Foreground="#9A3412" FontSize="12" FontWeight="Bold"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1.4*" MinWidth="200"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Total Funds rollup -->
+                        <materialDesign:PackIcon Grid.Column="0" Kind="WalletOutline" Width="30" Height="30"
+                                                 Foreground="#166534" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,22,0">
+                            <TextBlock Text="Total Funds" FontSize="12" Foreground="#64748B"/>
+                            <TextBlock Text="{Binding TotalFunds, StringFormat='₱{0:N2}'}"
+                                       FontSize="22" FontWeight="Bold" Foreground="#166534"/>
+                        </StackPanel>
+
+                        <Border Grid.Column="1" Width="1" Background="#E2E8F0" HorizontalAlignment="Right" Margin="0,4"/>
+
+                        <!-- Search -->
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Enter beneficiary name / beneficiary ID"
+                                     Height="44" FontSize="14"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:TextFieldAssist.HasClearButton="True"
+                                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                     VerticalAlignment="Center">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+
+                        <Button Grid.Column="4" Content="Search" Command="{Binding SearchCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#166534" BorderBrush="#166534" Foreground="White"
+                                Height="44" Padding="22,0" VerticalAlignment="Center"
+                                materialDesign:ButtonAssist.CornerRadius="6"/>
+
+                        <Button Grid.Column="6" Command="{Binding ScanCameraCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="44" Padding="18,0" VerticalAlignment="Center"
+                                Foreground="#0F172A" BorderBrush="#CBD5E1"
+                                materialDesign:ButtonAssist.CornerRadius="6">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Camera" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Scan via Camera" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Counter tiles -->
+                        <Border Grid.Column="8" Background="White" CornerRadius="8" BorderBrush="#E2E8F0"
+                                BorderThickness="1" Padding="22,12" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Margin="0,0,26,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ReleasedRecords.Count}" FontSize="22" FontWeight="Bold"
+                                               Foreground="#166534" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Released" FontSize="11" FontWeight="Bold" Foreground="#166534" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,26,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding UnreleasedRecords.Count}" FontSize="22" FontWeight="Bold"
+                                               Foreground="#166534" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Unreleased" FontSize="11" FontWeight="Bold" Foreground="#166534" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,26,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PendingRecords.Count}" FontSize="22" FontWeight="Bold"
+                                               Foreground="#D97706" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="On Hold" FontSize="11" FontWeight="Bold" Foreground="#D97706" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding RejectedRecords.Count}" FontSize="22" FontWeight="Bold"
+                                               Foreground="#DC2626" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Rejected" FontSize="11" FontWeight="Bold" Foreground="#DC2626" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Live status message -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom" Margin="52,0,0,-18">
+                    <materialDesign:PackIcon Kind="{Binding StatusIconKind}" Foreground="{Binding StatusIconColor}"
+                                             Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"
+                                             Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" FontWeight="Medium"
+                               Foreground="{Binding StatusIconColor}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <!-- Kanban Board Grid -->
+                <UniformGrid Grid.Row="2" Rows="1" Margin="30,28,16,10">
+                    <!-- Unreleased -->
+                    <Border Style="{StaticResource StatusColumnCard}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#F0FDF4" Padding="18,15" CornerRadius="9,9,0,0">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
+                                                                 Foreground="#166534" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="Unreleased" FontWeight="Bold" Foreground="#166534" FontSize="16" VerticalAlignment="Center"/>
+                                        <Border Background="#DCFCE7" CornerRadius="10" Padding="9,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding UnreleasedRecords.Count}" Foreground="#166534" FontSize="12" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
-                                    <TextBlock Text="Auto-listed from active beneficiaries" FontSize="11" Foreground="#C2410C" Margin="0,2,0,0"/>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Row="1" Padding="18,10" Background="White" BorderBrush="#EEF2F7" BorderThickness="0,1,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.1*"/>
+                                        <ColumnDefinition Width="1.2*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
+                                    <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
+                                    <TextBlock Grid.Column="2" Text="DATE ADDED" Style="{StaticResource ColumnHeaderLabel}"/>
+                                </Grid>
+                            </Border>
+
+                            <Grid Grid.Row="2">
+                                <ItemsControl ItemsSource="{Binding UnreleasedRecords}" Margin="0,4"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsControl.Template>
+                                        <ControlTemplate TargetType="ItemsControl">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                <ItemsPresenter/>
+                                            </ScrollViewer>
+                                        </ControlTemplate>
+                                    </ItemsControl.Template>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="18,11" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="1.1*"/>
+                                                        <ColumnDefinition Width="1.2*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#475569"
+                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding BeneficiaryName}" FontSize="13" FontWeight="SemiBold"
+                                                                   Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="Waiting to claim" FontSize="10" Foreground="#D97706" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="—" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
+                                            Visibility="{Binding HasUnreleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
+                                    <materialDesign:PackIcon Kind="InboxOutline" Width="58" Height="58"
+                                                             Foreground="#86EFAC" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="No unreleased beneficiaries." FontSize="14" FontWeight="SemiBold"
+                                               Foreground="#334155" HorizontalAlignment="Center" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Grid>
+
+                            <Border Grid.Row="3" Padding="18,12" Background="#FCFDFE" BorderBrush="#EEF2F7" BorderThickness="0,1,0,0"
+                                    CornerRadius="0,0,9,9">
+                                <Grid>
+                                    <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#94A3B8"
+                                               Text="{Binding UnreleasedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- On Hold Pending -->
+                    <Border Style="{StaticResource StatusColumnCard}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#FFFBEB" Padding="18,15" CornerRadius="9,9,0,0">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <materialDesign:PackIcon Kind="ClockOutline" Width="20" Height="20"
+                                                                 Foreground="#D97706" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="On Hold Pending" FontWeight="Bold" Foreground="#B45309" FontSize="16" VerticalAlignment="Center"/>
+                                        <Border Background="#FEF3C7" CornerRadius="10" Padding="9,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding PendingRecords.Count}" Foreground="#B45309" FontSize="12" FontWeight="Bold"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Row="1" Padding="18,10" Background="White" BorderBrush="#EEF2F7" BorderThickness="0,1,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.1*"/>
+                                        <ColumnDefinition Width="1.2*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
+                                    <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
+                                    <TextBlock Grid.Column="2" Text="DATE MOVED" Style="{StaticResource ColumnHeaderLabel}"/>
+                                </Grid>
+                            </Border>
+
+                            <Grid Grid.Row="2">
+                                <ItemsControl ItemsSource="{Binding PendingRecords}" Margin="0,4"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsControl.Template>
+                                        <ControlTemplate TargetType="ItemsControl">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                <ItemsPresenter/>
+                                            </ScrollViewer>
+                                        </ControlTemplate>
+                                    </ItemsControl.Template>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="18,11" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="1.1*"/>
+                                                        <ColumnDefinition Width="1.2*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#475569"
+                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding BeneficiaryName}" FontSize="13" FontWeight="SemiBold"
+                                                                   Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding Remarks, TargetNullValue='Pending verification'}"
+                                                                   FontSize="10" Foreground="#D97706" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
+                                                               FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
+                                            Visibility="{Binding HasPendingRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
+                                    <materialDesign:PackIcon Kind="InboxOutline" Width="58" Height="58"
+                                                             Foreground="#FCD34D" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="No beneficiaries on hold." FontSize="14" FontWeight="SemiBold"
+                                               Foreground="#334155" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Grid.Row="3" Padding="18,12" Background="#FCFDFE" BorderBrush="#EEF2F7" BorderThickness="0,1,0,0"
+                                    CornerRadius="0,0,9,9">
+                                <Grid>
+                                    <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#94A3B8"
+                                               Text="{Binding PendingRecords.Count, StringFormat='Showing {0} of {0}'}"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </UniformGrid>
+
+                <!-- 4. Drag-drop / processing hint -->
+                <Border Grid.Row="3" Background="White" CornerRadius="9" Margin="30,0,30,20" Padding="18,13"
+                        BorderBrush="#E2E8F0" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
+                                                 Foreground="#2563EB" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Search or scan a beneficiary to release, hold, or reject their distribution."
+                                   FontSize="12" Foreground="#475569" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            
+            
+            <!-- ==================== ADMIN MODE LAYOUT ==================== -->
+            <Grid Visibility="{Binding IsAdminHistoryMode, Converter={StaticResource LocalBoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Hero Banner -->
+                    <RowDefinition Height="*"/>    <!-- Dashboard Main Area -->
+                </Grid.RowDefinitions>
+
+                <!-- 1. Hero Banner with photo background -->
+                <Border Grid.Row="0" Margin="30,20,30,0" CornerRadius="12" Height="180" ClipToBounds="True">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
+                    </Border.Effect>
+                    <Grid>
+                        <!-- Background Image from user's design -->
+                        <Image Source="pack://application:,,,/Assets/Sulop_Municipal_Hall_Active.jpg" Stretch="UniformToFill"/>
+                        
+                        <!-- Dark gradient overlay for readability -->
+                        <Border>
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#064E3B" Offset="0"/> <!-- Dark forest green -->
+                                    <GradientStop Color="#14532D" Offset="0.45"/>
+                                    <GradientStop Color="#166534" Offset="0.8"/>
+                                    <GradientStop Color="#22C55E" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
                         </Border>
-                        <ListView Grid.Row="1" ItemsSource="{Binding UnreleasedRecords}" Margin="10" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="White" CornerRadius="6" Padding="12" Margin="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding BeneficiaryName}" FontWeight="Bold" FontSize="14" Foreground="#0F172A"/>
-                                                <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#64748B" Margin="0,2,0,0"/>
-                                                <TextBlock Text="Waiting to claim" FontSize="11" Foreground="#F59E0B" Margin="0,4,0,0" FontWeight="SemiBold"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+
+                        <Border Background="#000000" Opacity="0.15"/>
+
+                        <!-- Content inside Banner -->
+                        <Grid Margin="30,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <materialDesign:PackIcon Kind="ShieldCheck" Width="20" Height="20" Foreground="#86EFAC" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="ADMINISTRATOR HUB" FontSize="11" FontWeight="Bold" Foreground="#86EFAC" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Distribution Dashboard" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                                <TextBlock Text="Review, audit, and approve constituent benefit releases for the Municipality of Sulop." 
+                                           FontSize="13" Foreground="#E8F5E9" Margin="0,6,0,0"/>
+                            </StackPanel>
+
+                            <!-- Current Active Program Badge -->
+                            <Border Grid.Column="1" Background="#1E3A8A" CornerRadius="20" Padding="14,8" BorderBrush="#93C5FD" BorderThickness="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FilterVariant" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="{Binding SelectedProgram}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
                 </Border>
 
-                <!-- Column 3: On Hold Pending -->
-                <Border Grid.Column="4" Background="#F8FAFC" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
-                    <Grid>
+                <!-- 2. Main Content Split -->
+                <Grid Grid.Row="1" Margin="30,20,30,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.65*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="1.35*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Panel: Stats and Released Records -->
+                    <Grid Grid.Column="0">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/> <!-- Info Cards -->
+                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="*"/>    <!-- Released Records -->
                         </Grid.RowDefinitions>
-                        <Border Background="#FEE2E2" Padding="15,12" CornerRadius="6,6,0,0" BorderBrush="#FECACA" BorderThickness="0,0,0,1">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="On Hold Pending" FontWeight="Bold" Foreground="#991B1B" FontSize="15"/>
-                                <Border Background="#FECACA" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
-                                    <TextBlock Text="{Binding PendingRecords.Count}" Foreground="#991B1B" FontSize="12" FontWeight="Bold"/>
+
+                        <!-- Stats Cards -->
+                        <UniformGrid Grid.Row="0" Columns="3" Rows="1">
+                            <!-- Total Funds -->
+                            <Border Background="White" CornerRadius="8" Padding="16,14" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,12,0">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.04" Color="#000000"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Wallet" Width="18" Height="18" Foreground="#166534" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Available Funds" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="1" Text="{Binding TotalFunds, StringFormat='₱{0:N2}'}" FontSize="20" FontWeight="Bold" Foreground="#0F172A" Margin="0,6,0,0"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Released count -->
+                            <Border Background="White" CornerRadius="8" Padding="16,14" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,12,0">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.04" Color="#000000"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CheckDecagram" Width="18" Height="18" Foreground="#2563EB" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Released" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="1" Text="{Binding ReleasedRecords.Count}" FontSize="20" FontWeight="Bold" Foreground="#0F172A" Margin="0,6,0,0"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Pending count -->
+                            <Border Background="White" CornerRadius="8" Padding="16,14" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.04" Color="#000000"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ClockOutline" Width="18" Height="18" Foreground="#D97706" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Pending Review" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="1" Text="{Binding PendingRecords.Count}" FontSize="20" FontWeight="Bold" Foreground="#166534" Margin="0,6,0,0"/>
+                                </Grid>
+                            </Border>
+                        </UniformGrid>
+
+                        <!-- Released Records list -->
+                        <Border Grid.Row="2" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="18">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.04" Color="#000000"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="12"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CheckDecagram" Width="20" Height="20" Foreground="#166534" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Released Records" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Border Grid.Row="2" Background="#F8FAFC" Padding="12,8" CornerRadius="4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="1.5*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="BENEFICIARY" FontSize="9.5" FontWeight="Bold" Foreground="#94A3B8"/>
+                                        <TextBlock Grid.Column="1" Text="PROCESSED" FontSize="9.5" FontWeight="Bold" Foreground="#94A3B8"/>
+                                        <TextBlock Grid.Column="2" Text="REMARKS" FontSize="9.5" FontWeight="Bold" Foreground="#94A3B8"/>
+                                    </Grid>
+                                </Border>
+
+                                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="No released records yet." FontSize="12" Foreground="#94A3B8" Margin="4,12"
+                                                   Visibility="{Binding HasReleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Inverse}"/>
+                                        <ItemsControl ItemsSource="{Binding ReleasedRecords}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Padding="12,10" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="2*"/>
+                                                                <ColumnDefinition Width="1.5*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding BeneficiaryName}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                                                <TextBlock Text="{Binding BeneficiaryId}" FontSize="10.5" Foreground="#64748B" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                            <TextBlock Grid.Column="1" Text="{Binding ProcessedAt, StringFormat='MMM dd, yyyy'}" FontSize="11.5" Foreground="#475569" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding Remarks}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" MaxWidth="120" TextTrimming="CharacterEllipsis"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Right Panel: Pending Review (Approve/Reject) -->
+                    <Border Grid.Column="2" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="18">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.04" Color="#000000"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="12"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClockAlertOutline" Width="20" Height="20" Foreground="#D97706" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Pending Review" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                <Border Background="#FEF3C7" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PendingRecords.Count}" Foreground="#B45309" FontSize="11" FontWeight="Bold"/>
                                 </Border>
                             </StackPanel>
-                        </Border>
-                        <ListView Grid.Row="1" ItemsSource="{Binding PendingRecords}" Margin="10" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="White" CornerRadius="6" Padding="12" Margin="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding BeneficiaryName}" FontWeight="Bold" FontSize="14" Foreground="#0F172A"/>
-                                                <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#64748B" Margin="0,2,0,0"/>
-                                                <TextBlock Text="{Binding Remarks, TargetNullValue='Pending verification'}" FontSize="11" Foreground="#EF4444" Margin="0,4,0,0" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                            <Button Grid.Column="1" Command="{Binding DataContext.UndoRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconForegroundButton}" ToolTip="Undo Hold" Width="28" Height="28" Padding="0" Foreground="#64748B">
-                                                <materialDesign:PackIcon Kind="Undo" Width="18" Height="18"/>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </Grid>
-                </Border>
+
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <TextBlock Text="No records pending review." FontSize="12" Foreground="#94A3B8" Margin="4,12"
+                                               Visibility="{Binding HasPendingRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Inverse}"/>
+                                    <ItemsControl ItemsSource="{Binding PendingRecords}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="6"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="12"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <StackPanel Grid.Row="0">
+                                                            <TextBlock Text="{Binding BeneficiaryName}" FontSize="13.5" FontWeight="Bold" Foreground="#92400E"/>
+                                                            <TextBlock Text="{Binding BeneficiaryId}" FontSize="11" Foreground="#B45309" Margin="0,2,0,0"/>
+                                                        </StackPanel>
+
+                                                        <TextBlock Grid.Row="2" Text="{Binding Remarks}" FontSize="11.5" Foreground="#B45309" TextWrapping="Wrap"/>
+
+                                                        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right"
+                                                                    Visibility="{Binding DataContext.ShowAdminRowActions, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource LocalBoolToVis}}">
+                                                            <Button Content="Reject"
+                                                                    Command="{Binding DataContext.RejectRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource MaterialDesignOutlinedButton}" Height="28" Padding="12,0" FontSize="11"
+                                                                    Foreground="#DC2626" BorderBrush="#FCA5A5" Margin="0,0,8,0"/>
+                                                            <Button Content="Approve"
+                                                                    Command="{Binding DataContext.ApproveRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource MaterialDesignRaisedButton}" Height="28" Padding="12,0" FontSize="11"
+                                                                    Background="#166534" BorderBrush="#166534" Foreground="White"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
+            
         </Grid>
     </materialDesign:DialogHost>
 </UserControl>

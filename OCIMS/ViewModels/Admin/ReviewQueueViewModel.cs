@@ -150,7 +150,11 @@ namespace eSureHi.ViewModels.Admin
             _filteredItemsView.GroupDescriptions.Add(new PropertyGroupDescription("Status"));
 
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
-            CloseCommand = new RelayCommand(NavigateToDashboard);
+            CloseCommand = new RelayCommand(() =>
+            {
+                if (CloseAction is not null) CloseAction();
+                else NavigateToDashboard();
+            });
             OpenCommand = new RelayCommand(OpenSelectedItem, () => HasSelection);
             ShowAllCommand = new RelayCommand(() =>
             {
