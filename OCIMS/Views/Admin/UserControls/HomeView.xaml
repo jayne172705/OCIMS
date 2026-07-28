@@ -684,7 +684,6 @@
 
                 <Border Grid.Row="1"
                         Grid.Column="0"
-                        Grid.ColumnSpan="2"
                         Margin="2"
                         CornerRadius="7"
                         Background="#0B1F31"
@@ -712,6 +711,22 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
+                <Button Grid.Row="1"
+                        Grid.Column="1"
+                        Style="{StaticResource DashboardTileButton}"
+                        Background="{StaticResource TileDistributionBrush}"
+                        Command="{Binding QuickBarangayFundsCommand}">
+                    <StackPanel VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="BankTransferOut"
+                                                 Width="42"
+                                                 Height="42"
+                                                 Foreground="White"
+                                                 HorizontalAlignment="Center"/>
+                        <TextBlock Text="DISTRIBUTION" Style="{StaticResource TileTitle}" FontSize="14"/>
+                        <TextBlock Text="Release and monitor barangay funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    </StackPanel>
+                </Button>
 
                 <Button Grid.Row="1"
                         Grid.Column="2"

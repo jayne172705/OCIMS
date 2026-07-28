@@ -96,6 +96,20 @@ namespace eSureHi.ViewModels.Admin
             get => _myRecentClaims;
             set => SetProperty(ref _myRecentClaims, value);
         }
+
+        private int _pendingPayments;
+        public int PendingPayments
+        {
+            get => _pendingPayments;
+            set => SetProperty(ref _pendingPayments, value);
+        }
+
+        private int _groupClaims;
+        public int GroupClaims
+        {
+            get => _groupClaims;
+            set => SetProperty(ref _groupClaims, value);
+        }
         public int TotalBenefits
         {
             get => _totalBenefits;
@@ -330,6 +344,8 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand QuickSettingsCommand { get; }
         public RelayCommand QuickFileClaimCommand { get; }
         public RelayCommand QuickGroupClaimCommand { get; }
+        public RelayCommand QuickPendingClaimsCommand { get; }
+        public RelayCommand QuickAllClaimsCommand { get; }
         public RelayCommand QuickAdvancePaymentCommand { get; }
         public RelayCommand QuickPendingPaymentsCommand { get; }
         public RelayCommand QuickPaymentLedgerCommand { get; }
@@ -493,6 +509,16 @@ namespace eSureHi.ViewModels.Admin
                 IsClaimsManagementPopupOpen = false;
                 OpenPage("Group Claim", () => new ClaimsView(ClaimsListMode.GroupClaim));
             });
+            QuickPendingClaimsCommand = new RelayCommand(() =>
+            {
+                IsClaimsManagementPopupOpen = false;
+                OpenPage("Pending Claims", () => new ClaimsView(ClaimsListMode.PendingOnly));
+            });
+            QuickAllClaimsCommand = new RelayCommand(() =>
+            {
+                IsClaimsManagementPopupOpen = false;
+                OpenPage("All Claims", () => new ClaimsView(ClaimsListMode.All));
+            });
 
             // Payment Management popup
             QuickAdvancePaymentCommand = new RelayCommand(() =>
@@ -607,6 +633,13 @@ namespace eSureHi.ViewModels.Admin
                     .CountAsync(b => b.IsActive && b.WorkflowStatus != "Pending");
                 MyRecentClaims = await db.Claims
                     .CountAsync(c => c.ClaimStatus != "Draft");
+
+                // Same system-wide caveat as above: these back the user-landing stat
+                // cards and are not scoped per-user until attribution columns exist.
+                PendingPayments = await db.Payments
+                    .CountAsync(p => p.Status == "Pending");
+                GroupClaims = await db.Claims
+                    .CountAsync(c => c.SourceOfFunds != null && c.SourceOfFunds != "");
                 TotalBenefits = await db.Benefits.CountAsync();
                 TotalUsers = await db.SystemUsers.CountAsync();
                 TotalLogs = await db.AuditLogs.CountAsync();
