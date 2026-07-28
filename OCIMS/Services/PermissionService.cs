@@ -143,6 +143,14 @@ namespace eSureHi.Services
         // Distribution is an Admin/Super Admin activity. Payments (Advance/Pending/All Ledger)
         // are shared by Admin and User (registrar) per spec.
         public static bool CanAccessDistribution => IsAdminOrSuperAdmin;
+
+        // The Distribution Management board is deliberately shared: Admin/Super Admin review
+        // persisted records and approve or reject them, while User (registrar) works the scan
+        // queue. Stated explicitly — registrars previously reached this page only because the
+        // page name missed the "Distribution" key above and fell through to the catch-all.
+        public static bool CanAccessDistributionManagement =>
+            IsAdminOrSuperAdmin || IsUserRegistrar(AuthService.Instance.CurrentUser?.Role);
+
         public static bool CanAccessPayments =>
             IsAdminOrSuperAdmin || IsUserRegistrar(AuthService.Instance.CurrentUser?.Role);
 
@@ -190,6 +198,7 @@ namespace eSureHi.Services
             "Cedulas" => CanAccessCedulas,
             "Reports" => CanAccessReports,
             "Distribution" => CanAccessDistribution,
+            "Distribution Management" => CanAccessDistributionManagement,
             "Payments" => CanAccessPayments,
             "Advance Payment" => CanAccessPayments,
             "Pending Payment" => CanAccessPayments,
