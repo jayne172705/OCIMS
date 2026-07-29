@@ -7,10 +7,10 @@ namespace eSureHi.Views.Admin.UserControls
 {
     public partial class DistributionBatchView : UserControl
     {
-        public DistributionBatchView(DistributionBoardMode? mode = null)
+        public DistributionBatchView()
         {
             InitializeComponent();
-            DataContext = new DistributionBatchViewModel(eSureHiDbContextFactory.Create(), mode);
+            DataContext = new DistributionBatchViewModel(eSureHiDbContextFactory.Create());
         }
 
         private void DotsButton_Click(object sender, RoutedEventArgs e)

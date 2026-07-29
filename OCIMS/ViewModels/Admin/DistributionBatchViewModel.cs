@@ -65,44 +65,17 @@ namespace eSureHi.ViewModels.Admin
         }
     }
 
-    /// <summary>
-    /// Registrar works an unsaved queue of people still to process; Admin reviews
-    /// already-persisted outcomes. The two modes read from different sources.
-    /// </summary>
-    public enum DistributionBoardMode
-    {
-        Registrar,
-        AdminHistory
-    }
-
     public class DistributionBatchViewModel : ObservableObject
     {
         private readonly eSureHiDbContext _dbContext;
 
-        public DistributionBoardMode Mode { get; }
-        public bool IsRegistrarMode => Mode == DistributionBoardMode.Registrar;
-        public bool IsAdminHistoryMode => Mode == DistributionBoardMode.AdminHistory;
-
-        public bool ShowReleasedColumn => IsAdminHistoryMode;
-        public bool ShowUnreleasedColumn => IsRegistrarMode;
-
-        // Both boards surface Rejected: the registrar needs to see Admin's decision come
-        // back, and Admin needs rejected records to stay visible after they leave Pending.
-        public bool ShowRejectedColumn => true;
-        public bool ShowBatchActions => IsRegistrarMode;
-        public bool ShowDragDropHint => IsRegistrarMode;
-
-        // Searching and scanning drive the registrar's queue. Admin reviews a persisted
-        // snapshot and never scans, so the whole search/scan cluster is registrar-only.
-        public bool ShowSearchAndScan => IsRegistrarMode;
-
         /// <summary>
-        /// Per-row Approve/Reject buttons on the Pending column. Admin-side only, and
-        /// gated on the same review permission that governs claims and member approvals.
-        /// Deliberately separate from <see cref="ShowBatchActions"/> so this never
-        /// reintroduces Confirm/Rename/Reuse/Delete for Admin.
+        /// Per-row Approve/Reject buttons on the On Hold Pending column. The board itself
+        /// is identical for every role with distribution access; only these actions stay
+        /// gated, because deciding a release is a reviewer's call. The User (registrar)
+        /// role holds and rejects at the ID card, and files claims elsewhere.
         /// </summary>
-        public bool ShowAdminRowActions => IsAdminHistoryMode && PermissionService.CanApproveWorkflow;
+        public bool ShowRowReviewActions => PermissionService.CanApproveWorkflow || PermissionService.CanReject;
 
         private decimal _totalFunds;
         public decimal TotalFunds { get => _totalFunds; set => SetProperty(ref _totalFunds, value); }
@@ -195,12 +168,9 @@ namespace eSureHi.ViewModels.Admin
         public IRelayCommand DeleteBatchCommand { get; }
         public IRelayCommand ViewFundCommand { get; }
 
-        public DistributionBatchViewModel(eSureHiDbContext dbContext, DistributionBoardMode? mode = null)
+        public DistributionBatchViewModel(eSureHiDbContext dbContext)
         {
             _dbContext = dbContext;
-            Mode = mode ?? (PermissionService.IsUserRegistrar(AuthService.Instance.CurrentUser?.Role)
-                ? DistributionBoardMode.Registrar
-                : DistributionBoardMode.AdminHistory);
 
             LoadDataCommand = new AsyncRelayCommand(LoadDataAsync);
             SearchCommand = new AsyncRelayCommand(SearchAsync);
@@ -241,14 +211,7 @@ namespace eSureHi.ViewModels.Admin
                     .Where(f => f.Status == "Active")
                     .Sum(f => f.AllocatedAmount - f.UsedAmount);
 
-                if (IsAdminHistoryMode)
-                {
-                    await LoadHistoryAsync();
-                }
-                else
-                {
-                    await PreloadBeneficiariesAsync();
-                }
+                await PreloadBeneficiariesAsync();
             }
             catch (Exception ex)
             {
@@ -259,48 +222,28 @@ namespace eSureHi.ViewModels.Admin
         }
 
         /// <summary>
-        /// Admin mode: read-only snapshot of persisted records, loaded once on page open.
+        /// Fills the board from two sources at once: persisted Pending/Rejected records so
+        /// in-flight review items survive a restart, plus a live queue of every active
+        /// beneficiary not yet accounted for. A beneficiary already carried by a persisted
+        /// record is excluded from the queue so they can't appear in two columns.
         /// </summary>
-        private async Task LoadHistoryAsync()
-        {
-            var records = await _dbContext.DistributionRecords
-                .Include(r => r.Batch)
-                .Include(r => r.Beneficiary)
-                .Where(r => r.Status == "Released" || r.Status == "Pending" || r.Status == "Rejected")
-                .OrderByDescending(r => r.ProcessedAt)
-                .ToListAsync();
-
-            ReleasedRecords.Clear();
-            PendingRecords.Clear();
-            UnreleasedRecords.Clear();
-            RejectedRecords.Clear();
-
-            foreach (var r in records)
-            {
-                var vm = new DistributionRecordViewModel(r);
-                if (r.Status == "Released") ReleasedRecords.Add(vm);
-                else if (r.Status == "Rejected") RejectedRecords.Add(vm);
-                else PendingRecords.Add(vm);
-            }
-
-            UpdateCounts();
-        }
-
         private async Task PreloadBeneficiariesAsync()
         {
             try
             {
-                // Get beneficiary IDs already fully released in a past confirmed batch
-                var alreadyReleasedIds = await _dbContext.DistributionRecords
-                    .Where(r => r.Status == "Released")
-                    .Select(r => r.BeneficiaryId)
-                    .Distinct()
+                var persisted = await _dbContext.DistributionRecords
+                    .Include(r => r.Batch)
+                    .Include(r => r.Beneficiary)
+                    .Where(r => r.Status == "Released" || r.Status == "Pending" || r.Status == "Rejected")
+                    .OrderByDescending(r => r.ProcessedAt)
                     .ToListAsync();
 
-                // The queue lists every active beneficiary still awaiting release. Program is
-                // batch metadata captured at Confirm time, not a board filter.
+                // Anyone with a persisted record of any kind is already represented; the
+                // queue only offers people with no distribution outcome on file yet.
+                var spokenForIds = persisted.Select(r => r.BeneficiaryId).Distinct().ToList();
+
                 var beneficiaries = await _dbContext.Beneficiaries
-                    .Where(b => b.IsActive && !alreadyReleasedIds.Contains(b.BenId))
+                    .Where(b => b.IsActive && !spokenForIds.Contains(b.BenId))
                     .OrderByDescending(b => b.CreatedAt)
                     .ToListAsync();
 
@@ -308,6 +251,14 @@ namespace eSureHi.ViewModels.Admin
                 ReleasedRecords.Clear();
                 PendingRecords.Clear();
                 RejectedRecords.Clear();
+
+                foreach (var r in persisted)
+                {
+                    var vm = new DistributionRecordViewModel(r);
+                    if (r.Status == "Released") ReleasedRecords.Add(vm);
+                    else if (r.Status == "Rejected") RejectedRecords.Add(vm);
+                    else PendingRecords.Add(vm);
+                }
 
                 foreach (var b in beneficiaries)
                 {
@@ -350,13 +301,6 @@ namespace eSureHi.ViewModels.Admin
             }
 
             SearchQuery = string.Empty;
-
-            // Admin mode is a read-only snapshot — locate only, never open the processing dialog.
-            if (IsAdminHistoryMode)
-            {
-                SetStatus($"{found.BeneficiaryName} — {found.Status}", "InformationOutline", "#1D4ED8");
-                return;
-            }
 
             await ShowIdCardAndProcessAsync(found);
         }
@@ -630,6 +574,12 @@ namespace eSureHi.ViewModels.Admin
             };
 
             var allRecords = UnreleasedRecords.Concat(PendingRecords).Concat(ReleasedRecords).Concat(RejectedRecords).ToList();
+
+            // The board now mixes persisted records with the unsaved queue. Only the unsaved
+            // ones belong to this batch — re-adding a saved record would insert a duplicate
+            // and re-parent it away from the batch it was actually released under.
+            var newRecords = allRecords.Where(r => r.Model.RecordId == 0).ToList();
+
             SourceFund? fund = null;
             var debitedRecords = new System.Collections.Generic.List<DistributionRecordViewModel>();
             try
@@ -638,7 +588,7 @@ namespace eSureHi.ViewModels.Admin
 
                 fund = await _dbContext.SourceFunds.FindAsync(SelectedSourceFundId);
 
-                foreach (var r in allRecords)
+                foreach (var r in newRecords)
                 {
                     r.Model.Batch = batch;
                     _dbContext.DistributionRecords.Add(r.Model);
@@ -677,7 +627,7 @@ namespace eSureHi.ViewModels.Admin
 
             if (fund != null)
             {
-                var releasedItems = allRecords.Where(r => r.Status == "Released" && r.Model.Beneficiary != null).ToList();
+                var releasedItems = newRecords.Where(r => r.Status == "Released" && r.Model.Beneficiary != null).ToList();
                 foreach (var r in releasedItems)
                 {
                     var beneficiary = r.Model.Beneficiary!;
