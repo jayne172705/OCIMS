@@ -719,6 +719,12 @@
                         <!-- ============ USER (registrar) navigation flow ============ -->
                         <StackPanel Margin="0,4"
                                     Visibility="{Binding IsUserNavigationFlow, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Button Command="{Binding NavHomeCommand}" Style="{StaticResource SidebarNavButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Home" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Home" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
                             <Button Command="{Binding NavDashboardCommand}" Style="{StaticResource SidebarNavButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ViewDashboard" Width="20" Height="20" Margin="0,0,12,0"/>
