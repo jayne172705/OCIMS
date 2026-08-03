@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -109,6 +110,39 @@ namespace eSureHi.Views.Admin.Dialogs
                     _isProcessingFrame = false;
                 }
             }
+        }
+
+        private void SubmitBtn_Click(object sender, RoutedEventArgs e)
+        {
+            SubmitManualId();
+        }
+
+        private void ManualIdBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                SubmitManualId();
+            }
+        }
+
+        private void SubmitManualId()
+        {
+            var id = ManualIdBox.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                ManualIdBox.Focus();
+                return;
+            }
+
+            StopCamera();
+            QRCodeScanned?.Invoke(id);
+            DialogHost.CloseDialogCommand.Execute(null, this);
+        }
+
+        private void MirrorCheck_Changed(object sender, RoutedEventArgs e)
+        {
+            PreviewFlip.ScaleX = MirrorCheck.IsChecked == true ? -1 : 1;
         }
 
         private void CancelBtn_Click(object sender, RoutedEventArgs e)

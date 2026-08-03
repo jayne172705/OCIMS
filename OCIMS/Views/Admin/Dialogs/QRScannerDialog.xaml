@@ -2,30 +2,124 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             Background="White"
-             Width="500" Height="500">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        
-        <Border Background="#2E7D32" Padding="15">
-            <TextBlock Text="Scan Beneficiary QR Code" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-        </Border>
-        
-        <Border Grid.Row="1" Background="Black" Margin="15">
-            <Grid>
-                <Image x:Name="CameraPreview" Stretch="Uniform"/>
-                <TextBlock x:Name="NoCameraText" Text="No camera detected" Foreground="White" FontSize="16"
-                           FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Visibility="Collapsed"/>
-            </Grid>
-        </Border>
+             Background="Transparent"
+             Width="520" Height="640">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="StatusGreen"  Color="#2E7D32"/>
+        <SolidColorBrush x:Key="StatusRed"    Color="#D32F2F"/>
+        <SolidColorBrush x:Key="InkBrush"     Color="#0F172A"/>
+        <SolidColorBrush x:Key="MutedBrush"   Color="#64748B"/>
+        <SolidColorBrush x:Key="LineBrush"    Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="SurfaceWhite" Color="#FFFFFF"/>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="15">
-            <Button x:Name="CancelBtn" Content="Cancel" Style="{StaticResource MaterialDesignOutlinedButton}" Click="CancelBtn_Click" Width="120" Height="40"/>
-        </StackPanel>
-    </Grid>
+        <Style x:Key="PrimaryAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="DangerAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="BorderBrush" Value="{StaticResource StatusRed}"/>
+            <Setter Property="Foreground" Value="{StaticResource StatusRed}"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource SurfaceWhite}" CornerRadius="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Background="{StaticResource StatusGreen}" CornerRadius="10,10,0,0" Padding="18,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Kind="QrcodeScan" Width="24" Height="24"
+                                             Foreground="White" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="Scan Beneficiary QR Code" Margin="12,0,0,0"
+                               Foreground="White" FontSize="18" FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                    <Button x:Name="CloseBtn" Grid.Column="2"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32" Padding="0"
+                            Foreground="White" ToolTip="Close"
+                            Click="CancelBtn_Click">
+                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1" Background="#0F172A" CornerRadius="10" Margin="18,18,18,12"
+                    ClipToBounds="True">
+                <Grid>
+                    <Image x:Name="CameraPreview" Stretch="Uniform"
+                           RenderTransformOrigin="0.5,0.5">
+                        <Image.RenderTransform>
+                            <ScaleTransform x:Name="PreviewFlip" ScaleX="1" ScaleY="1"/>
+                        </Image.RenderTransform>
+                    </Image>
+
+                    <Border Width="200" Height="200" CornerRadius="10"
+                            BorderBrush="{StaticResource StatusGreen}" BorderThickness="3"
+                            Background="Transparent"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            IsHitTestVisible="False"/>
+
+                    <TextBlock x:Name="NoCameraText" Text="No camera detected" Foreground="White" FontSize="16"
+                               FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="2" Margin="18,0,18,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.ColumnSpan="2" Text="Or type beneficiary ID manually"
+                           Foreground="{StaticResource MutedBrush}" FontSize="12"
+                           FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                <TextBox x:Name="ManualIdBox" Grid.Row="1"
+                         materialDesign:HintAssist.Hint="e.g. 000-0000-000000"
+                         VerticalContentAlignment="Center" Height="44"
+                         KeyDown="ManualIdBox_KeyDown"/>
+
+                <Button x:Name="SubmitBtn" Grid.Row="1" Grid.Column="1" Content="Submit"
+                        Style="{StaticResource PrimaryAction}" Width="110" Margin="10,0,0,0"
+                        Click="SubmitBtn_Click"/>
+            </Grid>
+
+            <Border Grid.Row="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
+                    Padding="18,14">
+                <Grid>
+                    <CheckBox x:Name="MirrorCheck" Content="Mirror Camera Preview"
+                              Foreground="{StaticResource InkBrush}"
+                              HorizontalAlignment="Left" VerticalAlignment="Center"
+                              Checked="MirrorCheck_Changed" Unchecked="MirrorCheck_Changed"/>
+                    <Button x:Name="CancelBtn" Content="Cancel"
+                            Style="{StaticResource DangerAction}" Width="120"
+                            HorizontalAlignment="Right"
+                            Click="CancelBtn_Click"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </UserControl>
