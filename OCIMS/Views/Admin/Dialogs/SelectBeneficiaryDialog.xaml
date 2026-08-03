@@ -73,49 +73,7 @@
                          materialDesign:TextFieldAssist.TextFieldCornerRadius="8"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Height="46"/>
-
-                <!-- Live suggestion popup. Quick-match shortcut over the same
-                     filtered results the lists below already show; picking a
-                     row sets the same selection the list row would, which is
-                     also what closes this dialog.
-                     StaysOpen stays True on purpose: the built-in click-away
-                     dismissal captures the mouse and eats the click, so
-                     PopupDismiss handles it without swallowing the click. -->
-                <Popup IsOpen="{Binding IsSuggestionsOpen, Mode=TwoWay}"
-                       PlacementTarget="{Binding ElementName=BeneficiarySearchBox}"
-                       Placement="Bottom"
-                       StaysOpen="True"
-                       helpers:PopupDismiss.OnOutsideClick="True"
-                       AllowsTransparency="True"
-                       PopupAnimation="Slide"
-                       HorizontalOffset="0"
-                       VerticalOffset="4">
-                    <Border Width="{Binding ActualWidth, ElementName=BeneficiarySearchBox}"
-                            Background="White"
-                            BorderBrush="#DDE4EF"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="0,4">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="16"
-                                              ShadowDepth="4"
-                                              Opacity="0.20"
-                                              Color="#000000"/>
-                        </Border.Effect>
-                        <ItemsControl ItemsSource="{Binding SearchSuggestions}"
-                                      ItemTemplate="{StaticResource SuggestionRowTemplate}"
-                                      MaxHeight="392">
-                            <ItemsControl.Template>
-                                <ControlTemplate TargetType="ItemsControl">
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </ControlTemplate>
-                            </ItemsControl.Template>
-                        </ItemsControl>
-                    </Border>
-                </Popup>
-
+                
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -291,6 +249,10 @@
                             <DataTrigger Binding="{Binding IsLoading}" Value="True">
                                 <Setter Property="Visibility" Value="Visible"/>
                                 <Setter Property="Text" Value="Loading CRS master list…"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsImporting}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Text" Value="Syncing CRS master list…"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

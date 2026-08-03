@@ -418,13 +418,20 @@ namespace eSureHi.ViewModels.Admin
                 if (SetProperty(ref _selectedSource, value))
                 {
                     CloseProfile();
-                    ApplyFilter();
+                    if (SelectionOnly)
+                    {
+                        QueueSelectionSearch();
+                    }
+                    else
+                    {
+                        ApplyFilter();
+                        _ = LoadAsync();
+                    }
                     OnPropertyChanged(nameof(IsCrsSource));
                     OnPropertyChanged(nameof(IsSystemSource));
                     OnPropertyChanged(nameof(SourceCaption));
                     OnPropertyChanged(nameof(ActiveTotalCount));
                     OnPropertyChanged(nameof(ActiveFilteredCount));
-                    _ = LoadAsync();
                 }
             }
         }
@@ -962,40 +969,74 @@ namespace eSureHi.ViewModels.Admin
             try
             {
                 using var db = eSureHiDbContextFactory.Create();
-                var query = db.BeneficiaryStaging.AsNoTracking();
                 var search = SearchText.Trim();
 
-                if (!string.IsNullOrWhiteSpace(search))
+                if (IsCrsSource)
                 {
-                    query = query.Where(r =>
-                        (r.FullName != null && r.FullName.Contains(search)) ||
-                        (r.LastName != null && r.LastName.Contains(search)) ||
-                        (r.FirstName != null && r.FirstName.Contains(search)) ||
-                        (r.MiddleName != null && r.MiddleName.Contains(search)) ||
-                        (r.BeneficiaryId != null && r.BeneficiaryId.Contains(search)) ||
-                        (r.CivilRegistryId != null && r.CivilRegistryId.Contains(search)) ||
-                        (r.ResidentsId.HasValue && r.ResidentsId.Value.ToString().Contains(search)));
+                    var query = db.BeneficiaryStaging.AsNoTracking();
+
+                    if (!string.IsNullOrWhiteSpace(search))
+                    {
+                        query = query.Where(r =>
+                            (r.FullName != null && EF.Functions.Collate(r.FullName, "NOCASE").Contains(search)) ||
+                            (r.LastName != null && EF.Functions.Collate(r.LastName, "NOCASE").Contains(search)) ||
+                            (r.FirstName != null && EF.Functions.Collate(r.FirstName, "NOCASE").Contains(search)) ||
+                            (r.MiddleName != null && EF.Functions.Collate(r.MiddleName, "NOCASE").Contains(search)) ||
+                            (r.BeneficiaryId != null && EF.Functions.Collate(r.BeneficiaryId, "NOCASE").Contains(search)) ||
+                            (r.CivilRegistryId != null && EF.Functions.Collate(r.CivilRegistryId, "NOCASE").Contains(search)) ||
+                            (r.ResidentsId.HasValue && r.ResidentsId.Value.ToString().Contains(search)));
+                    }
+
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    var records = await query
+                        .OrderBy(r => r.LastName)
+                        .ThenBy(r => r.FirstName)
+                        .Take(80)
+                        .ToListAsync(cancellationToken);
+                    sw.Stop();
+                    System.Diagnostics.Debug.WriteLine($"[LoadSelectionRecordsAsync - CRS] DB Query took {sw.ElapsedMilliseconds} ms for SearchText='{search}'");
+
+                    await EnrichWithDemographicsAsync(db, records, cancellationToken);
+
+                    DisplayedRecords.Clear();
+                    foreach (var record in records)
+                        DisplayedRecords.Add(record);
+
+                    TotalCount = records.Count;
+                    FilteredCount = records.Count;
+                    UnlinkedCount = records.Count(r => r.LinkStatus == "Unlinked");
+                    LinkedCount = records.Count(r => r.LinkStatus == "Linked");
                 }
+                else
+                {
+                    var query = db.Beneficiaries.AsNoTracking().Include(b => b.Employee).Where(b => b.IsActive);
 
-                var sw = System.Diagnostics.Stopwatch.StartNew();
-                var records = await query
-                    .OrderBy(r => r.LastName)
-                    .ThenBy(r => r.FirstName)
-                    .Take(80)
-                    .ToListAsync(cancellationToken);
-                sw.Stop();
-                System.Diagnostics.Debug.WriteLine($"[LoadSelectionRecordsAsync] DB Query took {sw.ElapsedMilliseconds} ms for SearchText='{search}'");
+                    if (!string.IsNullOrWhiteSpace(search))
+                    {
+                        query = query.Where(b =>
+                            (b.FullName != null && EF.Functions.Collate(b.FullName, "NOCASE").Contains(search)) ||
+                            (b.Relationship != null && EF.Functions.Collate(b.Relationship, "NOCASE").Contains(search)) ||
+                            (b.Employee != null && b.Employee.FullName != null && EF.Functions.Collate(b.Employee.FullName, "NOCASE").Contains(search)) ||
+                            (b.Employee != null && b.Employee.EmployeeNo != null && EF.Functions.Collate(b.Employee.EmployeeNo, "NOCASE").Contains(search)) ||
+                            (b.BeneficiaryId != null && EF.Functions.Collate(b.BeneficiaryId, "NOCASE").Contains(search)));
+                    }
 
-                await EnrichWithDemographicsAsync(db, records, cancellationToken);
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    var list = await query
+                        .OrderBy(b => b.LastName)
+                        .ThenBy(b => b.FirstName)
+                        .Take(80)
+                        .ToListAsync(cancellationToken);
+                    sw.Stop();
+                    System.Diagnostics.Debug.WriteLine($"[LoadSelectionRecordsAsync - System] DB Query took {sw.ElapsedMilliseconds} ms for SearchText='{search}'");
 
-                DisplayedRecords.Clear();
-                foreach (var record in records)
-                    DisplayedRecords.Add(record);
+                    DisplayedSystemBeneficiaries.Clear();
+                    foreach (var beneficiary in list)
+                        DisplayedSystemBeneficiaries.Add(beneficiary);
 
-                TotalCount = records.Count;
-                FilteredCount = records.Count;
-                UnlinkedCount = records.Count(r => r.LinkStatus == "Unlinked");
-                LinkedCount = records.Count(r => r.LinkStatus == "Linked");
+                    SystemTotalCount = list.Count;
+                    SystemFilteredCount = list.Count;
+                }
 
                 _suggestionsRequested = true;
                 UpdateSuggestions();
@@ -1066,6 +1107,12 @@ namespace eSureHi.ViewModels.Admin
         /// </summary>
         private void UpdateSuggestions()
         {
+            if (SelectionOnly)
+            {
+                IsSuggestionsOpen = false;
+                return;
+            }
+
             var requested = _suggestionsRequested;
             _suggestionsRequested = false;
 
