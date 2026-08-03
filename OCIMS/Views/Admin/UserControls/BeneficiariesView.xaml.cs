@@ -67,6 +67,11 @@ namespace eSureHi.Views.Admin.UserControls
 
             var dialog = new SelectBeneficiaryDialog(vm);
             await MaterialDesignThemes.Wpf.DialogHost.Show(dialog, "BeneficiariesDialogHost");
+
+            if (!vm.HasSelection)
+            {
+                vm.BackToDashboardCommand.Execute(null);
+            }
         }
 
         private async void PrintIdCardBtn_Click(object sender, RoutedEventArgs e)

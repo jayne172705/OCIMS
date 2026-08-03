@@ -130,42 +130,7 @@
              BeneficiariesDialogHost above), so this row is the detail panel alone. -->
         <Grid Grid.Row="2" Margin="18">
 
-            <Border Background="White"
-                    BorderBrush="#DDE4EF"
-                    BorderThickness="1"
-                    Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="360">
-                    <materialDesign:PackIcon Kind="AccountDetailsOutline"
-                                             Width="64"
-                                             Height="64"
-                                             Foreground="#CBD5E1"
-                                             HorizontalAlignment="Center"/>
-                    <TextBlock Text="Select a beneficiary name"
-                               FontSize="18"
-                               FontWeight="SemiBold"
-                               Foreground="#475569"
-                               HorizontalAlignment="Center"
-                               Margin="0,14,0,6"/>
-                    <TextBlock Text="Full CRS/master-list details and the insurance add form will appear here before anything is saved."
-                               FontSize="13"
-                               Foreground="#64748B"
-                               TextAlignment="Center"
-                               TextWrapping="Wrap"/>
-                    <Button Click="OpenSearchButton_Click"
-                            Background="{StaticResource PrimaryBrush}"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            HorizontalAlignment="Center"
-                            Height="40"
-                            MinWidth="200"
-                            Padding="16,0"
-                            Margin="0,18,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountSearch" Width="18" Height="18" Margin="0,0,8,0"/>
-                            <TextBlock Text="SEARCH BENEFICIARY" FontSize="13" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Border>
+
 
             <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid.RowDefinitions>
