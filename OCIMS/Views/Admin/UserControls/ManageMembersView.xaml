@@ -92,6 +92,10 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Suggestion row chrome (SuggestionRowButton / SuggestionStatusPill /
+             SuggestionStatusText / SuggestionRowTemplate) is shared with
+             BeneficiariesView and lives in Views/Shared/SuggestionPopupResources.xaml. -->
+
         <Style x:Key="PageButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
@@ -238,14 +242,66 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Search" Style="{StaticResource FilterLabel}"/>
-                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                        <TextBlock Text="Search Beneficiary"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextBrush}"/>
+                        <TextBlock Text="Start typing a name to see matching members, then pick one to open their full profile."
+                                   FontSize="12"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,4,0,8"/>
+                        <TextBox x:Name="MemberSearchBox"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 materialDesign:HintAssist.Hint="Search by name..."
+                                 materialDesign:HintAssist.Hint="Search name, beneficiary ID..."
+                                 materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                 materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                 materialDesign:TextFieldAssist.TextFieldCornerRadius="8"
                                  Height="46"/>
+
+                        <!-- Live suggestion popup. Floats over the table, which keeps
+                             filtering underneath, so this is purely additive.
+                             StaysOpen stays True on purpose: the built-in click-away
+                             dismissal captures the mouse and eats the click, so
+                             PopupDismiss handles it without swallowing the click. -->
+                        <Popup IsOpen="{Binding IsSuggestionsOpen, Mode=TwoWay}"
+                               PlacementTarget="{Binding ElementName=MemberSearchBox}"
+                               Placement="Bottom"
+                               StaysOpen="True"
+                               helpers:PopupDismiss.OnOutsideClick="True"
+                               AllowsTransparency="True"
+                               PopupAnimation="Slide"
+                               HorizontalOffset="0"
+                               VerticalOffset="4">
+                            <Border Width="{Binding ActualWidth, ElementName=MemberSearchBox}"
+                                    Background="White"
+                                    BorderBrush="#DDE4EF"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="0,4">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16"
+                                                      ShadowDepth="4"
+                                                      Opacity="0.20"
+                                                      Color="#000000"/>
+                                </Border.Effect>
+                                <ItemsControl ItemsSource="{Binding SearchSuggestions}"
+                                              ItemTemplate="{StaticResource SuggestionRowTemplate}"
+                                              MaxHeight="392">
+                                    <ItemsControl.Template>
+                                        <ControlTemplate TargetType="ItemsControl">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                <ItemsPresenter/>
+                                            </ScrollViewer>
+                                        </ControlTemplate>
+                                    </ItemsControl.Template>
+                                </ItemsControl>
+                            </Border>
+                        </Popup>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2">
+                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
                         <TextBlock Text="Group / Employment Type" Style="{StaticResource FilterLabel}"/>
                         <ComboBox ItemsSource="{Binding GroupOptions}"
                                   SelectedItem="{Binding SelectedGroup}"
@@ -253,7 +309,7 @@
                                   Height="46"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="4">
+                    <StackPanel Grid.Column="4" VerticalAlignment="Bottom">
                         <TextBlock Text="Barangay" Style="{StaticResource FilterLabel}"/>
                         <ComboBox ItemsSource="{Binding BarangayOptions}"
                                   SelectedItem="{Binding SelectedBarangay}"
@@ -261,7 +317,7 @@
                                   Height="46"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="6">
+                    <StackPanel Grid.Column="6" VerticalAlignment="Bottom">
                         <TextBlock Text="Status Filter" Style="{StaticResource FilterLabel}"/>
                         <ComboBox ItemsSource="{Binding StatusOptions}"
                                   SelectedItem="{Binding SelectedStatus}"

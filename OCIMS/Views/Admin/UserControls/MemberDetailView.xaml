@@ -1,0 +1,393 @@
+<UserControl x:Class="eSureHi.Views.Admin.UserControls.MemberDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <UserControl.Resources>
+        <!-- ============ Palette ============
+             Mirrors the Distribution/Dashboard restyle so the detail page reads as
+             part of the same system. Promote these into App.xaml once that work
+             is committed — they are duplicated across several views today. -->
+        <SolidColorBrush x:Key="StatusGreen"      Color="#2E7D32"/>
+        <SolidColorBrush x:Key="StatusGreenTint"  Color="#E8F5E9"/>
+        <SolidColorBrush x:Key="StatusAmber"      Color="#B45309"/>
+        <SolidColorBrush x:Key="StatusAmberTint"  Color="#FEF3C7"/>
+        <SolidColorBrush x:Key="StatusRed"        Color="#D32F2F"/>
+        <SolidColorBrush x:Key="StatusRedTint"    Color="#FFEBEE"/>
+        <SolidColorBrush x:Key="StatusTeal"       Color="#0F766E"/>
+        <SolidColorBrush x:Key="StatusTealTint"   Color="#CCFBF1"/>
+        <SolidColorBrush x:Key="RoleInk"          Color="#5B21B6"/>
+        <SolidColorBrush x:Key="RoleTint"         Color="#EDE9FE"/>
+
+        <SolidColorBrush x:Key="InkBrush"         Color="#0F172A"/>
+        <SolidColorBrush x:Key="MutedBrush"       Color="#64748B"/>
+        <SolidColorBrush x:Key="FaintBrush"       Color="#94A3B8"/>
+        <SolidColorBrush x:Key="LineBrush"        Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="CanvasBrush"      Color="#F8FAFC"/>
+
+        <!-- ============ Surfaces ============ -->
+        <Style x:Key="SurfaceCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="22,18"/>
+        </Style>
+
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ============ Field rows ============
+             Every field is a stacked label/value pair so the two-column grids
+             inside each card stay aligned regardless of value length. -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,3"/>
+        </Style>
+
+        <Style x:Key="FieldValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="FieldBlock" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,18,16"/>
+        </Style>
+
+        <!-- Status pill: neutral by default, tinted per workflow state. -->
+        <Style x:Key="StatusPill" TargetType="Border">
+            <Setter Property="CornerRadius" Value="11"/>
+            <Setter Property="Padding" Value="11,4"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="#E2E8F0"/>
+        </Style>
+
+        <Style x:Key="StatusPillText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#334155"/>
+        </Style>
+
+        <Style x:Key="HeaderAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Padding" Value="20,0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource CanvasBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="3"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ============ Header band ============ -->
+        <Border Background="{StaticResource StatusGreen}" Padding="24,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Command="{Binding BackCommand}"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Width="40" Height="40" Padding="0"
+                        Foreground="White"
+                        ToolTip="Back to Manage Members"
+                        VerticalAlignment="Center"
+                        Margin="0,0,14,0">
+                    <materialDesign:PackIcon Kind="ArrowLeft" Width="24" Height="24"/>
+                </Button>
+
+                <Border Grid.Column="1"
+                        Width="54" Height="54" CornerRadius="27"
+                        Background="#FFFFFF" Opacity="0.18"
+                        VerticalAlignment="Center" Margin="0,0,14,0"/>
+                <materialDesign:PackIcon Grid.Column="1" Kind="Account"
+                                         Width="28" Height="28" Foreground="White"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                                         Margin="0,0,14,0"/>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding FullName}"
+                               FontSize="24" FontWeight="Bold" Foreground="White"
+                               TextTrimming="CharacterEllipsis"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock Text="{Binding FamilyId}"
+                                   FontSize="13" Foreground="White" Opacity="0.85"
+                                   VerticalAlignment="Center"/>
+                        <Border Background="White" Opacity="0.9" CornerRadius="11"
+                                Padding="11,3" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding FamilyRole}"
+                                       FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource StatusGreen}"/>
+                        </Border>
+                        <Border Background="White" Opacity="0.9" CornerRadius="11"
+                                Padding="11,3" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Status}"
+                                       FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource StatusGreen}"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Grid.Column="3"
+                        Command="{Binding UpdateCommand}"
+                        Style="{StaticResource HeaderAction}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Pencil" Width="17" Height="17"
+                                                 Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Update" FontSize="13" FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ProgressBar Grid.Row="1"
+                     IsIndeterminate="True"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+        <Border Grid.Row="2"
+                Background="{StaticResource StatusRedTint}"
+                Padding="24,12"
+                Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{StaticResource StatusRed}"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap"/>
+        </Border>
+
+        <!-- ============ Detail cards ============ -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="24,20,24,24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="18"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Personal details -->
+                <Border Style="{StaticResource SurfaceCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                            <Border Width="34" Height="34" CornerRadius="8"
+                                    Background="{StaticResource StatusGreenTint}" Margin="0,0,12,0">
+                                <materialDesign:PackIcon Kind="AccountDetails" Width="19" Height="19"
+                                                         Foreground="{StaticResource StatusGreen}"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Personal Details" Style="{StaticResource CardTitle}"/>
+                        </StackPanel>
+
+                        <UniformGrid Columns="2">
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="FIRST NAME" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding FirstName}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="LAST NAME" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding LastName}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="GENDER" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding Gender}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="DATE OF BIRTH" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding DateOfBirth}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="AGE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding Age}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="FAMILY ROLE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding FamilyRole}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="RELATIONSHIP" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding Relationship}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding Email}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="CIVIL REGISTRY ID" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding CivilRegistryId}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="MEMBER SINCE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding MemberSince}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Barangay and group -->
+                <Border Grid.Column="2" Style="{StaticResource SurfaceCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                            <Border Width="34" Height="34" CornerRadius="8"
+                                    Background="{StaticResource StatusTealTint}" Margin="0,0,12,0">
+                                <materialDesign:PackIcon Kind="MapMarker" Width="19" Height="19"
+                                                         Foreground="{StaticResource StatusTeal}"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Barangay &amp; Group" Style="{StaticResource CardTitle}"/>
+                        </StackPanel>
+
+                        <StackPanel Style="{StaticResource FieldBlock}">
+                            <TextBlock Text="BARANGAY" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="{Binding Barangay}" Style="{StaticResource FieldValue}"/>
+                        </StackPanel>
+                        <StackPanel Style="{StaticResource FieldBlock}">
+                            <TextBlock Text="ADDRESS" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="{Binding Address}" Style="{StaticResource FieldValue}"/>
+                        </StackPanel>
+
+                        <UniformGrid Columns="2">
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="GROUP / EMPLOYMENT TYPE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding GroupEmploymentType}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="SOURCE OF FUNDS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding SourceOfFunds}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="CEDULA NO." Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding CedulaNo}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="RECIPIENT'S INSURANCE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding RecipientsInsurance}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Workflow status -->
+                <Border Grid.Row="2" Style="{StaticResource SurfaceCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                            <Border Width="34" Height="34" CornerRadius="8"
+                                    Background="{StaticResource StatusAmberTint}" Margin="0,0,12,0">
+                                <materialDesign:PackIcon Kind="ClipboardCheck" Width="19" Height="19"
+                                                         Foreground="{StaticResource StatusAmber}"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Workflow Status" Style="{StaticResource CardTitle}"/>
+                            <Border Style="{StaticResource StatusPill}" Margin="12,0,0,0">
+                                <TextBlock Text="{Binding Status}" Style="{StaticResource StatusPillText}"/>
+                            </Border>
+                        </StackPanel>
+
+                        <UniformGrid Columns="2">
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="RECORD STATE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding ActiveState}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="BENEFIT RELEASE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding ReceivedState}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="CONTRIBUTION" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding Contribution}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                        </UniformGrid>
+
+                        <StackPanel Style="{StaticResource FieldBlock}">
+                            <TextBlock Text="REMARKS" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="{Binding StatusRemarks}" Style="{StaticResource FieldValue}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Linked employee -->
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource SurfaceCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                            <Border Width="34" Height="34" CornerRadius="8"
+                                    Background="{StaticResource RoleTint}" Margin="0,0,12,0">
+                                <materialDesign:PackIcon Kind="BriefcaseAccount" Width="19" Height="19"
+                                                         Foreground="{StaticResource RoleInk}"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Linked Employee" Style="{StaticResource CardTitle}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="No employee is linked to this member."
+                                   FontSize="13"
+                                   Foreground="{StaticResource MutedBrush}"
+                                   Visibility="{Binding HasEmployee, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+
+                        <UniformGrid Columns="2"
+                                     Visibility="{Binding HasEmployee, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="EMPLOYEE NO." Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeNo}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="NAME" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeName}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="POSITION" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeePosition}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="DEPARTMENT" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeDepartment}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="EMPLOYMENT TYPE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeType}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="EMPLOYMENT STATUS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeStatus}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="MOBILE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeMobile}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeEmail}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FieldBlock}">
+                                <TextBlock Text="DATE HIRED" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding EmployeeDateHired}" Style="{StaticResource FieldValue}"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -18,6 +18,9 @@ namespace eSureHi.ViewModels.Admin
         public Beneficiary Beneficiary { get; init; } = new();
         public string FamilyId { get; init; } = string.Empty;
         public string FullName { get; init; } = string.Empty;
+        /// <summary>"Last, First" — used by the search suggestion popup.</summary>
+        public string DisplayName { get; init; } = string.Empty;
+        public string FamilyRole { get; init; } = string.Empty;
         public string Barangay { get; init; } = string.Empty;
         public string GroupEmploymentType { get; init; } = string.Empty;
         public string Status { get; init; } = string.Empty;
@@ -32,11 +35,13 @@ namespace eSureHi.ViewModels.Admin
     public class ManageMembersViewModel : ObservableObject
     {
         private const int PageSize = 10;
+        private const int MaxSuggestions = 8;
 
         private readonly ObservableCollection<ManageMemberRow> _allMembers = new();
         private readonly List<ManageMemberRow> _filteredMembers = new();
 
         public ObservableCollection<ManageMemberRow> DisplayedMembers { get; } = new();
+        public ObservableCollection<ManageMemberRow> SearchSuggestions { get; } = new();
         public ObservableCollection<string> GroupOptions { get; } = new();
         public ObservableCollection<string> BarangayOptions { get; } = new();
         public ObservableCollection<PageNavigationItem> PageNumbers { get; } = new();
@@ -52,8 +57,18 @@ namespace eSureHi.ViewModels.Admin
                 {
                     SetCurrentPage(1, updateResults: false);
                     ApplyFilter();
+                    UpdateSuggestions();
                 }
             }
+        }
+
+        // The suggestion popup floats over the table; the table keeps filtering
+        // underneath so the popup is purely additive to the existing behaviour.
+        private bool _isSuggestionsOpen;
+        public bool IsSuggestionsOpen
+        {
+            get => _isSuggestionsOpen;
+            set => SetProperty(ref _isSuggestionsOpen, value);
         }
 
         private string _selectedGroup = "All Groups";
@@ -181,6 +196,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand BackToDashboardCommand { get; }
         public RelayCommand<ManageMemberRow> UpdateCommand { get; }
         public RelayCommand<ManageMemberRow> ViewDetailsCommand { get; }
+        public RelayCommand<ManageMemberRow> OpenSuggestionCommand { get; }
         public RelayCommand PreviousPageCommand { get; }
         public RelayCommand NextPageCommand { get; }
         public RelayCommand<PageNavigationItem> GoToPageCommand { get; }
@@ -191,7 +207,8 @@ namespace eSureHi.ViewModels.Admin
             ResetCommand = new RelayCommand(ResetFilters);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
             UpdateCommand = new RelayCommand<ManageMemberRow>(OpenMemberForEdit, row => row is not null);
-            ViewDetailsCommand = new RelayCommand<ManageMemberRow>(OpenMemberForEdit, row => row is not null);
+            ViewDetailsCommand = new RelayCommand<ManageMemberRow>(OpenMemberDetail, row => row is not null);
+            OpenSuggestionCommand = new RelayCommand<ManageMemberRow>(OpenMemberDetail, row => row is not null);
             PreviousPageCommand = new RelayCommand(() => SetCurrentPage(CurrentPage - 1), () => CanGoPrevious);
             NextPageCommand = new RelayCommand(() => SetCurrentPage(CurrentPage + 1), () => CanGoNext);
             GoToPageCommand = new RelayCommand<PageNavigationItem>(item =>
@@ -236,6 +253,7 @@ namespace eSureHi.ViewModels.Admin
                 RefreshBarangays(rows);
                 SetCurrentPage(1, updateResults: false);
                 ApplyFilter();
+                UpdateSuggestions();
             }
             catch (Exception ex)
             {
@@ -264,13 +282,32 @@ namespace eSureHi.ViewModels.Admin
                     beneficiary.Employee?.EmployeeNo,
                     $"BEN-{beneficiary.BenId:000000}"),
                 FullName = FirstNonEmpty(beneficiary.FullName, "Unnamed Member"),
+                DisplayName = BuildDisplayName(beneficiary),
+                FamilyRole = BuildFamilyRole(beneficiary),
                 Barangay = FirstNonEmpty(beneficiary.Employee?.Barangay, "Not set"),
                 GroupEmploymentType = group,
                 Status = BuildStatus(beneficiary)
             };
         }
 
-        private static string BuildStatus(Beneficiary beneficiary)
+        /// <summary>"Last, First" for the suggestion popup; falls back to whatever name we have.</summary>
+        internal static string BuildDisplayName(Beneficiary beneficiary)
+        {
+            var last = beneficiary.LastName?.Trim() ?? string.Empty;
+            var first = beneficiary.FirstName?.Trim() ?? string.Empty;
+
+            if (last.Length > 0 && first.Length > 0)
+                return $"{last}, {first}";
+
+            return FirstNonEmpty(last, first, beneficiary.FullName, "Unnamed Member");
+        }
+
+        internal static string BuildFamilyRole(Beneficiary beneficiary) =>
+            beneficiary.IsPrimary
+                ? "Head of Family"
+                : FirstNonEmpty(beneficiary.Relationship, "Member");
+
+        internal static string BuildStatus(Beneficiary beneficiary)
         {
             if (!beneficiary.IsActive)
                 return "Inactive";
@@ -288,7 +325,7 @@ namespace eSureHi.ViewModels.Admin
             };
         }
 
-        private static string FirstNonEmpty(params string?[] values) =>
+        internal static string FirstNonEmpty(params string?[] values) =>
             values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim() ?? string.Empty;
 
         private void RefreshGroups(IEnumerable<ManageMemberRow> rows)
@@ -377,6 +414,43 @@ namespace eSureHi.ViewModels.Admin
             RefreshDisplayedMembers();
         }
 
+        /// <summary>
+        /// Rebuilds the name-suggestion list from the in-memory roster. Matching is
+        /// name-first (the popup is a name picker) with beneficiary ID as a fallback
+        /// so the hint text stays honest.
+        /// </summary>
+        private void UpdateSuggestions()
+        {
+            SearchSuggestions.Clear();
+
+            var search = SearchText?.Trim();
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                var defaultMatches = _allMembers
+                    .OrderBy(row => row.DisplayName, StringComparer.OrdinalIgnoreCase)
+                    .Take(MaxSuggestions);
+                foreach (var match in defaultMatches)
+                    SearchSuggestions.Add(match);
+
+                IsSuggestionsOpen = SearchSuggestions.Count > 0;
+                return;
+            }
+
+            var needle = search.ToLowerInvariant();
+            var matches = _allMembers
+                .Where(row =>
+                    row.FullName.ToLowerInvariant().Contains(needle) ||
+                    row.DisplayName.ToLowerInvariant().Contains(needle) ||
+                    row.FamilyId.ToLowerInvariant().Contains(needle))
+                .OrderBy(row => row.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxSuggestions);
+
+            foreach (var match in matches)
+                SearchSuggestions.Add(match);
+
+            IsSuggestionsOpen = SearchSuggestions.Count > 0;
+        }
+
         private void RefreshDisplayedMembers()
         {
             DisplayedMembers.Clear();
@@ -405,6 +479,8 @@ namespace eSureHi.ViewModels.Admin
                     Beneficiary = row.Beneficiary,
                     FamilyId = row.FamilyId,
                     FullName = row.FullName,
+                    DisplayName = row.DisplayName,
+                    FamilyRole = row.FamilyRole,
                     Barangay = row.Barangay,
                     GroupEmploymentType = row.GroupEmploymentType,
                     Status = row.Status
@@ -476,6 +552,9 @@ namespace eSureHi.ViewModels.Admin
             OnPropertyChanged(nameof(SelectedBarangay));
             OnPropertyChanged(nameof(SelectedStatus));
 
+            SearchSuggestions.Clear();
+            IsSuggestionsOpen = false;
+
             SetCurrentPage(1, updateResults: false);
             ApplyFilter();
         }
@@ -483,6 +562,19 @@ namespace eSureHi.ViewModels.Admin
         private static void NavigateToDashboard()
         {
             NavigationService.Instance.NavigateTo(new HomeView());
+        }
+
+        /// <summary>
+        /// Read-only, full-screen profile. Used by both the suggestion popup and the
+        /// table's "View Details" button, which previously shared the edit path.
+        /// </summary>
+        private void OpenMemberDetail(ManageMemberRow? row)
+        {
+            if (row is null)
+                return;
+
+            IsSuggestionsOpen = false;
+            NavigationService.Instance.NavigateTo(new MemberDetailView(row.Beneficiary));
         }
 
         private static void OpenMemberForEdit(ManageMemberRow? row)
