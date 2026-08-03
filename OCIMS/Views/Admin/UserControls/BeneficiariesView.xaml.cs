@@ -27,9 +27,6 @@ namespace eSureHi.Views.Admin.UserControls
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!_openInitialSearch)
-                return;
-
             if (_openedInitialSearch)
                 return;
 
