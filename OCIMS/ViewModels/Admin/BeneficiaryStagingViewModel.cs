@@ -538,6 +538,10 @@ namespace eSureHi.ViewModels.Admin
                     else
                     {
                         ApplyFilter();
+                        if (SelectedRecord is not null)
+                        {
+                            _ = OpenProfileAsync(SelectedRecord);
+                        }
                     }
                 }
             }
@@ -970,6 +974,7 @@ namespace eSureHi.ViewModels.Admin
             {
                 using var db = eSureHiDbContextFactory.Create();
                 var search = SearchText.Trim();
+                var searchLower = search.ToLower();
 
                 if (IsCrsSource)
                 {
@@ -978,13 +983,13 @@ namespace eSureHi.ViewModels.Admin
                     if (!string.IsNullOrWhiteSpace(search))
                     {
                         query = query.Where(r =>
-                            (r.FullName != null && EF.Functions.Collate(r.FullName, "NOCASE").Contains(search)) ||
-                            (r.LastName != null && EF.Functions.Collate(r.LastName, "NOCASE").Contains(search)) ||
-                            (r.FirstName != null && EF.Functions.Collate(r.FirstName, "NOCASE").Contains(search)) ||
-                            (r.MiddleName != null && EF.Functions.Collate(r.MiddleName, "NOCASE").Contains(search)) ||
-                            (r.BeneficiaryId != null && EF.Functions.Collate(r.BeneficiaryId, "NOCASE").Contains(search)) ||
-                            (r.CivilRegistryId != null && EF.Functions.Collate(r.CivilRegistryId, "NOCASE").Contains(search)) ||
-                            (r.ResidentsId.HasValue && r.ResidentsId.Value.ToString().Contains(search)));
+                            (r.FullName != null && r.FullName.ToLower().Contains(searchLower)) ||
+                            (r.LastName != null && r.LastName.ToLower().Contains(searchLower)) ||
+                            (r.FirstName != null && r.FirstName.ToLower().Contains(searchLower)) ||
+                            (r.MiddleName != null && r.MiddleName.ToLower().Contains(searchLower)) ||
+                            (r.BeneficiaryId != null && r.BeneficiaryId.ToLower().Contains(searchLower)) ||
+                            (r.CivilRegistryId != null && r.CivilRegistryId.ToLower().Contains(searchLower)) ||
+                            (r.ResidentsId.HasValue && r.ResidentsId.Value.ToString().Contains(searchLower)));
                     }
 
                     var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -1014,11 +1019,11 @@ namespace eSureHi.ViewModels.Admin
                     if (!string.IsNullOrWhiteSpace(search))
                     {
                         query = query.Where(b =>
-                            (b.FullName != null && EF.Functions.Collate(b.FullName, "NOCASE").Contains(search)) ||
-                            (b.Relationship != null && EF.Functions.Collate(b.Relationship, "NOCASE").Contains(search)) ||
-                            (b.Employee != null && b.Employee.FullName != null && EF.Functions.Collate(b.Employee.FullName, "NOCASE").Contains(search)) ||
-                            (b.Employee != null && b.Employee.EmployeeNo != null && EF.Functions.Collate(b.Employee.EmployeeNo, "NOCASE").Contains(search)) ||
-                            (b.BeneficiaryId != null && EF.Functions.Collate(b.BeneficiaryId, "NOCASE").Contains(search)));
+                            (b.FullName != null && b.FullName.ToLower().Contains(searchLower)) ||
+                            (b.Relationship != null && b.Relationship.ToLower().Contains(searchLower)) ||
+                            (b.Employee != null && b.Employee.FullName != null && b.Employee.FullName.ToLower().Contains(searchLower)) ||
+                            (b.Employee != null && b.Employee.EmployeeNo != null && b.Employee.EmployeeNo.ToLower().Contains(searchLower)) ||
+                            (b.BeneficiaryId != null && b.BeneficiaryId.ToLower().Contains(searchLower)));
                     }
 
                     var sw = System.Diagnostics.Stopwatch.StartNew();
