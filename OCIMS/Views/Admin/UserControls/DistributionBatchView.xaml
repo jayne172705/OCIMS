@@ -10,28 +10,218 @@
     <UserControl.Resources>
         <helpers:BoolToVisibilityConverter x:Key="LocalBoolToVis"/>
 
-        <Style x:Key="ColumnHeaderLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#94A3B8"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+        <!-- ============ Palette ============
+             Three status colours drive the whole board. Each has a solid tone for
+             text/icons, a tint for header bands, and a soft tone for badges and the
+             empty-state medallion. Neutrals are shared across every card. -->
+        <SolidColorBrush x:Key="StatusGreen"      Color="#2E7D32"/>
+        <SolidColorBrush x:Key="StatusGreenTint"  Color="#E8F5E9"/>
+        <SolidColorBrush x:Key="StatusGreenSoft"  Color="#C8E6C9"/>
+
+        <SolidColorBrush x:Key="StatusOrange"     Color="#F57C00"/>
+        <SolidColorBrush x:Key="StatusOrangeTint" Color="#FFF3E0"/>
+        <SolidColorBrush x:Key="StatusOrangeSoft" Color="#FFE0B2"/>
+
+        <SolidColorBrush x:Key="StatusRed"        Color="#D32F2F"/>
+        <SolidColorBrush x:Key="StatusRedTint"    Color="#FFEBEE"/>
+        <SolidColorBrush x:Key="StatusRedSoft"    Color="#FFCDD2"/>
+
+        <SolidColorBrush x:Key="InkBrush"         Color="#0F172A"/>
+        <SolidColorBrush x:Key="MutedBrush"       Color="#64748B"/>
+        <SolidColorBrush x:Key="FaintBrush"       Color="#94A3B8"/>
+        <SolidColorBrush x:Key="LineBrush"        Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="HairlineBrush"    Color="#EEF2F7"/>
+        <SolidColorBrush x:Key="RowLineBrush"     Color="#F1F5F9"/>
+        <SolidColorBrush x:Key="CanvasBrush"      Color="#F8FAFC"/>
+
+        <!-- ============ Surfaces ============ -->
+        <Style x:Key="SurfaceCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <Style x:Key="StatusColumnCard" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="9"/>
-            <Setter Property="BorderBrush" Value="#E2E8F0"/>
-            <Setter Property="BorderThickness" Value="1"/>
+        <Style x:Key="StatusColumnCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
             <Setter Property="Margin" Value="0,0,14,0"/>
         </Style>
 
+        <!-- Icon chip: a tinted rounded square holding a single glyph. -->
+        <Style x:Key="IconChip" TargetType="Border">
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ============ Typography ============ -->
+        <Style x:Key="ColumnHeaderLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ColumnTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="CountBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="9,2"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ============ Stat tiles ============ -->
+        <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="MinWidth" Value="92"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="StatNumber" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="StatLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <!-- ============ Buttons ============ -->
+        <Style x:Key="PrimaryAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="22,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="SecondaryAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <!-- Small square glyph button used for the inline scan affordance. -->
+        <Style x:Key="SquareIconButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
         <Style x:Key="PagerButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-            <Setter Property="Width" Value="34"/>
+            <Setter Property="Width" Value="30"/>
             <Setter Property="Height" Value="30"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="4,0,0,0"/>
-            <Setter Property="Foreground" Value="#64748B"/>
-            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="Margin" Value="6,0,0,0"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="ColumnMenuButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ============ Empty state ============ -->
+        <Style x:Key="EmptyStateMedallion" TargetType="Border">
+            <Setter Property="Width" Value="104"/>
+            <Setter Property="Height" Value="104"/>
+            <Setter Property="CornerRadius" Value="52"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="EmptyStateGlyph" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="48"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="EmptyStateText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,14,0,0"/>
+        </Style>
+
+        <!-- ============ Rows ============ -->
+        <Style x:Key="RecordRow" TargetType="Border">
+            <Setter Property="Padding" Value="18,12"/>
+            <Setter Property="BorderBrush" Value="{StaticResource RowLineBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+
+        <Style x:Key="RecordId" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="RecordName" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="RecordNote" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="RecordDate" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ColumnFooter" TargetType="Border">
+            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="Background" Value="#FCFDFE"/>
+            <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}"/>
+            <Setter Property="BorderThickness" Value="0,1,0,0"/>
+            <Setter Property="CornerRadius" Value="0,0,10,10"/>
+        </Style>
+
+        <Style x:Key="FooterText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+        </Style>
+
+        <Style x:Key="TableHeaderBand" TargetType="Border">
+            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}"/>
+            <Setter Property="BorderThickness" Value="0,1,0,1"/>
         </Style>
     </UserControl.Resources>
 
@@ -42,444 +232,521 @@
     </b:Interaction.Triggers>
 
     <materialDesign:DialogHost Identifier="DistributionDialogHost" CloseOnClickAway="True">
-        <Grid Background="#F8FAFC">
+        <Grid Background="{StaticResource CanvasBrush}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Title + batch actions -->
-                <RowDefinition Height="Auto"/> <!-- Total Funds / search / counters -->
+                <RowDefinition Height="Auto"/> <!-- Title + program + batch action -->
+                <RowDefinition Height="Auto"/> <!-- Total funds / search / stat tiles -->
                 <RowDefinition Height="*"/>    <!-- Status columns -->
                 <RowDefinition Height="Auto"/> <!-- Processing hint -->
             </Grid.RowDefinitions>
 
-                <!-- 1. White header with title and Program selection -->
-                <Border Background="White" Padding="30,22" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+            <!-- ============ 1. Page header ============ -->
+            <Border Background="White" Padding="30,24" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Distribution Management" FontSize="26" FontWeight="Bold" Foreground="#0F172A"/>
-                            <TextBlock Text="Manage batch distribution of beneficiaries"
-                                       FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Distribution Management" FontSize="26" FontWeight="Bold"
+                                   Foreground="{StaticResource InkBrush}"/>
+                        <TextBlock Text="Manage batch distribution of beneficiaries"
+                                   FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Program selector -->
+                    <Border Grid.Column="1" Style="{StaticResource SurfaceCard}" CornerRadius="8"
+                            Padding="16,8" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
+                                                     Foreground="{StaticResource StatusGreen}"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Program:" FontWeight="Bold" Foreground="{StaticResource InkBrush}"
+                                       FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram}"
+                                      Width="180" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"
+                                      Style="{StaticResource MaterialDesignComboBox}"
+                                      materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                                      BorderThickness="0" VerticalAlignment="Center"/>
                         </StackPanel>
-
-                        <!-- Program Selector Card -->
-                        <Border Grid.Column="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16,8" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20" Foreground="#166534" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Program:" FontWeight="Bold" Foreground="#0F172A" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <ComboBox ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram}"
-                                          Width="180" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"
-                                          Style="{StaticResource MaterialDesignComboBox}"
-                                          materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                                          BorderThickness="0" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Button Grid.Column="2" Content="Confirm Batch" Command="{Binding ConfirmBatchCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="#166534" BorderBrush="#166534" Foreground="White"
-                                Height="44" Padding="22,0" Margin="14,0,0,0" VerticalAlignment="Center"
-                                materialDesign:ButtonAssist.CornerRadius="6"/>
-                    </Grid>
-                </Border>
-
-                <!-- 2. Total Funds + Search + Scan + Counters -->
-                <Border Grid.Row="1" Background="White" CornerRadius="10" Margin="30,20,30,0"
-                        Padding="22,18" BorderBrush="#E2E8F0" BorderThickness="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="1.4*" MinWidth="200"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="14"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Total Funds rollup -->
-                        <materialDesign:PackIcon Grid.Column="0" Kind="WalletOutline" Width="30" Height="30"
-                                                 Foreground="#166534" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,22,0">
-                            <TextBlock Text="Total Funds" FontSize="12" Foreground="#64748B"/>
-                            <TextBlock Text="{Binding TotalFunds, StringFormat='₱{0:N2}'}"
-                                       FontSize="22" FontWeight="Bold" Foreground="#166534"/>
-                        </StackPanel>
-
-                        <Border Grid.Column="1" Width="1" Background="#E2E8F0" HorizontalAlignment="Right" Margin="0,4"/>
-
-                        <!-- Search -->
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                            <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Enter beneficiary name / beneficiary ID"
-                                     Height="44" FontSize="14"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     materialDesign:TextFieldAssist.HasClearButton="True"
-                                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
-                                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                                     VerticalAlignment="Center">
-                                <TextBox.InputBindings>
-                                    <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
-                                </TextBox.InputBindings>
-                            </TextBox>
-                        </StackPanel>
-
-                        <Button Grid.Column="4" Content="Search" Command="{Binding SearchCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="#166534" BorderBrush="#166534" Foreground="White"
-                                Height="44" Padding="22,0" VerticalAlignment="Center"
-                                materialDesign:ButtonAssist.CornerRadius="6"/>
-
-                        <Button Grid.Column="6" Command="{Binding ScanCameraCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Height="44" Padding="18,0" VerticalAlignment="Center"
-                                Foreground="#0F172A" BorderBrush="#CBD5E1"
-                                materialDesign:ButtonAssist.CornerRadius="6">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Camera" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Scan via Camera" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <!-- Counter tiles -->
-                        <Border Grid.Column="8" Background="White" CornerRadius="8" BorderBrush="#E2E8F0"
-                                BorderThickness="1" Padding="22,12" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <StackPanel Margin="0,0,26,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding ReleasedRecords.Count}" FontSize="22" FontWeight="Bold"
-                                               Foreground="#166534" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Released" FontSize="11" FontWeight="Bold" Foreground="#166534" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,0,26,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding UnreleasedRecords.Count}" FontSize="22" FontWeight="Bold"
-                                               Foreground="#166534" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Unreleased" FontSize="11" FontWeight="Bold" Foreground="#166534" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,0,26,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding PendingRecords.Count}" FontSize="22" FontWeight="Bold"
-                                               Foreground="#D97706" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="On Hold" FontSize="11" FontWeight="Bold" Foreground="#D97706" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding RejectedRecords.Count}" FontSize="22" FontWeight="Bold"
-                                               Foreground="#DC2626" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Rejected" FontSize="11" FontWeight="Bold" Foreground="#DC2626" Margin="0,2,0,0"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <!-- Live status message -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left"
-                            VerticalAlignment="Bottom" Margin="52,0,0,-18">
-                    <materialDesign:PackIcon Kind="{Binding StatusIconKind}" Foreground="{Binding StatusIconColor}"
-                                             Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"
-                                             Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
-                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" FontWeight="Medium"
-                               Foreground="{Binding StatusIconColor}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
-
-                <!-- Kanban Board Grid -->
-                <UniformGrid Grid.Row="2" Rows="1" Margin="30,28,16,10">
-                    <!-- Unreleased -->
-                    <Border Style="{StaticResource StatusColumnCard}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <Border Background="#F0FDF4" Padding="18,15" CornerRadius="9,9,0,0">
-                                <Grid>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                        <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
-                                                                 Foreground="#166534" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                        <TextBlock Text="Unreleased" FontWeight="Bold" Foreground="#166534" FontSize="16" VerticalAlignment="Center"/>
-                                        <Border Background="#DCFCE7" CornerRadius="10" Padding="9,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding UnreleasedRecords.Count}" Foreground="#166534" FontSize="12" FontWeight="Bold"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Border Grid.Row="1" Padding="18,10" Background="White" BorderBrush="#EEF2F7" BorderThickness="0,1,0,1">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.1*"/>
-                                        <ColumnDefinition Width="1.2*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
-                                    <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
-                                    <TextBlock Grid.Column="2" Text="DATE ADDED" Style="{StaticResource ColumnHeaderLabel}"/>
-                                </Grid>
-                            </Border>
-
-                            <Grid Grid.Row="2">
-                                <ItemsControl ItemsSource="{Binding UnreleasedRecords}" Margin="0,4"
-                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ItemsControl.Template>
-                                        <ControlTemplate TargetType="ItemsControl">
-                                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                                <ItemsPresenter/>
-                                            </ScrollViewer>
-                                        </ControlTemplate>
-                                    </ItemsControl.Template>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="18,11" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="1.1*"/>
-                                                        <ColumnDefinition Width="1.2*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#475569"
-                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding BeneficiaryName}" FontSize="13" FontWeight="SemiBold"
-                                                                   Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="Waiting to claim" FontSize="10" Foreground="#D97706" FontWeight="SemiBold"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="—" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
-                                            Visibility="{Binding HasUnreleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
-                                    <materialDesign:PackIcon Kind="InboxOutline" Width="58" Height="58"
-                                                             Foreground="#86EFAC" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="No unreleased beneficiaries." FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#334155" HorizontalAlignment="Center" Margin="0,12,0,0"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <Border Grid.Row="3" Padding="18,12" Background="#FCFDFE" BorderBrush="#EEF2F7" BorderThickness="0,1,0,0"
-                                    CornerRadius="0,0,9,9">
-                                <Grid>
-                                    <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#94A3B8"
-                                               Text="{Binding UnreleasedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
-                                </Grid>
-                            </Border>
-                        </Grid>
                     </Border>
 
-                    <!-- On Hold Pending -->
-                    <Border Style="{StaticResource StatusColumnCard}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                    <Button Grid.Column="2" Content="Confirm Batch" Command="{Binding ConfirmBatchCommand}"
+                            Style="{StaticResource PrimaryAction}" Margin="14,0,0,0"/>
+                </Grid>
+            </Border>
 
-                            <Border Background="#FFFBEB" Padding="18,15" CornerRadius="9,9,0,0">
-                                <Grid>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                        <materialDesign:PackIcon Kind="ClockOutline" Width="20" Height="20"
-                                                                 Foreground="#D97706" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                        <TextBlock Text="On Hold Pending" FontWeight="Bold" Foreground="#B45309" FontSize="16" VerticalAlignment="Center"/>
-                                        <Border Background="#FEF3C7" CornerRadius="10" Padding="9,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding PendingRecords.Count}" Foreground="#B45309" FontSize="12" FontWeight="Bold"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
+            <!-- ============ 2. Toolbar card ============ -->
+            <Border Grid.Row="1" Style="{StaticResource SurfaceCard}" Margin="30,20,30,0" Padding="22,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/> <!-- wallet chip -->
+                        <ColumnDefinition Width="Auto"/> <!-- total funds -->
+                        <ColumnDefinition Width="Auto"/> <!-- divider -->
+                        <ColumnDefinition Width="1.4*" MinWidth="200"/> <!-- search -->
+                        <ColumnDefinition Width="Auto"/> <!-- inline scan -->
+                        <ColumnDefinition Width="Auto"/> <!-- search button -->
+                        <ColumnDefinition Width="Auto"/> <!-- scan via camera -->
+                        <ColumnDefinition Width="*"/>    <!-- flex gap -->
+                        <ColumnDefinition Width="Auto"/> <!-- stat tiles -->
+                    </Grid.ColumnDefinitions>
 
-                            <Border Grid.Row="1" Padding="18,10" Background="White" BorderBrush="#EEF2F7" BorderThickness="0,1,0,1">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.1*"/>
-                                        <ColumnDefinition Width="1.2*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
-                                    <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
-                                    <TextBlock Grid.Column="2" Text="DATE MOVED" Style="{StaticResource ColumnHeaderLabel}"/>
-                                </Grid>
-                            </Border>
-
-                            <Grid Grid.Row="2">
-                                <ItemsControl ItemsSource="{Binding PendingRecords}" Margin="0,4"
-                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ItemsControl.Template>
-                                        <ControlTemplate TargetType="ItemsControl">
-                                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                                <ItemsPresenter/>
-                                            </ScrollViewer>
-                                        </ControlTemplate>
-                                    </ItemsControl.Template>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="18,11" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
-                                                <Grid>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="1.1*"/>
-                                                        <ColumnDefinition Width="1.2*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#475569"
-                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding BeneficiaryName}" FontSize="13" FontWeight="SemiBold"
-                                                                   Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="{Binding Remarks, TargetNullValue='Pending verification'}"
-                                                                   FontSize="10" Foreground="#D97706" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
-                                                               FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                                    <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal"
-                                                                HorizontalAlignment="Right" Margin="0,8,0,0"
-                                                                Visibility="{Binding DataContext.ShowRowReviewActions, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource LocalBoolToVis}}">
-                                                        <Button Content="Reject"
-                                                                Command="{Binding DataContext.RejectRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource MaterialDesignOutlinedButton}" Height="26" Padding="12,0" FontSize="11"
-                                                                Foreground="#DC2626" BorderBrush="#FCA5A5" Margin="0,0,8,0"/>
-                                                        <Button Content="Approve"
-                                                                Command="{Binding DataContext.ApproveRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource MaterialDesignRaisedButton}" Height="26" Padding="12,0" FontSize="11"
-                                                                Background="#166534" BorderBrush="#166534" Foreground="White"/>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
-                                            Visibility="{Binding HasPendingRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
-                                    <materialDesign:PackIcon Kind="InboxOutline" Width="58" Height="58"
-                                                             Foreground="#FCD34D" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="No beneficiaries on hold." FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#334155" HorizontalAlignment="Center" Margin="0,12,0,0"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <Border Grid.Row="3" Padding="18,12" Background="#FCFDFE" BorderBrush="#EEF2F7" BorderThickness="0,1,0,0"
-                                    CornerRadius="0,0,9,9">
-                                <Grid>
-                                    <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#94A3B8"
-                                               Text="{Binding PendingRecords.Count, StringFormat='Showing {0} of {0}'}"/>
-                                </Grid>
-                            </Border>
-                        </Grid>
+                    <!-- Total funds -->
+                    <Border Grid.Column="0" Style="{StaticResource IconChip}"
+                            Background="{StaticResource StatusGreenTint}" Margin="0,0,14,0">
+                        <materialDesign:PackIcon Kind="WalletOutline" Width="24" Height="24"
+                                                 Foreground="{StaticResource StatusGreen}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,22,0">
+                        <TextBlock Text="Total Funds" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+                        <TextBlock Text="{Binding TotalFunds, StringFormat='₱{0:N2}'}"
+                                   FontSize="22" FontWeight="Bold" Foreground="{StaticResource StatusGreen}"/>
+                    </StackPanel>
 
-                    <!-- Rejected -->
-                    <Border Style="{StaticResource StatusColumnCard}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                    <Border Grid.Column="2" Width="1" Background="{StaticResource LineBrush}" Margin="0,4,22,4"/>
 
-                            <Border Background="#FEF2F2" Padding="18,15" CornerRadius="9,9,0,0">
+                    <!-- Search -->
+                    <TextBox Grid.Column="3" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Enter beneficiary name / beneficiary ID"
+                             MinHeight="44" FontSize="14"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:TextFieldAssist.HasClearButton="True"
+                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                             VerticalAlignment="Center" VerticalContentAlignment="Center"
+                             Padding="0,6">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <!-- Inline scan affordance; same command as the labelled button below. -->
+                    <Button Grid.Column="4" Command="{Binding ScanCameraCommand}"
+                            Style="{StaticResource SquareIconButton}" Margin="10,0,0,0"
+                            ToolTip="Scan a beneficiary ID">
+                        <materialDesign:PackIcon Kind="LineScan" Width="20" Height="20"/>
+                    </Button>
+
+                    <Button Grid.Column="5" Content="Search" Command="{Binding SearchCommand}"
+                            Style="{StaticResource PrimaryAction}" Margin="12,0,0,0"/>
+
+                    <Button Grid.Column="6" Command="{Binding ScanCameraCommand}"
+                            Style="{StaticResource SecondaryAction}" Margin="14,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Camera" Width="18" Height="18"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Scan via Camera" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stat tiles: one bordered tile per board column -->
+                    <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding UnreleasedRecords.Count}" Style="{StaticResource StatNumber}"
+                                           Foreground="{StaticResource StatusGreen}"/>
+                                <TextBlock Text="Unreleased" Style="{StaticResource StatLabel}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding PendingRecords.Count}" Style="{StaticResource StatNumber}"
+                                           Foreground="{StaticResource StatusOrange}"/>
+                                <TextBlock Text="On Hold" Style="{StaticResource StatLabel}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding RejectedRecords.Count}" Style="{StaticResource StatNumber}"
+                                           Foreground="{StaticResource StatusRed}"/>
+                                <TextBlock Text="Rejected" Style="{StaticResource StatLabel}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Live status message -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom" Margin="52,0,0,-18">
+                <materialDesign:PackIcon Kind="{Binding StatusIconKind}" Foreground="{Binding StatusIconColor}"
+                                         Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"
+                                         Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="12" FontWeight="Medium"
+                           Foreground="{Binding StatusIconColor}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+
+            <!-- ============ 3. Board ============ -->
+            <UniformGrid Grid.Row="2" Rows="1" Margin="30,28,16,10">
+
+                <!-- Unreleased -->
+                <Border Style="{StaticResource StatusColumnCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Background="{StaticResource StatusGreenTint}" Padding="18,15" CornerRadius="10,10,0,0">
+                            <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="20" Height="20"
-                                                             Foreground="#DC2626" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Rejected" FontWeight="Bold" Foreground="#B91C1C" FontSize="16" VerticalAlignment="Center"/>
-                                    <Border Background="#FEE2E2" CornerRadius="10" Padding="9,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding RejectedRecords.Count}" Foreground="#B91C1C" FontSize="12" FontWeight="Bold"/>
+                                    <materialDesign:PackIcon Kind="AccountOutline" Width="20" Height="20"
+                                                             Foreground="{StaticResource StatusGreen}"
+                                                             VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Unreleased" Style="{StaticResource ColumnTitle}"
+                                               Foreground="{StaticResource StatusGreen}"/>
+                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource StatusGreenSoft}">
+                                        <TextBlock Text="{Binding UnreleasedRecords.Count}"
+                                                   Foreground="{StaticResource StatusGreen}" FontSize="12" FontWeight="Bold"/>
                                     </Border>
                                 </StackPanel>
-                            </Border>
+                                <Button Style="{StaticResource ColumnMenuButton}"
+                                        Foreground="{StaticResource StatusGreen}"
+                                        Click="DotsButton_Click" ToolTip="Column options">
+                                    <materialDesign:PackIcon Kind="DotsHorizontal" Width="20" Height="20"/>
+                                </Button>
+                            </Grid>
+                        </Border>
 
-                            <Border Grid.Row="1" Padding="18,10" Background="White" BorderBrush="#EEF2F7" BorderThickness="0,1,0,1">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.1*"/>
-                                        <ColumnDefinition Width="1.2*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
-                                    <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
-                                    <TextBlock Grid.Column="2" Text="DATE REJECTED" Style="{StaticResource ColumnHeaderLabel}"/>
-                                </Grid>
-                            </Border>
+                        <Border Grid.Row="1" Style="{StaticResource TableHeaderBand}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="2" Text="DATE ADDED" Style="{StaticResource ColumnHeaderLabel}"/>
+                            </Grid>
+                        </Border>
 
-                            <Grid Grid.Row="2">
-                                <ItemsControl ItemsSource="{Binding RejectedRecords}" Margin="0,4"
-                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ItemsControl.Template>
-                                        <ControlTemplate TargetType="ItemsControl">
-                                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                                <ItemsPresenter/>
-                                            </ScrollViewer>
-                                        </ControlTemplate>
-                                    </ItemsControl.Template>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="18,11" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="1.1*"/>
-                                                        <ColumnDefinition Width="1.2*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding BeneficiaryId}" FontSize="12" Foreground="#475569"
-                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding BeneficiaryName}" FontSize="13" FontWeight="SemiBold"
-                                                                   Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="{Binding Remarks, TargetNullValue='Rejected'}"
-                                                                   FontSize="10" Foreground="#DC2626" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
-                                                               FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                        <Grid Grid.Row="2">
+                            <ItemsControl ItemsSource="{Binding UnreleasedRecords}" Margin="0,4"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl.Template>
+                                    <ControlTemplate TargetType="ItemsControl">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </ItemsControl.Template>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RecordRow}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding BeneficiaryId}" Style="{StaticResource RecordId}"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding BeneficiaryName}" Style="{StaticResource RecordName}"/>
+                                                    <TextBlock Text="Waiting to claim" Style="{StaticResource RecordNote}"
+                                                               Foreground="{StaticResource StatusOrange}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="—" Style="{StaticResource RecordDate}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
-                                            Visibility="{Binding HasRejectedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
-                                    <materialDesign:PackIcon Kind="InboxOutline" Width="58" Height="58"
-                                                             Foreground="#FCA5A5" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="No rejected beneficiaries." FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#334155" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
+                                        Visibility="{Binding HasUnreleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
+                                <Border Style="{StaticResource EmptyStateMedallion}" Background="{StaticResource StatusGreenTint}">
+                                    <materialDesign:PackIcon Kind="InboxOutline" Style="{StaticResource EmptyStateGlyph}"
+                                                             Foreground="{StaticResource StatusGreen}"/>
+                                </Border>
+                                <TextBlock Text="No unreleased beneficiaries." Style="{StaticResource EmptyStateText}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="3" Style="{StaticResource ColumnFooter}">
+                            <Grid>
+                                <TextBlock Style="{StaticResource FooterText}"
+                                           Text="{Binding UnreleasedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="First page">
+                                        <materialDesign:PackIcon Kind="PageFirst" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Previous page">
+                                        <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Next page">
+                                        <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Last page">
+                                        <materialDesign:PackIcon Kind="PageLast" Width="16" Height="16"/>
+                                    </Button>
                                 </StackPanel>
                             </Grid>
-
-                            <Border Grid.Row="3" Padding="18,12" Background="#FCFDFE" BorderBrush="#EEF2F7" BorderThickness="0,1,0,0"
-                                    CornerRadius="0,0,9,9">
-                                <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#94A3B8"
-                                           Text="{Binding RejectedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-                </UniformGrid>
-
-                <!-- 4. Processing hint -->
-                <Border Grid.Row="3" Background="White" CornerRadius="9" Margin="30,0,30,20" Padding="18,13"
-                        BorderBrush="#E2E8F0" BorderThickness="1">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
-                                                 Foreground="#2563EB" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBlock Text="Search or scan a beneficiary to release, hold, or reject their distribution."
-                                   FontSize="12" Foreground="#475569" VerticalAlignment="Center"/>
-                    </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
+
+                <!-- On Hold Pending -->
+                <Border Style="{StaticResource StatusColumnCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Background="{StaticResource StatusOrangeTint}" Padding="18,15" CornerRadius="10,10,0,0">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <materialDesign:PackIcon Kind="ClockOutline" Width="20" Height="20"
+                                                             Foreground="{StaticResource StatusOrange}"
+                                                             VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="On Hold Pending" Style="{StaticResource ColumnTitle}"
+                                               Foreground="{StaticResource StatusOrange}"/>
+                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource StatusOrangeSoft}">
+                                        <TextBlock Text="{Binding PendingRecords.Count}"
+                                                   Foreground="{StaticResource StatusOrange}" FontSize="12" FontWeight="Bold"/>
+                                    </Border>
+                                </StackPanel>
+                                <Button Style="{StaticResource ColumnMenuButton}"
+                                        Foreground="{StaticResource StatusOrange}"
+                                        Click="DotsButton_Click" ToolTip="Column options">
+                                    <materialDesign:PackIcon Kind="DotsHorizontal" Width="20" Height="20"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Row="1" Style="{StaticResource TableHeaderBand}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="2" Text="DATE MOVED" Style="{StaticResource ColumnHeaderLabel}"/>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="2">
+                            <ItemsControl ItemsSource="{Binding PendingRecords}" Margin="0,4"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl.Template>
+                                    <ControlTemplate TargetType="ItemsControl">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </ItemsControl.Template>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RecordRow}">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding BeneficiaryId}" Style="{StaticResource RecordId}"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding BeneficiaryName}" Style="{StaticResource RecordName}"/>
+                                                    <TextBlock Text="{Binding Remarks, TargetNullValue='Pending verification'}"
+                                                               Style="{StaticResource RecordNote}"
+                                                               Foreground="{StaticResource StatusOrange}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
+                                                           Style="{StaticResource RecordDate}"/>
+                                                <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal"
+                                                            HorizontalAlignment="Right" Margin="0,8,0,0"
+                                                            Visibility="{Binding DataContext.ShowRowReviewActions, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource LocalBoolToVis}}">
+                                                    <Button Content="Reject"
+                                                            Command="{Binding DataContext.RejectRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                            Height="28" Padding="14,0" FontSize="11" Margin="0,0,8,0"
+                                                            Foreground="{StaticResource StatusRed}"
+                                                            BorderBrush="{StaticResource StatusRedSoft}"
+                                                            materialDesign:ButtonAssist.CornerRadius="8"/>
+                                                    <Button Content="Approve"
+                                                            Command="{Binding DataContext.ApproveRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                                            Height="28" Padding="14,0" FontSize="11"
+                                                            Background="{StaticResource StatusGreen}"
+                                                            BorderBrush="{StaticResource StatusGreen}" Foreground="White"
+                                                            materialDesign:ButtonAssist.CornerRadius="8"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
+                                        Visibility="{Binding HasPendingRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
+                                <Border Style="{StaticResource EmptyStateMedallion}" Background="{StaticResource StatusOrangeTint}">
+                                    <materialDesign:PackIcon Kind="InboxOutline" Style="{StaticResource EmptyStateGlyph}"
+                                                             Foreground="{StaticResource StatusOrange}"/>
+                                </Border>
+                                <TextBlock Text="No beneficiaries on hold." Style="{StaticResource EmptyStateText}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="3" Style="{StaticResource ColumnFooter}">
+                            <Grid>
+                                <TextBlock Style="{StaticResource FooterText}"
+                                           Text="{Binding PendingRecords.Count, StringFormat='Showing {0} of {0}'}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="First page">
+                                        <materialDesign:PackIcon Kind="PageFirst" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Previous page">
+                                        <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Next page">
+                                        <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Last page">
+                                        <materialDesign:PackIcon Kind="PageLast" Width="16" Height="16"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Rejected -->
+                <Border Style="{StaticResource StatusColumnCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Background="{StaticResource StatusRedTint}" Padding="18,15" CornerRadius="10,10,0,0">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="20" Height="20"
+                                                             Foreground="{StaticResource StatusRed}"
+                                                             VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Rejected" Style="{StaticResource ColumnTitle}"
+                                               Foreground="{StaticResource StatusRed}"/>
+                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource StatusRedSoft}">
+                                        <TextBlock Text="{Binding RejectedRecords.Count}"
+                                                   Foreground="{StaticResource StatusRed}" FontSize="12" FontWeight="Bold"/>
+                                    </Border>
+                                </StackPanel>
+                                <Button Style="{StaticResource ColumnMenuButton}"
+                                        Foreground="{StaticResource StatusRed}"
+                                        Click="DotsButton_Click" ToolTip="Column options">
+                                    <materialDesign:PackIcon Kind="DotsHorizontal" Width="20" Height="20"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Row="1" Style="{StaticResource TableHeaderBand}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="2" Text="DATE REJECTED" Style="{StaticResource ColumnHeaderLabel}"/>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="2">
+                            <ItemsControl ItemsSource="{Binding RejectedRecords}" Margin="0,4"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl.Template>
+                                    <ControlTemplate TargetType="ItemsControl">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </ItemsControl.Template>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RecordRow}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding BeneficiaryId}" Style="{StaticResource RecordId}"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding BeneficiaryName}" Style="{StaticResource RecordName}"/>
+                                                    <TextBlock Text="{Binding Remarks, TargetNullValue='Rejected'}"
+                                                               Style="{StaticResource RecordNote}"
+                                                               Foreground="{StaticResource StatusRed}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
+                                                           Style="{StaticResource RecordDate}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
+                                        Visibility="{Binding HasRejectedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
+                                <Border Style="{StaticResource EmptyStateMedallion}" Background="{StaticResource StatusRedTint}">
+                                    <materialDesign:PackIcon Kind="InboxOutline" Style="{StaticResource EmptyStateGlyph}"
+                                                             Foreground="{StaticResource StatusRed}"/>
+                                </Border>
+                                <TextBlock Text="No rejected beneficiaries." Style="{StaticResource EmptyStateText}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="3" Style="{StaticResource ColumnFooter}">
+                            <Grid>
+                                <TextBlock Style="{StaticResource FooterText}"
+                                           Text="{Binding RejectedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="First page">
+                                        <materialDesign:PackIcon Kind="PageFirst" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Previous page">
+                                        <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Next page">
+                                        <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButton}" ToolTip="Last page">
+                                        <materialDesign:PackIcon Kind="PageLast" Width="16" Height="16"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <!-- ============ 4. Processing hint ============ -->
+            <Border Grid.Row="3" Style="{StaticResource SurfaceCard}" Margin="30,0,30,20" Padding="18,13">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
+                                             Foreground="#2563EB" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="Search or scan a beneficiary to release, hold, or reject their distribution."
+                               FontSize="12" Foreground="#475569" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
         </Grid>
     </materialDesign:DialogHost>
 </UserControl>
