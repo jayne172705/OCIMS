@@ -23,6 +23,71 @@ namespace eSureHi.ViewModels.Admin
         public string RegistrationStatusForeground { get; init; } = "#475569";
     }
 
+    /// <summary>
+    /// One row in the live-search suggestion popup. Property names deliberately match
+    /// <c>ManageMemberRow</c> so both pages share Views/Shared/SuggestionPopupResources.xaml.
+    /// Carries the underlying record so picking a suggestion sets exactly the same
+    /// selection the corresponding ListBox row would.
+    /// </summary>
+    public class BeneficiarySuggestionRow
+    {
+        public string DisplayName { get; init; } = string.Empty;
+        public string FamilyId { get; init; } = string.Empty;
+        public string FamilyRole { get; init; } = string.Empty;
+        public string Barangay { get; init; } = string.Empty;
+        public string Status { get; init; } = string.Empty;
+
+        /// <summary>Set for CRS/master-list suggestions.</summary>
+        public BeneficiaryStaging? Record { get; init; }
+
+        /// <summary>Set for insurance-beneficiary suggestions.</summary>
+        public Beneficiary? Beneficiary { get; init; }
+
+        public static BeneficiarySuggestionRow FromRecord(BeneficiaryStaging record) => new()
+        {
+            DisplayName = BuildName(record.LastName, record.FirstName, record.DisplayName),
+            FamilyId = Or(record.BeneficiaryId, record.CivilRegistryId, record.ResidentsId?.ToString(), "No ID"),
+            FamilyRole = Or(record.ResidentSearchRoleBadge, "Unclassified"),
+            // CRS staging carries a single free-text address rather than a barangay column.
+            Barangay = Or(record.Address, "No address"),
+            Status = Or(record.LinkStatus, "Unlinked"),
+            Record = record
+        };
+
+        public static BeneficiarySuggestionRow FromBeneficiary(Beneficiary beneficiary) => new()
+        {
+            DisplayName = BuildName(beneficiary.LastName, beneficiary.FirstName, beneficiary.FullName),
+            FamilyId = Or(beneficiary.BeneficiaryId, beneficiary.CivilRegistryId,
+                          beneficiary.Employee?.EmployeeNo, $"BEN-{beneficiary.BenId:000000}"),
+            FamilyRole = beneficiary.IsPrimary ? "Head of Family" : Or(beneficiary.Relationship, "Member"),
+            Barangay = Or(beneficiary.Employee?.Barangay, "No barangay"),
+            Status = Or(beneficiary.WorkflowStatus, "Pending"),
+            Beneficiary = beneficiary
+        };
+
+        private static string BuildName(string? last, string? first, string? fallback)
+        {
+            var l = last?.Trim() ?? string.Empty;
+            var f = first?.Trim() ?? string.Empty;
+
+            if (l.Length > 0 && f.Length > 0)
+                return $"{l}, {f}";
+
+            return Or(l, f, fallback, "Unnamed");
+        }
+
+        private static string Or(params string?[] candidates)
+        {
+            foreach (var candidate in candidates)
+            {
+                if (!string.IsNullOrWhiteSpace(candidate))
+                    return candidate.Trim();
+            }
+
+            return string.Empty;
+        }
+    }
+
     public class BeneficiaryStagingViewModel : ObservableObject
     {
         // ── Import State ───────────────────────────────────────────────
@@ -65,6 +130,24 @@ namespace eSureHi.ViewModels.Admin
         private ObservableCollection<Beneficiary> _allSystemBeneficiaries = new();
         public ObservableCollection<Beneficiary> DisplayedSystemBeneficiaries { get; } = new();
         public ObservableCollection<InsurancePolicy> InsurancePolicies { get; } = new();
+
+        // ── Live search suggestions ────────────────────────────────────
+        // Purely additive: the popup mirrors the top of whichever list is already
+        // showing, so it can never disagree with the ListBox underneath.
+        private const int MaxSuggestions = 8;
+
+        public ObservableCollection<BeneficiarySuggestionRow> SearchSuggestions { get; } = new();
+
+        private bool _isSuggestionsOpen;
+        public bool IsSuggestionsOpen
+        {
+            get => _isSuggestionsOpen;
+            set => SetProperty(ref _isSuggestionsOpen, value);
+        }
+
+        // Only a keystroke in the search box should raise the popup. ApplyFilter also
+        // runs for source/status changes and after loads, which must not pop it open.
+        private bool _suggestionsRequested;
 
         public ObservableCollection<Employee> Employees { get; } = new();
         public ObservableCollection<Employee> FilteredEmployees { get; } = new();
@@ -306,10 +389,12 @@ namespace eSureHi.ViewModels.Admin
                 if (!SetProperty(ref _searchText, value))
                     return;
 
-                if (_selectionOnly)
+                _suggestionsRequested = true;
+
+                if (SelectionOnly)
                     QueueSelectionSearch();
                 else
-                    ApplyFilter();
+                    QueueFilter();
             }
         }
         public string StatusFilter
@@ -428,10 +513,40 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand RemoveBeneficiaryCommand { get; }
         public RelayCommand CreateAccountCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
+        public RelayCommand<BeneficiarySuggestionRow> OpenSuggestionCommand { get; }
 
         private CancellationTokenSource? _cts;
-        private readonly bool _selectionOnly;
+        private bool _selectionOnly;
+        public bool SelectionOnly
+        {
+            get => _selectionOnly;
+            set
+            {
+                if (SetProperty(ref _selectionOnly, value))
+                {
+                    if (_selectionOnly)
+                    {
+                        QueueSelectionSearch();
+                    }
+                    else
+                    {
+                        ApplyFilter();
+                    }
+                }
+            }
+        }
         private CancellationTokenSource? _selectionSearchCts;
+        private CancellationTokenSource? _filterCts;
+
+        private const int FilterDebounceMs = 180;
+
+        /// <summary>
+        /// Ceiling on rows pushed into the bound result collections. Matches the Take(80)
+        /// the selection-only query already applies. Without it a one-character search on
+        /// a full CRS import raises ~40,000 CollectionChanged notifications on the UI
+        /// thread; FilteredCount still reports the true match count, so nothing is hidden.
+        /// </summary>
+        private const int MaxDisplayedRows = 80;
 
         // ── Constructor ────────────────────────────────────────────────
         public BeneficiaryStagingViewModel(bool selectionOnly = false)
@@ -464,8 +579,9 @@ namespace eSureHi.ViewModels.Admin
 
             ClearFilterCommand = new RelayCommand(ClearFilters);
             BackToSearchCommand = new RelayCommand(CloseProfile);
+            OpenSuggestionCommand = new RelayCommand<BeneficiarySuggestionRow>(ApplySuggestion, row => row is not null);
 
-            if (_selectionOnly)
+            if (SelectionOnly)
             {
                 _ = LoadSelectionRecordsAsync();
             }
@@ -667,6 +783,7 @@ namespace eSureHi.ViewModels.Admin
                 if (IsSystemSource)
                 {
                     await LoadSystemBeneficiariesAsync();
+                    _suggestionsRequested = true;
                     ApplyFilter();
                     return;
                 }
@@ -675,7 +792,11 @@ namespace eSureHi.ViewModels.Admin
                 // await AutoSyncCrsMasterListAsync();
 
                 using var db = eSureHiDbContextFactory.Create();
+                // AsNoTracking: this context is disposed at the end of the method and
+                // every write path opens its own, so change tracking here buys nothing
+                // and costs about a third of the load on a full CRS import.
                 var records = await db.BeneficiaryStaging
+                    .AsNoTracking()
                     .OrderBy(b => b.LastName)
                     .ThenBy(b => b.FirstName)
                     .ToListAsync();
@@ -689,6 +810,7 @@ namespace eSureHi.ViewModels.Admin
                 UnlinkedCount = _allRecords.Count(r => r.LinkStatus == "Unlinked");
                 LinkedCount = _allRecords.Count(r => r.LinkStatus == "Linked");
                 await LoadSystemBeneficiariesAsync();
+                _suggestionsRequested = true;
                 ApplyFilter();
                 
                 if (TotalCount == 0 && !IsImporting)
@@ -705,6 +827,12 @@ namespace eSureHi.ViewModels.Admin
         // crs_beneficiary_cache. Without this, rows reloaded from beneficiary_staging
         // lose the position that was only held in memory during import, so the
         // role badge falls through to "UNCLASSIFIED".
+        /// <summary>
+        /// Batch size up to which the demographics read is narrowed to the ids being
+        /// enriched rather than sweeping the whole cache table.
+        /// </summary>
+        private const int ScopedEnrichmentLimit = 500;
+
         private static async Task EnrichWithDemographicsAsync(
             eSureHiDbContext db,
             System.Collections.Generic.IReadOnlyList<BeneficiaryStaging> records,
@@ -713,9 +841,32 @@ namespace eSureHi.ViewModels.Admin
             if (records.Count == 0)
                 return;
 
-            var cacheRows = await db.CrsBeneficiaryCache
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+            var cacheQuery = db.CrsBeneficiaryCache.AsNoTracking();
+
+            // Reading the whole cache to decorate a handful of rows is the dominant cost
+            // on the search path — 40k rows fetched to enrich 80. Scope the read to the
+            // ids actually being enriched when that fits an IN-list; a whole-table load
+            // wants every row anyway, so it keeps the single sweep.
+            if (records.Count <= ScopedEnrichmentLimit)
+            {
+                var beneficiaryIds = records
+                    .Where(r => !string.IsNullOrWhiteSpace(r.BeneficiaryId))
+                    .Select(r => r.BeneficiaryId!)
+                    .Distinct()
+                    .ToList();
+
+                var residentIds = records
+                    .Where(r => r.ResidentsId.HasValue)
+                    .Select(r => r.ResidentsId!.Value)
+                    .Distinct()
+                    .ToList();
+
+                cacheQuery = cacheQuery.Where(c =>
+                    (c.BeneficiaryId != null && beneficiaryIds.Contains(c.BeneficiaryId)) ||
+                    (c.ResidentsId.HasValue && residentIds.Contains(c.ResidentsId.Value)));
+            }
+
+            var cacheRows = await cacheQuery.ToListAsync(cancellationToken);
 
             if (cacheRows.Count == 0)
                 return;
@@ -752,6 +903,36 @@ namespace eSureHi.ViewModels.Admin
             }
         }
 
+        /// <summary>
+        /// Debounced entry point for keystroke-driven filtering. ApplyFilter used to run
+        /// straight off the SearchText setter, once per keystroke, over the whole
+        /// master list — on a 40k-row import that is roughly a second of frozen UI per
+        /// character. Same 180ms window the selection-only path already uses, so a burst
+        /// of typing costs one pass instead of one per key.
+        /// </summary>
+        private void QueueFilter()
+        {
+            _filterCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _filterCts = cts;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(FilterDebounceMs, cts.Token);
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (!cts.IsCancellationRequested)
+                            ApplyFilter();
+                    });
+                }
+                catch (TaskCanceledException)
+                {
+                }
+            });
+        }
+
         private void QueueSelectionSearch()
         {
             _selectionSearchCts?.Cancel();
@@ -786,22 +967,24 @@ namespace eSureHi.ViewModels.Admin
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    var s = search.ToLower();
                     query = query.Where(r =>
-                        (r.FullName != null && r.FullName.ToLower().Contains(s)) ||
-                        (r.LastName != null && r.LastName.ToLower().Contains(s)) ||
-                        (r.FirstName != null && r.FirstName.ToLower().Contains(s)) ||
-                        (r.MiddleName != null && r.MiddleName.ToLower().Contains(s)) ||
-                        (r.BeneficiaryId != null && r.BeneficiaryId.ToLower().Contains(s)) ||
-                        (r.CivilRegistryId != null && r.CivilRegistryId.ToLower().Contains(s)) ||
-                        (r.ResidentsId.HasValue && r.ResidentsId.Value.ToString().Contains(s)));
+                        (r.FullName != null && r.FullName.Contains(search)) ||
+                        (r.LastName != null && r.LastName.Contains(search)) ||
+                        (r.FirstName != null && r.FirstName.Contains(search)) ||
+                        (r.MiddleName != null && r.MiddleName.Contains(search)) ||
+                        (r.BeneficiaryId != null && r.BeneficiaryId.Contains(search)) ||
+                        (r.CivilRegistryId != null && r.CivilRegistryId.Contains(search)) ||
+                        (r.ResidentsId.HasValue && r.ResidentsId.Value.ToString().Contains(search)));
                 }
 
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 var records = await query
                     .OrderBy(r => r.LastName)
                     .ThenBy(r => r.FirstName)
                     .Take(80)
                     .ToListAsync(cancellationToken);
+                sw.Stop();
+                System.Diagnostics.Debug.WriteLine($"[LoadSelectionRecordsAsync] DB Query took {sw.ElapsedMilliseconds} ms for SearchText='{search}'");
 
                 await EnrichWithDemographicsAsync(db, records, cancellationToken);
 
@@ -813,6 +996,9 @@ namespace eSureHi.ViewModels.Admin
                 FilteredCount = records.Count;
                 UnlinkedCount = records.Count(r => r.LinkStatus == "Unlinked");
                 LinkedCount = records.Count(r => r.LinkStatus == "Linked");
+
+                _suggestionsRequested = true;
+                UpdateSuggestions();
             }
             catch (OperationCanceledException)
             {
@@ -846,9 +1032,11 @@ namespace eSureHi.ViewModels.Admin
                 q = q.Where(r => r.LinkStatus == StatusFilter);
             }
 
+            var matches = q.ToList();
+
             DisplayedRecords.Clear();
-            foreach (var r in q) DisplayedRecords.Add(r);
-            FilteredCount = DisplayedRecords.Count;
+            foreach (var r in matches.Take(MaxDisplayedRows)) DisplayedRecords.Add(r);
+            FilteredCount = matches.Count;
 
             var local = _allSystemBeneficiaries.AsEnumerable();
 
@@ -862,9 +1050,61 @@ namespace eSureHi.ViewModels.Admin
                     (b.Employee?.EmployeeNo?.ToLower().Contains(s) ?? false));
             }
 
+            var localMatches = local.ToList();
+
             DisplayedSystemBeneficiaries.Clear();
-            foreach (var b in local) DisplayedSystemBeneficiaries.Add(b);
-            SystemFilteredCount = DisplayedSystemBeneficiaries.Count;
+            foreach (var b in localMatches.Take(MaxDisplayedRows)) DisplayedSystemBeneficiaries.Add(b);
+            SystemFilteredCount = localMatches.Count;
+
+            UpdateSuggestions();
+        }
+
+        /// <summary>
+        /// Mirrors the top of the active source's already-filtered list into the
+        /// suggestion popup. Reads the displayed collections rather than re-querying,
+        /// so the popup and the ListBox underneath can never disagree.
+        /// </summary>
+        private void UpdateSuggestions()
+        {
+            var requested = _suggestionsRequested;
+            _suggestionsRequested = false;
+
+            SearchSuggestions.Clear();
+
+            // Nothing typed means nothing to suggest — otherwise the initial load, which
+            // also asks for suggestions, pops the list open over an untouched search box.
+            if (!requested || string.IsNullOrWhiteSpace(SearchText))
+            {
+                IsSuggestionsOpen = false;
+                return;
+            }
+
+            var rows = IsCrsSource
+                ? DisplayedRecords.Take(MaxSuggestions).Select(BeneficiarySuggestionRow.FromRecord)
+                : DisplayedSystemBeneficiaries.Take(MaxSuggestions).Select(BeneficiarySuggestionRow.FromBeneficiary);
+
+            foreach (var row in rows)
+                SearchSuggestions.Add(row);
+
+            IsSuggestionsOpen = SearchSuggestions.Count > 0;
+        }
+
+        /// <summary>
+        /// Picking a suggestion does exactly what clicking the matching ListBox row
+        /// does — it sets the same selection property, so the staging/edit flow,
+        /// profile load and command CanExecute all run unchanged.
+        /// </summary>
+        private void ApplySuggestion(BeneficiarySuggestionRow? row)
+        {
+            if (row is null)
+                return;
+
+            IsSuggestionsOpen = false;
+
+            if (row.Record is not null)
+                SelectedRecord = row.Record;
+            else if (row.Beneficiary is not null)
+                SelectedSystemBeneficiary = row.Beneficiary;
         }
 
         // ── Load Employees ─────────────────────────────────────────────

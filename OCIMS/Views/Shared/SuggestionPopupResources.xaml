@@ -1,0 +1,164 @@
+<!--
+    Shared chrome for the live-search suggestion popup used by ManageMembersView
+    (read-only member profiles) and BeneficiariesView (registration/staging).
+    Both popups bind rows exposing DisplayName / FamilyId / FamilyRole / Barangay /
+    Status, so the row template is defined once here rather than per page.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!-- The button is stripped back to a bare hit target so the row template
+         controls all of its own padding and dividers. -->
+    <Style x:Key="SuggestionRowButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Hit" Background="{TemplateBinding Background}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Hit" Property="Background" Value="#F1F7FF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Amber is the resting tone; terminal states recolour so a scan of the list
+         still reads at a glance. Covers both vocabularies: member workflow status
+         (Active/Released/Rejected/Inactive) and CRS link status (Linked/Unlinked/
+         Skipped) plus the staging workflow values. -->
+    <Style x:Key="SuggestionStatusPill" TargetType="Border">
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Padding" Value="8,3"/>
+        <Setter Property="Margin" Value="8,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="#FEF3C7"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="Active">
+                <Setter Property="Background" Value="#DCFCE7"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Approved">
+                <Setter Property="Background" Value="#DCFCE7"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Linked">
+                <Setter Property="Background" Value="#DCFCE7"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Released">
+                <Setter Property="Background" Value="#CCFBF1"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Rejected">
+                <Setter Property="Background" Value="#FEE2E2"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Inactive">
+                <Setter Property="Background" Value="#E2E8F0"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                <Setter Property="Background" Value="#E2E8F0"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="SuggestionStatusText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="#B45309"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="Active">
+                <Setter Property="Foreground" Value="#166534"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Approved">
+                <Setter Property="Foreground" Value="#166534"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Linked">
+                <Setter Property="Foreground" Value="#166534"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Released">
+                <Setter Property="Foreground" Value="#0F766E"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Rejected">
+                <Setter Property="Foreground" Value="#B91C1C"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Inactive">
+                <Setter Property="Foreground" Value="#475569"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                <Setter Property="Foreground" Value="#475569"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Avatar circle · bold "Last, First" · ID + family-role pill + barangay
+         subline · status pill on the right. The command is resolved off the
+         hosting ItemsControl so each page supplies its own OpenSuggestionCommand. -->
+    <DataTemplate x:Key="SuggestionRowTemplate">
+        <Button Command="{Binding DataContext.OpenSuggestionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                CommandParameter="{Binding}"
+                Style="{StaticResource SuggestionRowButton}">
+            <Border BorderBrush="#EEF2F7"
+                    BorderThickness="0,0,0,1"
+                    Padding="12,11">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="36" Height="36" CornerRadius="18"
+                            Background="#E8F1FD" Margin="0,0,11,0"
+                            VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Account"
+                                                 Width="20" Height="20"
+                                                 Foreground="#2563EB"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"/>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" MinWidth="0">
+                        <TextBlock Text="{Binding DisplayName}"
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   Foreground="#0F172A"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="{Binding FamilyId}"
+                                       FontSize="11"
+                                       Foreground="#64748B"
+                                       VerticalAlignment="Center"/>
+                            <Border Background="#EDE9FE"
+                                    CornerRadius="8"
+                                    Padding="7,2"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding FamilyRole}"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="#5B21B6"/>
+                            </Border>
+                            <TextBlock Text="{Binding Barangay}"
+                                       FontSize="11"
+                                       Foreground="#94A3B8"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Border Grid.Column="2" Style="{StaticResource SuggestionStatusPill}">
+                        <TextBlock Text="{Binding Status}" Style="{StaticResource SuggestionStatusText}"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Button>
+    </DataTemplate>
+
+</ResourceDictionary>

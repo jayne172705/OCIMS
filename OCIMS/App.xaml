@@ -21,6 +21,10 @@
                     <helpers:PathToImageConverter x:Key="PathToImageConverter"/>
                     <helpers:AdaptiveForegroundConverter x:Key="AdaptiveForegroundConverter"/>
                 </ResourceDictionary>
+
+                <!-- Live-search suggestion popup chrome, shared by ManageMembersView
+                     and BeneficiariesView -->
+                <ResourceDictionary Source="Views/Shared/SuggestionPopupResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Brand Colors — GREEN primary; yellow/red reserved for status accents only -->

@@ -1,6 +1,7 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using eSureHi.Models;
+using System.Windows.Threading;
 using eSureHi.ViewModels.Admin;
 using eSureHi.Views.Admin.Dialogs;
 
@@ -33,12 +34,22 @@ namespace eSureHi.Views.Admin.UserControls
                 return;
 
             _openedInitialSearch = true;
-            OpenSearchDialog(clearCurrentSelection: false);
+
+            // DialogHost registers its identifier during its own load pass, and this
+            // handler runs on an ancestor, so showing straight away can race it.
+            // Queueing at Loaded priority lets that pass finish first.
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded,
+                new Action(() => OpenSearchDialog(clearCurrentSelection: false)));
         }
 
         private void OpenSearchButton_Click(object sender, RoutedEventArgs e)
             => OpenSearchDialog(clearCurrentSelection: true);
 
+        /// <summary>
+        /// Shows the "Select Beneficiary" search panel as a modal. The dialog shares
+        /// this page's ViewModel, so a pick inside it populates the detail panel out
+        /// here; the dialog closes itself off that same selection.
+        /// </summary>
         private async void OpenSearchDialog(bool clearCurrentSelection)
         {
             if (DataContext is not BeneficiaryStagingViewModel vm)
@@ -46,33 +57,19 @@ namespace eSureHi.Views.Admin.UserControls
 
             if (clearCurrentSelection)
             {
+                // Drop the current profile first — otherwise the dialog opens on an
+                // already-satisfied selection and closes itself again immediately.
                 vm.BackToSearchCommand.Execute(null);
+            }
+            else if (vm.HasSelection)
+            {
+                // Arrived pre-seeded (e.g. MemberDetailView's Update hand-off), so
+                // there is nothing to search for.
                 return;
             }
 
-            var queueVm = new BeneficiaryQueueViewModel();
-            var dialog = new BeneficiaryQueueDialog(queueVm);
-            var owner = Window.GetWindow(this);
-            if (owner is not null)
-                dialog.Owner = owner;
-
-            BeneficiaryQueueItem? selectedItem = null;
-            queueVm.OnItemSelected = item => selectedItem = item;
-
-            dialog.ShowDialog();
-
-            if (selectedItem != null)
-            {
-                if (selectedItem.OriginalSource is BeneficiaryStaging staging)
-                {
-                    vm.SelectedRecord = staging;
-                    await vm.AddSelectedRecordToInsuranceAsync();
-                }
-                else if (selectedItem.OriginalSource is Beneficiary beneficiary)
-                {
-                    vm.SelectedSystemBeneficiary = beneficiary;
-                }
-            }
+            var dialog = new SelectBeneficiaryDialog(vm);
+            await MaterialDesignThemes.Wpf.DialogHost.Show(dialog, "BeneficiariesDialogHost");
         }
 
         private async void PrintIdCardBtn_Click(object sender, RoutedEventArgs e)

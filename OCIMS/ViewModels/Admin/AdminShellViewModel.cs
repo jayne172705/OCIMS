@@ -476,7 +476,7 @@ namespace eSureHi.ViewModels.Admin
                 "My Claims" => new MyClaimsView(),
                 "My Premiums" => new MyPremiumsView(),
                 "My Benefits" => new MyBenefitsView(),
-                "Register Member" => new BeneficiariesView(),
+                "Register Member" => new BeneficiariesView(null, openInitialSearch: true),
                 "Manage Members" => new ManageMembersView(),
                 "Employees" => new EmployeesView(),
                 "Policies" => new PoliciesView(),
