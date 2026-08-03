@@ -8,254 +8,619 @@
         <vm:DashboardViewModel/>
     </UserControl.DataContext>
 
-    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+    <UserControl.Resources>
+        <!-- ============ Palette ============
+             Mirrors DistributionBatchView so the two boards read as one product.
+             Solid tones carry text/icons, tints fill chips and bands. -->
+        <SolidColorBrush x:Key="StatusGreen"      Color="#2E7D32"/>
+        <SolidColorBrush x:Key="StatusGreenTint"  Color="#E8F5E9"/>
+
+        <SolidColorBrush x:Key="StatusOrange"     Color="#F57C00"/>
+        <SolidColorBrush x:Key="StatusOrangeTint" Color="#FFF3E0"/>
+
+        <SolidColorBrush x:Key="StatusRed"        Color="#D32F2F"/>
+        <SolidColorBrush x:Key="StatusRedTint"    Color="#FFEBEE"/>
+
+        <SolidColorBrush x:Key="StatusBlue"       Color="#0369A1"/>
+        <SolidColorBrush x:Key="StatusBlueTint"   Color="#E0F2FE"/>
+
+        <SolidColorBrush x:Key="InkBrush"         Color="#0F172A"/>
+        <SolidColorBrush x:Key="MutedBrush"       Color="#64748B"/>
+        <SolidColorBrush x:Key="FaintBrush"       Color="#94A3B8"/>
+        <SolidColorBrush x:Key="LineBrush"        Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="HairlineBrush"    Color="#EEF2F7"/>
+        <SolidColorBrush x:Key="RowLineBrush"     Color="#F1F5F9"/>
+        <SolidColorBrush x:Key="CanvasBrush"      Color="#F8FAFC"/>
+
+        <!-- ============ Surfaces ============ -->
+        <Style x:Key="SurfaceCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="IconChip" TargetType="Border">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ============ Typography ============ -->
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="CardSubtitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <Style x:Key="KpiLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+        </Style>
+
+        <Style x:Key="KpiNumber" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <Style x:Key="KpiNote" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- ============ Buttons ============ -->
+        <Style x:Key="PrimaryAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource StatusGreen}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="SecondaryAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="DangerAction" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Background" Value="{StaticResource StatusRed}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource StatusRed}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <!-- ============ Empty state ============ -->
+        <Style x:Key="EmptyStateText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ============ Charts ============
+             Both charts are drawn from ChartItem.BarHeight, which the ViewModel
+             already normalises to a 0-120 scale against the largest value in the
+             series. The column chart therefore uses 120 as its plot height and the
+             ranked list uses 120 as its ProgressBar maximum — no extra scaling. -->
+        <Style x:Key="ChartColumn" TargetType="Border">
+            <Setter Property="CornerRadius" Value="5,5,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="Margin" Value="7,0"/>
+        </Style>
+
+        <Style x:Key="ChartAxisLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="2,8,2,0"/>
+        </Style>
+
+        <Style x:Key="ChartValueLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <!-- ============ Rows ============ -->
+        <Style x:Key="ActivityRow" TargetType="Border">
+            <Setter Property="Padding" Value="0,10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource RowLineBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource CanvasBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
         <Grid.RowDefinitions>
-            <RowDefinition Height="64"/>
-            <RowDefinition Height="3"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/> <!-- Page header -->
+            <RowDefinition Height="3"/>    <!-- Loading strip -->
+            <RowDefinition Height="Auto"/> <!-- KPI row -->
+            <RowDefinition Height="*"/>    <!-- Charts + summary + activity -->
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="White" BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
-            <Grid Margin="24,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ViewDashboard"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="{StaticResource PrimaryBrush}"
-                                             Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Dashboard"
-                                   FontSize="20"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="Insurance, beneficiary, funding, and activity records"
-                                   FontSize="12"
-                                   Foreground="{StaticResource MutedTextBrush}"/>
-                    </StackPanel>
+        <!-- ============ 1. Page header ============ -->
+        <Border Background="White" Padding="30,22"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource IconChip}" Width="46" Height="46"
+                        Background="{StaticResource StatusGreenTint}" Margin="0,0,14,0">
+                    <materialDesign:PackIcon Kind="ViewDashboard" Width="24" Height="24"
+                                             Foreground="{StaticResource StatusGreen}"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Dashboard" FontSize="26" FontWeight="Bold"
+                               Foreground="{StaticResource InkBrush}"/>
+                    <TextBlock Text="Insurance, beneficiary, funding, and activity records"
+                               FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Command="{Binding RefreshCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Foreground="{StaticResource PrimaryBrush}"
-                            BorderBrush="{StaticResource PrimaryBrush}"
-                            Height="36"
-                            Padding="12,0"
-                            Margin="0,0,8,0">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Style="{StaticResource SurfaceCard}" CornerRadius="8"
+                            Padding="14,8" Margin="0,0,10,0" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0"/>
-                            <TextBlock Text="Refresh"/>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,8,0"
+                                     Fill="{Binding DatabaseStatusColor, Converter={StaticResource HexToBrushConverter}}"/>
+                            <TextBlock Text="{Binding DatabaseStatusText}" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryAction}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,7,0"/>
+                            <TextBlock Text="Refresh" FontSize="12" FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding BackToDashboardCommand}"
-                            Background="#D32F2F"
-                            Foreground="White"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="36"
-                            Padding="16,0">
+
+                    <Button Command="{Binding BackToDashboardCommand}" Style="{StaticResource DangerAction}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,8,0"/>
-                            <TextBlock Text="Exit" FontSize="12" FontWeight="Medium"/>
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,7,0"/>
+                            <TextBlock Text="Exit" FontSize="12" FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <ProgressBar Grid.Row="1"
-                     IsIndeterminate="True"
+        <ProgressBar Grid.Row="1" IsIndeterminate="True"
+                     Background="Transparent" BorderThickness="0"
+                     Foreground="{StaticResource StatusGreen}"
                      Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-        <UniformGrid Grid.Row="2" Columns="5" Margin="22,18,22,12">
-            <materialDesign:Card Background="White" Margin="0,0,10,0">
-                <StackPanel Margin="16,12">
-                    <TextBlock Text="Active Employees" FontSize="11" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding ActiveEmployees, Mode=OneWay}" FontSize="26" FontWeight="Bold" Foreground="#0F172A"/>
-                    <TextBlock Text="covered workforce" FontSize="11" Foreground="#94A3B8"/>
-                </StackPanel>
-            </materialDesign:Card>
+        <!-- ============ 2. KPI row ============ -->
+        <UniformGrid Grid.Row="2" Columns="5" Margin="30,20,30,0">
+            <Border Style="{StaticResource SurfaceCard}" Padding="18,16" Margin="0,0,14,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="ACTIVE EMPLOYEES" Style="{StaticResource KpiLabel}"/>
+                        <TextBlock Text="{Binding ActiveEmployees, Mode=OneWay}" Style="{StaticResource KpiNumber}"/>
+                        <TextBlock Text="covered workforce" Style="{StaticResource KpiNote}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource IconChip}"
+                            Background="{StaticResource StatusGreenTint}" VerticalAlignment="Top">
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
+                                                 Foreground="{StaticResource StatusGreen}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
 
-            <materialDesign:Card Background="White" Margin="0,0,10,0">
-                <StackPanel Margin="16,12">
-                    <TextBlock Text="Beneficiaries" FontSize="11" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding TotalBeneficiaries, Mode=OneWay}" FontSize="26" FontWeight="Bold" Foreground="#0F172A"/>
-                    <TextBlock Text="linked records" FontSize="11" Foreground="#94A3B8"/>
-                </StackPanel>
-            </materialDesign:Card>
+            <Border Style="{StaticResource SurfaceCard}" Padding="18,16" Margin="0,0,14,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="BENEFICIARIES" Style="{StaticResource KpiLabel}"/>
+                        <TextBlock Text="{Binding TotalBeneficiaries, Mode=OneWay}" Style="{StaticResource KpiNumber}"/>
+                        <TextBlock Text="linked records" Style="{StaticResource KpiNote}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource IconChip}"
+                            Background="{StaticResource StatusBlueTint}" VerticalAlignment="Top">
+                        <materialDesign:PackIcon Kind="AccountHeartOutline" Width="20" Height="20"
+                                                 Foreground="{StaticResource StatusBlue}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
 
-            <materialDesign:Card Background="White" Margin="0,0,10,0">
-                <StackPanel Margin="16,12">
-                    <TextBlock Text="Pending Claims" FontSize="11" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding PendingClaims, Mode=OneWay}" FontSize="26" FontWeight="Bold" Foreground="#B45309"/>
-                    <TextBlock Text="for review" FontSize="11" Foreground="#94A3B8"/>
-                </StackPanel>
-            </materialDesign:Card>
+            <Border Style="{StaticResource SurfaceCard}" Padding="18,16" Margin="0,0,14,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="PENDING CLAIMS" Style="{StaticResource KpiLabel}"/>
+                        <TextBlock Text="{Binding PendingClaims, Mode=OneWay}" Style="{StaticResource KpiNumber}"
+                                   Foreground="{StaticResource StatusOrange}"/>
+                        <TextBlock Text="for review" Style="{StaticResource KpiNote}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource IconChip}"
+                            Background="{StaticResource StatusOrangeTint}" VerticalAlignment="Top">
+                        <materialDesign:PackIcon Kind="ClipboardTextClock" Width="20" Height="20"
+                                                 Foreground="{StaticResource StatusOrange}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
 
-            <materialDesign:Card Background="White" Margin="0,0,10,0">
-                <StackPanel Margin="16,12">
-                    <TextBlock Text="Premiums Due" FontSize="11" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding PremiumsDueFormatted, Mode=OneWay}" FontSize="26" FontWeight="Bold" Foreground="#B91C1C"/>
-                    <TextBlock Text="this month" FontSize="11" Foreground="#94A3B8"/>
-                </StackPanel>
-            </materialDesign:Card>
+            <Border Style="{StaticResource SurfaceCard}" Padding="18,16" Margin="0,0,14,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="PREMIUMS DUE" Style="{StaticResource KpiLabel}"/>
+                        <TextBlock Text="{Binding PremiumsDueFormatted, Mode=OneWay}" Style="{StaticResource KpiNumber}"
+                                   Foreground="{StaticResource StatusRed}"/>
+                        <TextBlock Text="this month" Style="{StaticResource KpiNote}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource IconChip}"
+                            Background="{StaticResource StatusRedTint}" VerticalAlignment="Top">
+                        <materialDesign:PackIcon Kind="CashClock" Width="20" Height="20"
+                                                 Foreground="{StaticResource StatusRed}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
 
-            <materialDesign:Card Background="White">
-                <StackPanel Margin="16,12">
-                    <TextBlock Text="GGMS Remaining" FontSize="11" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding GgmsRemaining, Mode=OneWay, StringFormat={}{0:N2}}" FontSize="24" FontWeight="Bold" Foreground="#15803D"/>
-                    <TextBlock Text="{Binding GgmsStatus, Mode=OneWay, TargetNullValue=online}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                </StackPanel>
-            </materialDesign:Card>
+            <!-- GGMS: remaining balance plus a spent-vs-allocated meter. Maximum binds
+                 straight to the allocation, so no ratio property is needed. -->
+            <Border Style="{StaticResource SurfaceCard}" Padding="18,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="GGMS REMAINING" Style="{StaticResource KpiLabel}"/>
+                        <TextBlock Text="{Binding GgmsRemaining, Mode=OneWay, StringFormat={}{0:N2}}"
+                                   Style="{StaticResource KpiNumber}" FontSize="22"
+                                   Foreground="{StaticResource StatusGreen}"/>
+                        <ProgressBar Height="5" Margin="0,7,0,5"
+                                     Background="{StaticResource HairlineBrush}" BorderThickness="0"
+                                     Minimum="0"
+                                     Maximum="{Binding GgmsAllocated, Mode=OneWay}"
+                                     Value="{Binding GgmsSpent, Mode=OneWay}"
+                                     Foreground="{StaticResource StatusGreen}"
+                                     Visibility="{Binding GgmsLoaded, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <TextBlock Text="{Binding GgmsStatus, Mode=OneWay, TargetNullValue=online}"
+                                   Style="{StaticResource KpiNote}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource IconChip}"
+                            Background="{StaticResource StatusGreenTint}" VerticalAlignment="Top">
+                        <materialDesign:PackIcon Kind="WalletOutline" Width="20" Height="20"
+                                                 Foreground="{StaticResource StatusGreen}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
         </UniformGrid>
 
-        <Grid Grid.Row="3" Margin="22,0,22,22">
+        <!-- ============ 3. Charts, summary, activity ============ -->
+        <Grid Grid.Row="3" Margin="30,20,30,24">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.15*"/>
-                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="1.25*"/>
+                <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1.1*" MinHeight="230"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="1*" MinHeight="200"/>
             </Grid.RowDefinitions>
 
-            <materialDesign:Card Grid.Row="0" Grid.Column="0" Background="White">
-                <Grid Margin="18">
+            <!-- Claims by Status — XAML-drawn column chart -->
+            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource SurfaceCard}" Padding="22,18">
+                <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Claims by Status" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding ClaimStatusItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="50"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" FontSize="12" VerticalAlignment="Center"/>
-                                    <ProgressBar Grid.Column="1"
-                                                 Height="10"
-                                                 Minimum="0"
-                                                 Maximum="120"
-                                                 Value="{Binding BarHeight}"
-                                                 Foreground="{StaticResource PrimaryBrush}"/>
-                                    <TextBlock Grid.Column="2"
-                                               Text="{Binding Count}"
-                                               FontWeight="SemiBold"
-                                               HorizontalAlignment="Right"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
-            </materialDesign:Card>
 
-            <materialDesign:Card Grid.Row="0" Grid.Column="2" Background="White">
-                <Grid Margin="18">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="Premium Status" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding PremiumStatusItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="50"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" FontSize="12" VerticalAlignment="Center"/>
-                                    <ProgressBar Grid.Column="1"
-                                                 Height="10"
-                                                 Minimum="0"
-                                                 Maximum="120"
-                                                 Value="{Binding BarHeight}"
-                                                 Foreground="#2E8D31"/>
-                                    <TextBlock Grid.Column="2"
-                                               Text="{Binding Count}"
-                                               FontWeight="SemiBold"
-                                               HorizontalAlignment="Right"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
-            </materialDesign:Card>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Claims by Status" Style="{StaticResource CardTitle}"/>
+                            <TextBlock Text="Distribution across the claim lifecycle"
+                                       Style="{StaticResource CardSubtitle}"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="1" Kind="ChartBar" Width="20" Height="20"
+                                                 Foreground="{StaticResource FaintBrush}"
+                                                 VerticalAlignment="Top"/>
+                    </Grid>
 
-            <materialDesign:Card Grid.Row="2" Grid.Column="0" Background="White">
-                <Grid Margin="18">
+                    <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}"
+                            Margin="0,14,0,0"/>
+
+                    <Grid Grid.Row="2">
+                        <ItemsControl ItemsSource="{Binding ClaimStatusItems}"
+                                      VerticalAlignment="Bottom" Margin="0,10,0,0"
+                                      Visibility="{Binding HasClaimsData, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Fixed 120px plot row keeps every column on a shared
+                                         baseline; BarHeight is already normalised to 0-120. -->
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="120"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="{Binding Count}" Style="{StaticResource ChartValueLabel}"/>
+                                        <Border Grid.Row="1" Style="{StaticResource ChartColumn}"
+                                                Height="{Binding BarHeight}"
+                                                Background="{Binding ColorHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                        <Border Grid.Row="2" Height="1" Background="{StaticResource LineBrush}"/>
+                                        <TextBlock Grid.Row="3" Text="{Binding Label}"
+                                                   Style="{StaticResource ChartAxisLabel}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="No claim records yet" Style="{StaticResource EmptyStateText}"
+                                   Visibility="{Binding HasClaimsData, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Premium Status — ranked horizontal bars -->
+            <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource SurfaceCard}" Padding="22,18">
+                <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Operational Summary" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <UniformGrid Grid.Row="1" Columns="2">
-                        <Border Background="#F0FDF4" CornerRadius="6" Padding="14" Margin="0,0,8,8">
-                            <StackPanel>
-                                <TextBlock Text="Active Policies" FontSize="11" Foreground="#64748B"/>
-                                <TextBlock Text="{Binding ActivePolicies, Mode=OneWay}" FontSize="24" FontWeight="Bold"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Premium Status" Style="{StaticResource CardTitle}"/>
+                            <TextBlock Text="Collection standing by payment state"
+                                       Style="{StaticResource CardSubtitle}"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="1" Kind="ChartTimelineVariant" Width="20" Height="20"
+                                                 Foreground="{StaticResource FaintBrush}"
+                                                 VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}"
+                            Margin="0,14,0,0"/>
+
+                    <Grid Grid.Row="2">
+                        <ItemsControl ItemsSource="{Binding PremiumStatusItems}" Margin="0,14,0,0"
+                                      Visibility="{Binding HasPremiumData, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,13">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="76"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="42"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource MutedBrush}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <ProgressBar Grid.Column="1" Height="9"
+                                                     Background="{StaticResource HairlineBrush}"
+                                                     BorderThickness="0"
+                                                     Minimum="0" Maximum="120"
+                                                     Value="{Binding BarHeight}"
+                                                     Foreground="{Binding ColorHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Count}"
+                                                   FontSize="12" FontWeight="Bold"
+                                                   Foreground="{StaticResource InkBrush}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="No premium records yet" Style="{StaticResource EmptyStateText}"
+                                   Visibility="{Binding HasPremiumData, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Operational Summary -->
+            <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource SurfaceCard}" Padding="22,18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Operational Summary" Style="{StaticResource CardTitle}"/>
+                        <TextBlock Text="Record counts across the core modules"
+                                   Style="{StaticResource CardSubtitle}"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}"
+                            Margin="0,14,0,0"/>
+
+                    <UniformGrid Grid.Row="2" Columns="4" Margin="0,14,0,0">
+                        <Border Background="{StaticResource StatusGreenTint}" CornerRadius="8"
+                                Padding="14,12" Margin="0,0,10,0">
+                            <StackPanel VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ShieldCheckOutline" Width="18" Height="18"
+                                                         Foreground="{StaticResource StatusGreen}"/>
+                                <TextBlock Text="{Binding ActivePolicies, Mode=OneWay}" FontSize="22"
+                                           FontWeight="Bold" Foreground="{StaticResource InkBrush}"
+                                           Margin="0,6,0,0"/>
+                                <TextBlock Text="Active Policies" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-                        <Border Background="#F0FDF4" CornerRadius="6" Padding="14" Margin="8,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Benefits" FontSize="11" Foreground="#64748B"/>
-                                <TextBlock Text="{Binding TotalBenefits, Mode=OneWay}" FontSize="24" FontWeight="Bold"/>
+
+                        <Border Background="{StaticResource StatusBlueTint}" CornerRadius="8"
+                                Padding="14,12" Margin="0,0,10,0">
+                            <StackPanel VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="GiftOutline" Width="18" Height="18"
+                                                         Foreground="{StaticResource StatusBlue}"/>
+                                <TextBlock Text="{Binding TotalBenefits, Mode=OneWay}" FontSize="22"
+                                           FontWeight="Bold" Foreground="{StaticResource InkBrush}"
+                                           Margin="0,6,0,0"/>
+                                <TextBlock Text="Benefits" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-                        <Border Background="#FFF7ED" CornerRadius="6" Padding="14" Margin="0,8,8,0">
-                            <StackPanel>
-                                <TextBlock Text="Documents" FontSize="11" Foreground="#64748B"/>
-                                <TextBlock Text="{Binding TotalDocuments, Mode=OneWay}" FontSize="24" FontWeight="Bold"/>
+
+                        <Border Background="{StaticResource StatusOrangeTint}" CornerRadius="8"
+                                Padding="14,12" Margin="0,0,10,0">
+                            <StackPanel VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="FileDocumentMultipleOutline" Width="18" Height="18"
+                                                         Foreground="{StaticResource StatusOrange}"/>
+                                <TextBlock Text="{Binding TotalDocuments, Mode=OneWay}" FontSize="22"
+                                           FontWeight="Bold" Foreground="{StaticResource InkBrush}"
+                                           Margin="0,6,0,0"/>
+                                <TextBlock Text="Documents" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-                        <Border Background="#F8FAFC" CornerRadius="6" Padding="14" Margin="8,8,0,0">
-                            <StackPanel>
-                                <TextBlock Text="System Users" FontSize="11" Foreground="#64748B"/>
-                                <TextBlock Text="{Binding TotalUsers, Mode=OneWay}" FontSize="24" FontWeight="Bold"/>
+
+                        <Border Background="{StaticResource CanvasBrush}" CornerRadius="8" Padding="14,12">
+                            <StackPanel VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="AccountCogOutline" Width="18" Height="18"
+                                                         Foreground="{StaticResource MutedBrush}"/>
+                                <TextBlock Text="{Binding TotalUsers, Mode=OneWay}" FontSize="22"
+                                           FontWeight="Bold" Foreground="{StaticResource InkBrush}"
+                                           Margin="0,6,0,0"/>
+                                <TextBlock Text="System Users" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                     </UniformGrid>
                 </Grid>
-            </materialDesign:Card>
+            </Border>
 
-            <materialDesign:Card Grid.Row="2" Grid.Column="2" Background="White">
-                <Grid Margin="18">
+            <!-- Recent Activity -->
+            <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource SurfaceCard}" Padding="22,18">
+                <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Recent Activity" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding RecentActivityItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,9">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Action}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding TimeAgo}"
-                                                   FontSize="11"
-                                                   Foreground="#94A3B8"
-                                                   Margin="10,0,0,0"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Recent Activity" Style="{StaticResource CardTitle}"/>
+                            <TextBlock Text="Latest entries from the audit log"
+                                       Style="{StaticResource CardSubtitle}"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Grid.Column="1" Kind="History" Width="20" Height="20"
+                                                 Foreground="{StaticResource FaintBrush}"
+                                                 VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}"
+                            Margin="0,14,0,0"/>
+
+                    <Grid Grid.Row="2">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      Visibility="{Binding HasActivity, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <ItemsControl ItemsSource="{Binding RecentActivityItems}" Margin="0,6,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource ActivityRow}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="8" Height="8" VerticalAlignment="Top"
+                                                         Margin="0,5,10,0"
+                                                         Fill="{Binding DotColor, Converter={StaticResource HexToBrushConverter}}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Action}" FontSize="12" FontWeight="Bold"
+                                                               Foreground="{StaticResource InkBrush}"/>
+                                                    <TextBlock Text="{Binding Description}" FontSize="11"
+                                                               Foreground="{StaticResource MutedBrush}"
+                                                               TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding TimeAgo}" FontSize="11"
+                                                           Foreground="{StaticResource FaintBrush}"
+                                                           VerticalAlignment="Top" Margin="10,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock Text="No recent activity" Style="{StaticResource EmptyStateText}"
+                                   Visibility="{Binding HasActivity, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                    </Grid>
                 </Grid>
-            </materialDesign:Card>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
