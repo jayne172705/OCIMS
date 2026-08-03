@@ -5,8 +5,10 @@
     <TargetFramework>net9.0-windows</TargetFramework>
     <AssemblyName>eSureHi</AssemblyName>
     <RootNamespace>eSureHi</RootNamespace>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <Platforms>AnyCPU;x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

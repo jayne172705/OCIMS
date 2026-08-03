@@ -30,7 +30,7 @@
                                     <TextBlock Text="ADD BENEFICIARY" FontSize="12"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding CloseBeneficiariesCommand}" Style="{StaticResource MaterialDesignIconForegroundButton}" Foreground="White" Width="30" Height="30" Padding="0" Margin="0,-5,-10,-5">
+                            <Button Command="{Binding CloseBeneficiariesCommand}" Style="{StaticResource MaterialDesignIconButton}" Foreground="White" Width="30" Height="30" Padding="0" Margin="0,-5,-10,-5">
                                 <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
                             </Button>
                         </StackPanel>

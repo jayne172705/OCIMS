@@ -70,7 +70,7 @@
                 <Grid Margin="40">
                     <!-- Top Right Close Button -->
                     <Button Click="BtnClose_Click"
-                            Style="{StaticResource MaterialDesignIconForegroundButton}" 
+                            Style="{StaticResource MaterialDesignIconButton}" 
                             Width="36" Height="36" 
                             HorizontalAlignment="Right" VerticalAlignment="Top" 
                             Margin="0,-30,-30,0"
