@@ -153,6 +153,15 @@ namespace eSureHi.Data
             modelBuilder.Entity<CrsBeneficiaryCache>()
                 .HasIndex(c => c.BeneficiaryId);
 
+            modelBuilder.Entity<CrsBeneficiaryCache>()
+                .HasIndex(c => c.ResidentsId);
+
+            modelBuilder.Entity<CrsBeneficiaryCache>()
+                .HasIndex(c => c.FamilyId);
+
+            modelBuilder.Entity<BeneficiaryStaging>()
+                .HasIndex(b => b.BeneficiaryId);
+
             modelBuilder.Entity<ResidentDemographic>()
                 .HasIndex(d => d.ResidentsId);
 

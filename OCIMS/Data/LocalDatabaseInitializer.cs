@@ -17,7 +17,15 @@ namespace eSureHi.Data
             await EnsurePaymentsTableAsync(db);
             await EnsureSyncColumnsAsync(db);
             await EnsureLocalViewsAsync(db);
+            await EnsureBeneficiaryStagingIndexesAsync(db);
             await BackfillSyncIdsAsync(db);
+        }
+
+        private static async Task EnsureBeneficiaryStagingIndexesAsync(eSureHiDbContext db)
+        {
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_beneficiary_staging_beneficiary_id
+                ON beneficiary_staging (beneficiary_id);");
         }
 
         private static async Task EnsureResidentDemographicsTableAsync(eSureHiDbContext db)
@@ -103,6 +111,14 @@ namespace eSureHi.Data
             await db.Database.ExecuteSqlRawAsync(@"
                 CREATE INDEX IF NOT EXISTS ix_crs_beneficiary_cache_beneficiary_id
                 ON crs_beneficiary_cache (beneficiary_id);");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_crs_beneficiary_cache_residents_id
+                ON crs_beneficiary_cache (residents_id);");
+
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE INDEX IF NOT EXISTS ix_crs_beneficiary_cache_family_id
+                ON crs_beneficiary_cache (family_id);");
         }
 
         private static async Task EnsureDistributionTablesAsync(eSureHiDbContext db)

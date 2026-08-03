@@ -1,0 +1,301 @@
+<!--
+    "Select Beneficiary" as a modal, shown through BeneficiariesDialogHost.
+
+    The markup below is lifted from what used to be BeneficiariesView's docked
+    390px left panel — same title, subtitle, search box, live suggestion popup,
+    Source/Status combos and the two overlaid result lists — so the search and
+    filter behaviour is byte-for-byte the same, only relocated. It inherits the
+    page's BeneficiaryStagingViewModel as its DataContext, which is why every
+    binding here is unqualified.
+-->
+<UserControl x:Class="eSureHi.Views.Admin.Dialogs.SelectBeneficiaryDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:eSureHi.Helpers"
+             Width="780"
+             MaxHeight="640"
+             VerticalAlignment="Center"
+             FontFamily="{materialDesign:MaterialDesignFont}">
+    <Border Background="White" CornerRadius="10" VerticalAlignment="Center">
+        <!-- Every row is Auto and the results row collapses when there is nothing to
+             show, so the card is just header + search bar until a search matches
+             something, then grows to fit (capped by the ListBox MaxHeight below). -->
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Text="Select Beneficiary"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#0F172A"/>
+                    <TextBlock Text="Choose a CRS/master-list record first, review the complete details, then add the person to insurance records."
+                               FontSize="12"
+                               Foreground="#64748B"
+                               TextWrapping="Wrap"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Click="CloseButton_Click"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Width="34"
+                        Height="34"
+                        VerticalAlignment="Top"
+                        Foreground="#64748B"
+                        ToolTip="Close without selecting">
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                </Button>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,0,0,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBox x:Name="BeneficiarySearchBox"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Search name, beneficiary ID..."
+                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                         materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                         materialDesign:TextFieldAssist.TextFieldCornerRadius="8"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Height="46"/>
+
+                <!-- Live suggestion popup. Quick-match shortcut over the same
+                     filtered results the lists below already show; picking a
+                     row sets the same selection the list row would, which is
+                     also what closes this dialog.
+                     StaysOpen stays True on purpose: the built-in click-away
+                     dismissal captures the mouse and eats the click, so
+                     PopupDismiss handles it without swallowing the click. -->
+                <Popup IsOpen="{Binding IsSuggestionsOpen, Mode=TwoWay}"
+                       PlacementTarget="{Binding ElementName=BeneficiarySearchBox}"
+                       Placement="Bottom"
+                       StaysOpen="True"
+                       helpers:PopupDismiss.OnOutsideClick="True"
+                       AllowsTransparency="True"
+                       PopupAnimation="Slide"
+                       HorizontalOffset="0"
+                       VerticalOffset="4">
+                    <Border Width="{Binding ActualWidth, ElementName=BeneficiarySearchBox}"
+                            Background="White"
+                            BorderBrush="#DDE4EF"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="0,4">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16"
+                                              ShadowDepth="4"
+                                              Opacity="0.20"
+                                              Color="#000000"/>
+                        </Border.Effect>
+                        <ItemsControl ItemsSource="{Binding SearchSuggestions}"
+                                      ItemTemplate="{StaticResource SuggestionRowTemplate}"
+                                      MaxHeight="392">
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                        </ItemsControl>
+                    </Border>
+                </Popup>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox ItemsSource="{Binding SourceOptions}"
+                              SelectedItem="{Binding SelectedSource}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              materialDesign:HintAssist.Hint="Source"
+                              Height="46"
+                              FontSize="12"/>
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding StatusOptions}"
+                              SelectedItem="{Binding StatusFilter}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              materialDesign:HintAssist.Hint="Support status"
+                              Height="46"
+                              FontSize="12"/>
+                </Grid>
+            </Grid>
+
+            <!-- Results. Hidden until something has been typed, and hidden again when
+                 that search matches nothing, so the dialog never reserves an empty
+                 white box. MaxHeight keeps the card inside its 640 ceiling and hands
+                 overflow to each ListBox's own scroll viewer. -->
+            <Grid Grid.Row="2" MaxHeight="392">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility"
+                                Value="{Binding SearchText, Converter={StaticResource StringToVisibilityConverter}}"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding DisplayedRecords.Count}" Value="0"/>
+                                    <Condition Binding="{Binding DisplayedSystemBeneficiaries.Count}" Value="0"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <ListBox ItemsSource="{Binding DisplayedRecords}"
+                         SelectedItem="{Binding SelectedRecord}"
+                         BorderBrush="#E2E8F0"
+                         BorderThickness="1"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         VirtualizingStackPanel.VirtualizationMode="Recycling"
+                         Visibility="{Binding IsCrsSource, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="12,10" BorderBrush="#E5EAF2" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="34" Height="34" CornerRadius="17" Background="#F0FDF4" Margin="0,0,10,0">
+                                        <materialDesign:PackIcon Kind="Account"
+                                                                 Width="19"
+                                                                 Height="19"
+                                                                 Foreground="{StaticResource PrimaryBrush}"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" MinWidth="0">
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                            <TextBlock FontSize="11" Foreground="#64748B" VerticalAlignment="Center">
+                                                <Run Text="{Binding BeneficiaryId}"/>
+                                            </TextBlock>
+                                            <Border Background="#EDE9FE" CornerRadius="8" Padding="6,2" Margin="8,0">
+                                                <TextBlock Text="{Binding ResidentSearchRoleBadge}" FontSize="9" FontWeight="SemiBold" Foreground="#5B21B6"/>
+                                            </Border>
+                                            <TextBlock FontSize="11" Foreground="#64748B" VerticalAlignment="Center">
+                                                <Run Text="  |  "/>
+                                                <Run Text="{Binding DateOfBirth, TargetNullValue='No birth date'}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <ListBox ItemsSource="{Binding DisplayedSystemBeneficiaries}"
+                         SelectedItem="{Binding SelectedSystemBeneficiary}"
+                         BorderBrush="#E2E8F0"
+                         BorderThickness="1"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         Visibility="{Binding IsSystemSource, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="12,10" BorderBrush="#E5EAF2" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding FullName}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock FontSize="11" Foreground="#64748B" Margin="0,3,0,0" TextTrimming="CharacterEllipsis">
+                                            <Run Text="{Binding BeneficiaryId, TargetNullValue='No ID'}"/>
+                                            <Run Text="  |  "/>
+                                            <Run Text="{Binding Employee.FullName, TargetNullValue='No linked employee'}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <Border Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="10"
+                                            Padding="9,3"
+                                            Margin="8,0,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#E2E8F0"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WorkflowStatus}" Value="Pending">
+                                                        <Setter Property="Background" Value="#FFF3D6"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WorkflowStatus}" Value="UnderReview">
+                                                        <Setter Property="Background" Value="#FFF3D6"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WorkflowStatus}" Value="Approved">
+                                                        <Setter Property="Background" Value="#D6EFD8"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WorkflowStatus}" Value="Released">
+                                                        <Setter Property="Background" Value="#D6EFD8"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WorkflowStatus}" Value="Rejected">
+                                                        <Setter Property="Background" Value="#FADBDB"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding WorkflowStatus, TargetNullValue='—'}"
+                                                   FontSize="10"
+                                                   FontWeight="Bold"
+                                                   Foreground="#334155"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- One slim line in place of the collapsed results area, so "still
+                 loading" and "nothing matched" don't both read as a blank dialog.
+                 The IsLoading trigger comes last on purpose — it wins while the
+                 master list is still being read. -->
+            <TextBlock Grid.Row="3"
+                       FontSize="12"
+                       Foreground="#64748B"
+                       Margin="2,4,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Setter Property="Text" Value="No matching records."/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding SearchText, Converter={StaticResource StringToVisibilityConverter}}" Value="Visible"/>
+                                    <Condition Binding="{Binding DisplayedRecords.Count}" Value="0"/>
+                                    <Condition Binding="{Binding DisplayedSystemBeneficiaries.Count}" Value="0"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Text" Value="Loading CRS master list…"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+    </Border>
+</UserControl>
