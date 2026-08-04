@@ -74,20 +74,26 @@ namespace eSureHi.Views.Admin.UserControls
 
             if (!vm.HasSelection)
             {
+                vm.SelectionOnly = false;
                 vm.BackToDashboardCommand.Execute(null);
             }
             else
             {
+                var selectedSystemBeneficiary = vm.SelectedSystemBeneficiary;
+                var selectedRecord = vm.SelectedRecord;
+
+                vm.SelectionOnly = false;
+
                 Beneficiary? target = null;
                 BeneficiaryStaging? staging = null;
 
-                if (vm.SelectedSystemBeneficiary != null)
+                if (selectedSystemBeneficiary != null)
                 {
-                    target = vm.SelectedSystemBeneficiary;
+                    target = selectedSystemBeneficiary;
                 }
-                else if (vm.SelectedRecord != null)
+                else if (selectedRecord != null)
                 {
-                    staging = vm.SelectedRecord;
+                    staging = selectedRecord;
                     if (staging.LinkedBenId.HasValue)
                     {
                         try

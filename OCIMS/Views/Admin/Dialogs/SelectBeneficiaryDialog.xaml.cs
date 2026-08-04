@@ -77,12 +77,6 @@ namespace eSureHi.Views.Admin.Dialogs
                 return;
 
             _watched.PropertyChanged -= OnViewModelPropertyChanged;
-
-            if (DataContext is BeneficiaryStagingViewModel vm)
-            {
-                vm.SelectionOnly = false;
-            }
-
             _watched = null;
         }
     }
