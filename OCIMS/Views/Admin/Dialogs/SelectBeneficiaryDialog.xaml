@@ -72,7 +72,9 @@
                          materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                          materialDesign:TextFieldAssist.TextFieldCornerRadius="8"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="46"/>
+                         Height="46"
+                         Padding="12,8,12,8"
+                         VerticalContentAlignment="Center"/>
                 
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>

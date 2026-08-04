@@ -21,12 +21,17 @@ namespace eSureHi.ViewModels.Admin
 
         private Beneficiary _member;
 
-        public MemberDetailViewModel(Beneficiary member)
+        public MemberDetailViewModel(Beneficiary member, Action? backAction = null)
         {
             _member = member ?? new Beneficiary();
 
             BackCommand = new RelayCommand(() =>
-                NavigationService.Instance.NavigateTo(new ManageMembersView()));
+            {
+                if (backAction != null)
+                    backAction();
+                else
+                    NavigationService.Instance.NavigateTo(new ManageMembersView());
+            });
             UpdateCommand = new RelayCommand(OpenForEdit);
 
             _ = LoadAsync();

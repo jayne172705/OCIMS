@@ -4,6 +4,10 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using eSureHi.ViewModels.Admin;
 using eSureHi.Views.Admin.Dialogs;
+using eSureHi.Models;
+using eSureHi.Data;
+using eSureHi.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace eSureHi.Views.Admin.UserControls
 {
@@ -71,6 +75,38 @@ namespace eSureHi.Views.Admin.UserControls
             if (!vm.HasSelection)
             {
                 vm.BackToDashboardCommand.Execute(null);
+            }
+            else
+            {
+                Beneficiary? target = null;
+                if (vm.SelectedSystemBeneficiary != null)
+                {
+                    target = vm.SelectedSystemBeneficiary;
+                }
+                else if (vm.SelectedRecord != null && vm.SelectedRecord.LinkedBenId.HasValue)
+                {
+                    try
+                    {
+                        using (var db = eSureHiDbContextFactory.Create())
+                        {
+                            target = await db.Beneficiaries
+                                .Include(b => b.Employee)
+                                .FirstOrDefaultAsync(b => b.BenId == vm.SelectedRecord.LinkedBenId.Value);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to load linked beneficiary: {ex.Message}");
+                    }
+                }
+
+                if (target != null)
+                {
+                    NavigationService.Instance.NavigateTo(new MemberDetailView(target, () =>
+                    {
+                        NavigationService.Instance.NavigateTo(new BeneficiariesView());
+                    }));
+                }
             }
         }
 
