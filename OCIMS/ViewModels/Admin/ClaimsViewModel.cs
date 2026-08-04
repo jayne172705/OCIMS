@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using Microsoft.EntityFrameworkCore;
 using eSureHi.Data;
 using eSureHi.Helpers;
@@ -23,6 +24,25 @@ namespace eSureHi.ViewModels.Admin
         // ── Collections ────────────────────────────────────────────────
         private ObservableCollection<Claim> _allClaims = new();
         public ObservableCollection<Claim> DisplayedClaims { get; } = new();
+
+        // ── File-claim beneficiary picker (grouped by program) ─────────
+        private readonly ObservableCollection<ClaimBeneficiaryRow> _claimants = new();
+        private ListCollectionView? _groupedClaimants;
+        public ListCollectionView? GroupedClaimants => _groupedClaimants;
+
+        private bool _isClaimantPickerOpen;
+        public bool IsClaimantPickerOpen
+        {
+            get => _isClaimantPickerOpen;
+            set => SetProperty(ref _isClaimantPickerOpen, value);
+        }
+
+        private string _claimantSearch = string.Empty;
+        public string ClaimantSearch
+        {
+            get => _claimantSearch;
+            set { if (SetProperty(ref _claimantSearch, value)) _groupedClaimants?.Refresh(); }
+        }
 
         // ── Selected ───────────────────────────────────────────────────
         private Claim? _selectedClaim;
@@ -129,6 +149,10 @@ namespace eSureHi.ViewModels.Admin
             _ => "Browse, review, and process all filed claims."
         };
         public bool CanFileClaim => _listMode == ClaimsListMode.All;
+        // A logged-in beneficiary may only file for themselves, so the picker — which
+        // lists every active beneficiary — stays staff-only.
+        public bool CanPickClaimant => CanFileClaim && !AuthService.Instance.IsBeneficiary;
+        public bool CanFileOwnClaim => CanFileClaim && AuthService.Instance.IsBeneficiary;
         public bool IsPendingOnly => _listMode == ClaimsListMode.PendingOnly;
         public bool IsAllMode => _listMode == ClaimsListMode.All;
         public bool IsGroupClaimMode => _listMode == ClaimsListMode.GroupClaim;
@@ -161,6 +185,8 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand ClearFilterCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
         public RelayCommand<Claim> PrintVoucherCommand { get; }
+        public RelayCommand ToggleClaimantPickerCommand { get; }
+        public RelayCommand<ClaimBeneficiaryRow> FileClaimForCommand { get; }
 
         // ── Constructor ────────────────────────────────────────────────
         public ClaimsViewModel(ClaimsListMode listMode = ClaimsListMode.All)
@@ -176,6 +202,9 @@ namespace eSureHi.ViewModels.Admin
             ClearFilterCommand = new RelayCommand(ClearFilters);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
             PrintVoucherCommand = new RelayCommand<Claim>(PrintVoucher);
+            ToggleClaimantPickerCommand = new RelayCommand(
+                () => IsClaimantPickerOpen = !IsClaimantPickerOpen);
+            FileClaimForCommand = new RelayCommand<ClaimBeneficiaryRow>(FileClaimFor);
 
             _ = LoadAsync();
         }
@@ -204,6 +233,9 @@ namespace eSureHi.ViewModels.Admin
                 foreach (var c in claims) _allClaims.Add(c);
                 TotalCount = _allClaims.Count(MatchesScope);
                 ApplyFilter();
+
+                if (CanPickClaimant)
+                    await LoadClaimantsAsync(db);
             }
             catch (Exception ex)
             {
@@ -341,8 +373,92 @@ namespace eSureHi.ViewModels.Admin
             NavigationService.Instance.NavigateTo(new Views.Admin.UserControls.HomeView());
         }
 
+        // ── Claimant picker ────────────────────────────────────────────
+        // Builds the program-grouped beneficiary list backing the "File Claim" panel.
+        // Grouping is display-only — it never touches the claim-amount formula.
+        private async Task LoadClaimantsAsync(eSureHiDbContext db)
+        {
+            var beneficiaries = await db.Beneficiaries
+                .Include(b => b.Employee)
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.LastName).ThenBy(b => b.FirstName)
+                .ToListAsync();
+
+            var openClaimBenIds = _allClaims
+                .Where(c => c.BenId.HasValue && IsOpenClaim(c.ClaimStatus))
+                .Select(c => c.BenId!.Value)
+                .ToHashSet();
+
+            _claimants.Clear();
+            foreach (var b in beneficiaries)
+                _claimants.Add(new ClaimBeneficiaryRow
+                {
+                    BenId = b.BenId,
+                    FamilyId = ManageMembersViewModel.FirstNonEmpty(
+                        b.BeneficiaryId,
+                        b.CivilRegistryId,
+                        b.Employee?.EmployeeNo,
+                        $"BEN-{b.BenId:000000}"),
+                    FullName = ManageMembersViewModel.FirstNonEmpty(b.FullName, "Unnamed Member"),
+                    Relationship = ManageMembersViewModel.BuildFamilyRole(b),
+                    Program = ManageMembersViewModel.FirstNonEmpty(
+                        b.SourceOfFunds,
+                        b.Employee?.EmploymentType,
+                        "Unassigned Program"),
+                    HasOpenClaim = openClaimBenIds.Contains(b.BenId)
+                });
+
+            if (_groupedClaimants is null)
+            {
+                _groupedClaimants = (ListCollectionView)CollectionViewSource.GetDefaultView(_claimants);
+                _groupedClaimants.Filter = FilterClaimant;
+                _groupedClaimants.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ClaimBeneficiaryRow.Program)));
+                OnPropertyChanged(nameof(GroupedClaimants));
+            }
+            else
+            {
+                _groupedClaimants.Refresh();
+            }
+        }
+
+        private bool FilterClaimant(object item)
+        {
+            if (item is not ClaimBeneficiaryRow row) return false;
+            if (string.IsNullOrWhiteSpace(ClaimantSearch)) return true;
+
+            var s = ClaimantSearch.Trim();
+            return row.FullName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                   row.FamilyId.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                   row.Program.Contains(s, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void FileClaimFor(ClaimBeneficiaryRow? row)
+        {
+            if (row is null || row.HasOpenClaim) return;
+
+            var dialog = new Views.Admin.Dialogs.ClaimVerificationDialog(row.BenId);
+            dialog.SetSaveCallback(async () => await LoadAsync());
+            if (App.ActiveShell != null && App.ActiveShell != dialog) dialog.Owner = App.ActiveShell;
+            dialog.ShowDialog();
+        }
+
+        private static bool IsOpenClaim(string status) =>
+            status is not ("Rejected" or "Cancelled" or "Released" or "Paid");
+
         private bool MatchesScope(Claim claim) =>
             _listMode != ClaimsListMode.PendingOnly ||
             claim.ClaimStatus is "Submitted" or "Under Review";
+    }
+
+    // One row in the program-grouped "File Claim" beneficiary picker.
+    public class ClaimBeneficiaryRow
+    {
+        public int BenId { get; init; }
+        public string FamilyId { get; init; } = string.Empty;
+        public string FullName { get; init; } = string.Empty;
+        public string Relationship { get; init; } = string.Empty;
+        public string Program { get; init; } = string.Empty;
+        public bool HasOpenClaim { get; init; }
+        public bool CanFile => !HasOpenClaim;
     }
 }

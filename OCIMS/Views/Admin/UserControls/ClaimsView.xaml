@@ -4,10 +4,36 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:eSureHi.Helpers">
 
+    <UserControl.Resources>
+        <!-- Program group header for the File Claim beneficiary picker -->
+        <Style x:Key="ProgramGroupHeaderStyle" TargetType="GroupItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupItem">
+                        <StackPanel>
+                            <Border Background="#F1F5F9" Padding="16,6" Margin="0,10,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="13" FontWeight="Bold"
+                                               Foreground="#334155"/>
+                                    <TextBlock Text="{Binding ItemCount, StringFormat=({0})}"
+                                               FontSize="12" Foreground="#64748B"
+                                               Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <ItemsPresenter/>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="64"/>
             <RowDefinition Height="3"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -61,8 +87,36 @@
                         </StackPanel>
                     </Button>
 
+                    <Button Command="{Binding ToggleClaimantPickerCommand}"
+            Visibility="{Binding CanPickClaimant, Converter={StaticResource BoolToVisibilityConverter}}"
+            Background="{StaticResource PrimaryBrush}"
+            Foreground="White"
+            Style="{StaticResource MaterialDesignRaisedButton}"
+            Height="34" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ClipboardPlus" Width="16" Height="16"
+                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="File Claim" FontSize="12"
+                       FontWeight="Medium" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Width="16" Height="16"
+                                     Margin="8,0,0,0" VerticalAlignment="Center">
+                                <materialDesign:PackIcon.Style>
+                                    <Style TargetType="materialDesign:PackIcon">
+                                        <Setter Property="Kind" Value="ChevronDown"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsClaimantPickerOpen}" Value="True">
+                                                <Setter Property="Kind" Value="ChevronUp"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Beneficiary self-service: files only for themselves, no picker -->
                     <Button Command="{Binding NewCommand}"
-            Visibility="{Binding CanFileClaim, Converter={StaticResource BoolToVisibilityConverter}}"
+            Visibility="{Binding CanFileOwnClaim, Converter={StaticResource BoolToVisibilityConverter}}"
             Background="{StaticResource PrimaryBrush}"
             Foreground="White"
             Style="{StaticResource MaterialDesignRaisedButton}"
@@ -195,8 +249,130 @@
             </Grid>
         </Border>
 
+        <!-- ── File Claim: beneficiary picker grouped by program ── -->
+        <Border Grid.Row="3" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1"
+                Visibility="{Binding IsClaimantPickerOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid Margin="16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Select a beneficiary to file a claim for"
+                                   FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"/>
+                        <TextBlock Text="Grouped by program. Beneficiaries with a claim already in progress cannot file another."
+                                   FontSize="11" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <TextBox Text="{Binding ClaimantSearch, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Search name, family ID, or program..."
+                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Width="300" FontSize="12"/>
+                </Grid>
+
+                <!-- Column captions, aligned with the row template below -->
+                <Border Grid.Row="1" BorderBrush="#E5EAF2" BorderThickness="1" CornerRadius="4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Background="#F8FAFC" Padding="16,8"
+                                BorderBrush="#E5EAF2" BorderThickness="0,0,0,1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="150"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Family ID" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="1" Text="Name" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="2" Text="Relationship" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="3" Text="Action" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding GroupedClaimants}"
+                                 MaxHeight="320"
+                                 BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.GroupStyle>
+                                <GroupStyle ContainerStyle="{StaticResource ProgramGroupHeaderStyle}"/>
+                            </ListBox.GroupStyle>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#EEF2F7" BorderThickness="0,0,0,1" Padding="16,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="150"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding FamilyId}"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12" FontWeight="Medium"
+                                                       Foreground="{StaticResource PrimaryBrush}"/>
+
+                                            <TextBlock Grid.Column="1" Text="{Binding FullName}"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="#0F172A"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="2" Text="{Binding Relationship}"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12" Foreground="#1E293B"/>
+
+                                            <Grid Grid.Column="3">
+                                                <Button Command="{Binding DataContext.FileClaimForCommand,
+                                                            RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding CanFile,
+                                                            Converter={StaticResource BoolToVisibilityConverter}}"
+                                                        Background="{StaticResource PrimaryBrush}"
+                                                        Foreground="White"
+                                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                                        HorizontalAlignment="Left"
+                                                        Height="30" Padding="12,0">
+                                                    <TextBlock Text="File Claim" FontSize="11" FontWeight="Medium"/>
+                                                </Button>
+                                                <Border Visibility="{Binding HasOpenClaim,
+                                                            Converter={StaticResource BoolToVisibilityConverter}}"
+                                                        Background="#FFF3E0" BorderBrush="#FFCC80" BorderThickness="1"
+                                                        CornerRadius="10" Padding="10,3"
+                                                        HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                    <TextBlock Text="CLAIM IN PROGRESS" FontSize="10"
+                                                               FontWeight="Bold" Foreground="#E65100"/>
+                                                </Border>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- ── DataGrid ── -->
-        <DataGrid Grid.Row="3"
+        <DataGrid Grid.Row="4"
                   ItemsSource="{Binding DisplayedClaims}"
                   SelectedItem="{Binding SelectedClaim}"
                   AutoGenerateColumns="False"
@@ -474,7 +650,7 @@
         </DataGrid>
 
         <!-- ── Empty State ── -->
-        <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="{Binding NoResults, Converter={StaticResource BoolToVisibilityConverter}}">
             <materialDesign:PackIcon Kind="ClipboardTextOffOutline" Width="48" Height="48"
                                      Foreground="#CBD5E1" HorizontalAlignment="Center"/>
@@ -483,7 +659,7 @@
         </StackPanel>
 
         <!-- ── Status Bar ── -->
-        <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+        <Border Grid.Row="5" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                 BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
                 Padding="16,8">
             <TextBlock FontSize="11">
