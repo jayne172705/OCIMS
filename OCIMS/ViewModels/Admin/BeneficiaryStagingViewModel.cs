@@ -216,7 +216,8 @@ namespace eSureHi.ViewModels.Admin
         public bool CanApproveMember =>
             PermissionService.CanApproveWorkflow &&
             SelectedSystemBeneficiary != null &&
-            SelectedSystemBeneficiary.WorkflowStatus is WorkflowStatuses.Pending or WorkflowStatuses.UnderReview;
+            (SelectedSystemBeneficiary.WorkflowStatus is WorkflowStatuses.Pending or WorkflowStatuses.UnderReview ||
+             !SelectedSystemBeneficiary.IsAdminConfirmed);
 
         public bool CanReject => 
             PermissionService.CanApproveWorkflow &&
@@ -641,9 +642,11 @@ namespace eSureHi.ViewModels.Admin
 
                 beneficiary.WorkflowStatus = status;
                 beneficiary.StatusRemarks = StatusRemarks;
+                bool isConfirming = false;
                 if (status == WorkflowStatuses.Approved)
                 {
                     beneficiary.IsAdminConfirmed = true;
+                    isConfirming = true;
                 }
                 await db.SaveChangesAsync();
 
@@ -654,6 +657,12 @@ namespace eSureHi.ViewModels.Admin
                     await OpenProfileAsync(SelectedRecord);
 
                 RefreshCanExecute();
+
+                if (isConfirming)
+                {
+                    MessageBox.Show("Beneficiary confirmation successful. The record has been marked as confirmed.", 
+                                    "Member Confirmed", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
