@@ -20,10 +20,12 @@ namespace eSureHi.ViewModels.Admin
         private const string NotSet = "Not set";
 
         private Beneficiary _member;
+        private readonly BeneficiaryStaging? _stagingRecord;
 
-        public MemberDetailViewModel(Beneficiary member, Action? backAction = null)
+        public MemberDetailViewModel(Beneficiary member, BeneficiaryStaging? stagingRecord = null, Action? backAction = null)
         {
             _member = member ?? new Beneficiary();
+            _stagingRecord = stagingRecord;
 
             BackCommand = new RelayCommand(() =>
             {
@@ -74,6 +76,8 @@ namespace eSureHi.ViewModels.Admin
             $"BEN-{Member.BenId:000000}");
         public string FamilyRole => ManageMembersViewModel.BuildFamilyRole(Member);
         public string Status => ManageMembersViewModel.BuildStatus(Member);
+        public string ActionButtonText => Member.BenId == 0 ? "Link / Add" : "Update";
+        public string ActionButtonIcon => Member.BenId == 0 ? "AccountPlus" : "Pencil";
 
         // ── Personal details ───────────────────────────────────────────
         public string FirstName => Or(Member.FirstName);
@@ -120,7 +124,45 @@ namespace eSureHi.ViewModels.Admin
         private async Task LoadAsync()
         {
             if (Member.BenId <= 0)
+            {
+                if (_stagingRecord != null && _stagingRecord.LinkedEmpId.HasValue)
+                {
+                    IsLoading = true;
+                    try
+                    {
+                        using var db = eSureHiDbContextFactory.Create();
+                        var emp = await db.Employees
+                            .Include(e => e.Department)
+                            .FirstOrDefaultAsync(e => e.EmpId == _stagingRecord.LinkedEmpId.Value);
+                        if (emp != null)
+                        {
+                            Member.Employee = emp;
+                            Member.EmpId = emp.EmpId;
+                            OnPropertyChanged(nameof(Barangay));
+                            OnPropertyChanged(nameof(Address));
+                            OnPropertyChanged(nameof(HasEmployee));
+                            OnPropertyChanged(nameof(EmployeeNo));
+                            OnPropertyChanged(nameof(EmployeeName));
+                            OnPropertyChanged(nameof(EmployeePosition));
+                            OnPropertyChanged(nameof(EmployeeDepartment));
+                            OnPropertyChanged(nameof(EmployeeType));
+                            OnPropertyChanged(nameof(EmployeeStatus));
+                            OnPropertyChanged(nameof(EmployeeMobile));
+                            OnPropertyChanged(nameof(EmployeeEmail));
+                            OnPropertyChanged(nameof(EmployeeDateHired));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        StatusMessage = $"Load employee details failed: {ex.GetBaseException().Message}";
+                    }
+                    finally
+                    {
+                        IsLoading = false;
+                    }
+                }
                 return;
+            }
 
             IsLoading = true;
             StatusMessage = string.Empty;
@@ -148,20 +190,36 @@ namespace eSureHi.ViewModels.Admin
 
         private void OpenForEdit()
         {
-            var viewModel = new BeneficiaryStagingViewModel
+            if (Member.BenId == 0 && _stagingRecord != null)
+            {
+                var stagingVm = new BeneficiaryStagingViewModel
+                {
+                    SelectedSource = "CRS Master List",
+                    SelectedRecord = _stagingRecord
+                };
+                NavigationService.Instance.NavigateTo(new BeneficiariesView(stagingVm, openInitialSearch: false));
+                return;
+            }
+
+            var systemVm = new BeneficiaryStagingViewModel
             {
                 SelectedSource = "Insurance Beneficiaries",
                 SelectedSystemBeneficiary = Member
             };
 
-            NavigationService.Instance.NavigateTo(new BeneficiariesView(viewModel, openInitialSearch: false));
+            NavigationService.Instance.NavigateTo(new BeneficiariesView(systemVm, openInitialSearch: false));
         }
 
         private string BuildAddress()
         {
             var employee = Member.Employee;
             if (employee is null)
+            {
+                if (_stagingRecord != null && !string.IsNullOrWhiteSpace(_stagingRecord.Address))
+                    return _stagingRecord.Address.Trim();
+
                 return NotSet;
+            }
 
             var address = ManageMembersViewModel.FirstNonEmpty(
                 string.Join(", ", new[]

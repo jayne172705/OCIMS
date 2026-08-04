@@ -152,9 +152,9 @@
                         Command="{Binding UpdateCommand}"
                         Style="{StaticResource HeaderAction}">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Pencil" Width="17" Height="17"
+                        <materialDesign:PackIcon Kind="{Binding ActionButtonIcon}" Width="17" Height="17"
                                                  Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Update" FontSize="13" FontWeight="Bold"
+                        <TextBlock Text="{Binding ActionButtonText}" FontSize="13" FontWeight="Bold"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>

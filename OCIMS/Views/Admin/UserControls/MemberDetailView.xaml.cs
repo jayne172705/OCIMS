@@ -7,10 +7,10 @@ namespace eSureHi.Views.Admin.UserControls
 {
     public partial class MemberDetailView : UserControl
     {
-        public MemberDetailView(Beneficiary member, Action? backAction = null)
+        public MemberDetailView(Beneficiary member, BeneficiaryStaging? stagingRecord = null, Action? backAction = null)
         {
             InitializeComponent();
-            DataContext = new MemberDetailViewModel(member, backAction);
+            DataContext = new MemberDetailViewModel(member, stagingRecord, backAction);
         }
     }
 }

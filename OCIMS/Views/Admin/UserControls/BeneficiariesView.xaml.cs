@@ -79,30 +79,61 @@ namespace eSureHi.Views.Admin.UserControls
             else
             {
                 Beneficiary? target = null;
+                BeneficiaryStaging? staging = null;
+
                 if (vm.SelectedSystemBeneficiary != null)
                 {
                     target = vm.SelectedSystemBeneficiary;
                 }
-                else if (vm.SelectedRecord != null && vm.SelectedRecord.LinkedBenId.HasValue)
+                else if (vm.SelectedRecord != null)
                 {
-                    try
+                    staging = vm.SelectedRecord;
+                    if (staging.LinkedBenId.HasValue)
                     {
-                        using (var db = eSureHiDbContextFactory.Create())
+                        try
                         {
-                            target = await db.Beneficiaries
-                                .Include(b => b.Employee)
-                                .FirstOrDefaultAsync(b => b.BenId == vm.SelectedRecord.LinkedBenId.Value);
+                            using (var db = eSureHiDbContextFactory.Create())
+                            {
+                                target = await db.Beneficiaries
+                                    .Include(b => b.Employee)
+                                    .FirstOrDefaultAsync(b => b.BenId == staging.LinkedBenId.Value);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Failed to load linked beneficiary: {ex.Message}");
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        System.Diagnostics.Debug.WriteLine($"Failed to load linked beneficiary: {ex.Message}");
+                        DateOnly? dob = null;
+                        if (!string.IsNullOrWhiteSpace(staging.DateOfBirth) &&
+                            DateTime.TryParse(staging.DateOfBirth, out var dt))
+                        {
+                            dob = DateOnly.FromDateTime(dt);
+                        }
+
+                        target = new Beneficiary
+                        {
+                            BenId = 0,
+                            BeneficiaryId = staging.BeneficiaryId,
+                            CivilRegistryId = staging.CivilRegistryId,
+                            FirstName = staging.FirstName ?? string.Empty,
+                            LastName = staging.LastName ?? string.Empty,
+                            Gender = staging.Sex,
+                            DateOfBirth = dob,
+                            Relationship = "Not specified",
+                            WorkflowStatus = "Unlinked",
+                            IsActive = true,
+                            Received = false,
+                            Contribution = 0
+                        };
                     }
                 }
 
                 if (target != null)
                 {
-                    NavigationService.Instance.NavigateTo(new MemberDetailView(target, () =>
+                    NavigationService.Instance.NavigateTo(new MemberDetailView(target, staging, () =>
                     {
                         NavigationService.Instance.NavigateTo(new BeneficiariesView());
                     }));
