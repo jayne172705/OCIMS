@@ -5,28 +5,6 @@
         xmlns:helpers="clr-namespace:eSureHi.Helpers">
 
     <UserControl.Resources>
-        <!-- Program group header for the File Claim beneficiary picker -->
-        <Style x:Key="ProgramGroupHeaderStyle" TargetType="GroupItem">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="GroupItem">
-                        <StackPanel>
-                            <Border Background="#F1F5F9" Padding="16,6" Margin="0,10,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Name}"
-                                               FontSize="13" FontWeight="Bold"
-                                               Foreground="#334155"/>
-                                    <TextBlock Text="{Binding ItemCount, StringFormat=({0})}"
-                                               FontSize="12" Foreground="#64748B"
-                                               Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </Border>
-                            <ItemsPresenter/>
-                        </StackPanel>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
@@ -260,23 +238,49 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <StackPanel>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="Select a beneficiary to file a claim for"
                                    FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"/>
-                        <TextBlock Text="Grouped by program. Beneficiaries with a claim already in progress cannot file another."
+                        <TextBlock Text="Filter by program. Beneficiaries with a claim already in progress cannot file another."
                                    FontSize="11" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
-                    <TextBox Text="{Binding ClaimantSearch, UpdateSourceTrigger=PropertyChanged}"
-                             materialDesign:HintAssist.Hint="Search name, family ID, or program..."
+
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding ClaimantPrograms}"
+                              SelectedItem="{Binding SelectedClaimantProgram, Mode=TwoWay}"
+                              materialDesign:HintAssist.Hint="Select Program"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Width="180" Height="46" FontSize="12" Margin="0,0,10,0"
+                              VerticalAlignment="Center"/>
+
+                    <TextBox Grid.Column="2"
+                             Text="{Binding ClaimantSearch, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Search name or family ID..."
                              materialDesign:TextFieldAssist.HasLeadingIcon="True"
                              materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             HorizontalAlignment="Right" VerticalAlignment="Center"
-                             Width="300" FontSize="12"/>
+                             VerticalAlignment="Center"
+                             Width="250" FontSize="12"/>
                 </Grid>
 
+                <!-- Empty state when no program is selected -->
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30"
+                            Visibility="{Binding ShowEmptyProgramState, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <materialDesign:PackIcon Kind="AccountFilterOutline" Width="48" Height="48"
+                                             Foreground="#CBD5E1" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Pilia una ang Program" FontSize="13" Foreground="#94A3B8"
+                               Margin="0,10,0,0" HorizontalAlignment="Center" FontWeight="Medium"/>
+                </StackPanel>
+
                 <!-- Column captions, aligned with the row template below -->
-                <Border Grid.Row="1" BorderBrush="#E5EAF2" BorderThickness="1" CornerRadius="4">
+                <Border Grid.Row="1" BorderBrush="#E5EAF2" BorderThickness="1" CornerRadius="4"
+                        Visibility="{Binding ShowClaimantsList, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -304,9 +308,6 @@
                                  BorderThickness="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <ListBox.GroupStyle>
-                                <GroupStyle ContainerStyle="{StaticResource ProgramGroupHeaderStyle}"/>
-                            </ListBox.GroupStyle>
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>

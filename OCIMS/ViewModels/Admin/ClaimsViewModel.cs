@@ -30,6 +30,27 @@ namespace eSureHi.ViewModels.Admin
         private ListCollectionView? _groupedClaimants;
         public ListCollectionView? GroupedClaimants => _groupedClaimants;
 
+        private readonly ObservableCollection<string> _claimantPrograms = new();
+        public ObservableCollection<string> ClaimantPrograms => _claimantPrograms;
+
+        private string? _selectedClaimantProgram;
+        public string? SelectedClaimantProgram
+        {
+            get => _selectedClaimantProgram;
+            set
+            {
+                if (SetProperty(ref _selectedClaimantProgram, value))
+                {
+                    _groupedClaimants?.Refresh();
+                    OnPropertyChanged(nameof(ShowClaimantsList));
+                    OnPropertyChanged(nameof(ShowEmptyProgramState));
+                }
+            }
+        }
+
+        public bool ShowClaimantsList => !string.IsNullOrEmpty(SelectedClaimantProgram);
+        public bool ShowEmptyProgramState => string.IsNullOrEmpty(SelectedClaimantProgram);
+
         private bool _isClaimantPickerOpen;
         public bool IsClaimantPickerOpen
         {
@@ -389,6 +410,28 @@ namespace eSureHi.ViewModels.Admin
                 .Select(c => c.BenId!.Value)
                 .ToHashSet();
 
+            // Gather distinct program options from the database (via beneficiaries in-memory)
+            var distinctFunds = beneficiaries
+                .Where(b => !string.IsNullOrEmpty(b.SourceOfFunds))
+                .Select(b => b.SourceOfFunds!)
+                .Distinct()
+                .ToList();
+
+            var progList = new System.Collections.Generic.List<string> { "Job Order", "Casual", "Regular", "Captain" };
+            foreach (var fund in distinctFunds)
+            {
+                if (!progList.Contains(fund, StringComparer.OrdinalIgnoreCase))
+                {
+                    progList.Add(fund);
+                }
+            }
+
+            _claimantPrograms.Clear();
+            foreach (var prog in progList)
+            {
+                _claimantPrograms.Add(prog);
+            }
+
             _claimants.Clear();
             foreach (var b in beneficiaries)
                 _claimants.Add(new ClaimBeneficiaryRow
@@ -412,7 +455,7 @@ namespace eSureHi.ViewModels.Admin
             {
                 _groupedClaimants = (ListCollectionView)CollectionViewSource.GetDefaultView(_claimants);
                 _groupedClaimants.Filter = FilterClaimant;
-                _groupedClaimants.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ClaimBeneficiaryRow.Program)));
+                // Grouping removed as requested
                 OnPropertyChanged(nameof(GroupedClaimants));
             }
             else
@@ -424,12 +467,19 @@ namespace eSureHi.ViewModels.Admin
         private bool FilterClaimant(object item)
         {
             if (item is not ClaimBeneficiaryRow row) return false;
+
+            // If no program selected, show nothing
+            if (string.IsNullOrEmpty(SelectedClaimantProgram)) return false;
+
+            // Program must match SelectedClaimantProgram (case-insensitive)
+            if (!string.Equals(row.Program, SelectedClaimantProgram, StringComparison.OrdinalIgnoreCase))
+                return false;
+
             if (string.IsNullOrWhiteSpace(ClaimantSearch)) return true;
 
             var s = ClaimantSearch.Trim();
             return row.FullName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
-                   row.FamilyId.Contains(s, StringComparison.OrdinalIgnoreCase) ||
-                   row.Program.Contains(s, StringComparison.OrdinalIgnoreCase);
+                   row.FamilyId.Contains(s, StringComparison.OrdinalIgnoreCase);
         }
 
         private void FileClaimFor(ClaimBeneficiaryRow? row)
