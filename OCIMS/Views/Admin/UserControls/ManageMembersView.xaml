@@ -414,12 +414,37 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="Status" Width="115">
+                    <DataGridTemplateColumn Header="Status" Width="240">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Status}"
-                                           Style="{StaticResource MemberStatusText}"
-                                           VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Status}"
+                                               Style="{StaticResource MemberStatusText}"
+                                               VerticalAlignment="Center"/>
+                                    <Border Background="#FFF7ED" 
+                                            BorderBrush="#F97316" 
+                                            BorderThickness="1" 
+                                            CornerRadius="4" 
+                                            Padding="6,2" 
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Beneficiary.IsAdminConfirmed}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="Pending Confirmation" 
+                                                   Foreground="#EA580C" 
+                                                   FontSize="10" 
+                                                   FontWeight="Bold"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

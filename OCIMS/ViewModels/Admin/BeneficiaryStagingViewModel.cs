@@ -641,6 +641,10 @@ namespace eSureHi.ViewModels.Admin
 
                 beneficiary.WorkflowStatus = status;
                 beneficiary.StatusRemarks = StatusRemarks;
+                if (status == WorkflowStatuses.Approved)
+                {
+                    beneficiary.IsAdminConfirmed = true;
+                }
                 await db.SaveChangesAsync();
 
                 StatusRemarks = string.Empty;
@@ -1894,6 +1898,7 @@ namespace eSureHi.ViewModels.Admin
                     beneficiary.SourceOfFunds = string.IsNullOrWhiteSpace(SourceOfFunds) ? beneficiary.SourceOfFunds : SourceOfFunds.Trim();
                     beneficiary.WorkflowStatus = initialStatus;
                     beneficiary.StatusRemarks = initialRemarks;
+                    beneficiary.IsAdminConfirmed = true;
                 }
                 else
                 {
@@ -1916,6 +1921,7 @@ namespace eSureHi.ViewModels.Admin
                         WorkflowStatus = initialStatus,
                         StatusRemarks = initialRemarks,
                         IsActive = true,
+                        IsAdminConfirmed = false,
                         CreatedAt = DateTime.Now
                     };
                     db.Beneficiaries.Add(beneficiary);

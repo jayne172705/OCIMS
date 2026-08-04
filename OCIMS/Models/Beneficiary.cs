@@ -69,6 +69,9 @@ namespace eSureHi.Models
         [Column("status_remarks")]
         public string? StatusRemarks { get; set; }
 
+        [Column("is_admin_confirmed")]
+        public bool IsAdminConfirmed { get; set; } = true;
+
         // Navigation
         [ForeignKey("EmpId")]
         public Employee? Employee { get; set; }

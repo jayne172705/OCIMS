@@ -177,6 +177,7 @@ namespace eSureHi
             await EnsureOptionalColumnAsync("beneficiaries", "source_of_funds", "LONGTEXT NULL");
             await EnsureOptionalColumnAsync("beneficiaries", "workflow_status", "VARCHAR(40) NOT NULL DEFAULT 'Pending'");
             await EnsureOptionalColumnAsync("beneficiaries", "status_remarks", "LONGTEXT NULL");
+            await EnsureOptionalColumnAsync("beneficiaries", "is_admin_confirmed", "TINYINT(1) NOT NULL DEFAULT 1");
         }
 
         private static async System.Threading.Tasks.Task EnsureBeneficiarySourceOfFundsColumnAsync()

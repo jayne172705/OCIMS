@@ -18,6 +18,7 @@ namespace eSureHi.Data
             await EnsureSyncColumnsAsync(db);
             await EnsureLocalViewsAsync(db);
             await EnsureBeneficiaryStagingIndexesAsync(db);
+            await EnsureBeneficiaryConfirmationColumnAsync(db);
             await BackfillSyncIdsAsync(db);
         }
 
@@ -26,6 +27,11 @@ namespace eSureHi.Data
             await db.Database.ExecuteSqlRawAsync(@"
                 CREATE INDEX IF NOT EXISTS ix_beneficiary_staging_beneficiary_id
                 ON beneficiary_staging (beneficiary_id);");
+        }
+
+        private static async Task EnsureBeneficiaryConfirmationColumnAsync(eSureHiDbContext db)
+        {
+            await EnsureSqliteColumnAsync(db, "beneficiaries", "is_admin_confirmed", "INTEGER NOT NULL DEFAULT 1");
         }
 
         private static async Task EnsureResidentDemographicsTableAsync(eSureHiDbContext db)
