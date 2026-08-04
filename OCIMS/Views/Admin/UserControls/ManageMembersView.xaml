@@ -347,7 +347,8 @@
                        Margin="2,0,2,12"
                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
 
-            <DataGrid Grid.Row="4"
+            <DataGrid x:Name="MembersDataGrid"
+                      Grid.Row="4"
                       ItemsSource="{Binding DisplayedMembers}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
@@ -454,6 +455,7 @@
                             <DataTemplate>
                                 <Button Command="{Binding DataContext.UpdateCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
+                                        Visibility="{Binding DataContext.CanUpdateMember, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibilityConverter}}"
                                         Background="{StaticResource PrimaryBrush}"
                                         Foreground="White"
                                         Style="{StaticResource MaterialDesignRaisedButton}"

@@ -34,7 +34,7 @@ namespace eSureHi.ViewModels.Admin
                 else
                     NavigationService.Instance.NavigateTo(new ManageMembersView());
             });
-            UpdateCommand = new RelayCommand(OpenForEdit);
+            UpdateCommand = new RelayCommand(OpenForEdit, () => CanUpdateMember);
 
             _ = LoadAsync();
         }
@@ -76,6 +76,7 @@ namespace eSureHi.ViewModels.Admin
             $"BEN-{Member.BenId:000000}");
         public string FamilyRole => ManageMembersViewModel.BuildFamilyRole(Member);
         public string Status => ManageMembersViewModel.BuildStatus(Member);
+        public bool CanUpdateMember => PermissionService.CanApproveWorkflow || Member.BenId == 0;
         public string ActionButtonText => Member.BenId == 0 ? "Link / Add" : "Update";
         public string ActionButtonIcon => Member.BenId == 0 ? "AccountPlus" : "Pencil";
 
@@ -190,6 +191,9 @@ namespace eSureHi.ViewModels.Admin
 
         private void OpenForEdit()
         {
+            if (!CanUpdateMember)
+                return;
+
             if (Member.BenId == 0 && _stagingRecord != null)
             {
                 var stagingVm = new BeneficiaryStagingViewModel

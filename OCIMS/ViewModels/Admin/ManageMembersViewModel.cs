@@ -186,6 +186,8 @@ namespace eSureHi.ViewModels.Admin
         public bool CanGoPrevious => CurrentPage > 1;
         public bool CanGoNext => CurrentPage < TotalPages;
 
+        public bool CanUpdateMember => PermissionService.CanApproveWorkflow;
+
         public string PageSummaryText =>
             FilteredCount == 0
                 ? "No member records found"
@@ -206,7 +208,7 @@ namespace eSureHi.ViewModels.Admin
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
             ResetCommand = new RelayCommand(ResetFilters);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
-            UpdateCommand = new RelayCommand<ManageMemberRow>(OpenMemberForEdit, row => row is not null);
+            UpdateCommand = new RelayCommand<ManageMemberRow>(OpenMemberForEdit, row => row is not null && CanUpdateMember);
             ViewDetailsCommand = new RelayCommand<ManageMemberRow>(OpenMemberDetail, row => row is not null);
             OpenSuggestionCommand = new RelayCommand<ManageMemberRow>(OpenMemberDetail, row => row is not null);
             PreviousPageCommand = new RelayCommand(() => SetCurrentPage(CurrentPage - 1), () => CanGoPrevious);

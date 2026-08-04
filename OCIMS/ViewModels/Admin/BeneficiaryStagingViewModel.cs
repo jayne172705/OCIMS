@@ -628,6 +628,12 @@ namespace eSureHi.ViewModels.Admin
         {
             if (SelectedSystemBeneficiary == null) return;
 
+            if (status != WorkflowStatuses.Pending && !PermissionService.CanApproveWorkflow)
+            {
+                MessageBox.Show("You do not have permission to modify member workflow status.", "Access Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 using var db = eSureHiDbContextFactory.Create();
