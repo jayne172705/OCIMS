@@ -437,14 +437,14 @@ namespace eSureHi.ViewModels.Admin
                 _claimants.Add(new ClaimBeneficiaryRow
                 {
                     BenId = b.BenId,
-                    FamilyId = ManageMembersViewModel.FirstNonEmpty(
+                    BeneficiaryId = FirstNonPlaceholder(
                         b.BeneficiaryId,
                         b.CivilRegistryId,
                         b.Employee?.EmployeeNo,
                         $"BEN-{b.BenId:000000}"),
-                    FullName = ManageMembersViewModel.FirstNonEmpty(b.FullName, "Unnamed Member"),
+                    FullName = FirstNonPlaceholder(b.FullName, "Unnamed Member"),
                     Relationship = ManageMembersViewModel.BuildFamilyRole(b),
-                    Program = ManageMembersViewModel.FirstNonEmpty(
+                    Program = FirstNonPlaceholder(
                         b.SourceOfFunds,
                         b.Employee?.EmploymentType,
                         "Unassigned Program"),
@@ -479,7 +479,7 @@ namespace eSureHi.ViewModels.Admin
 
             var s = ClaimantSearch.Trim();
             return row.FullName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
-                   row.FamilyId.Contains(s, StringComparison.OrdinalIgnoreCase);
+                   row.BeneficiaryId.Contains(s, StringComparison.OrdinalIgnoreCase);
         }
 
         private void FileClaimFor(ClaimBeneficiaryRow? row)
@@ -498,13 +498,28 @@ namespace eSureHi.ViewModels.Admin
         private bool MatchesScope(Claim claim) =>
             _listMode != ClaimsListMode.PendingOnly ||
             claim.ClaimStatus is "Submitted" or "Under Review";
+
+        private static string FirstNonPlaceholder(params string?[] values)
+        {
+            foreach (var val in values)
+            {
+                if (!string.IsNullOrWhiteSpace(val) &&
+                    !string.Equals(val, "None", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(val, "Not set", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(val, "Not specified", StringComparison.OrdinalIgnoreCase))
+                {
+                    return val.Trim();
+                }
+            }
+            return string.Empty;
+        }
     }
 
     // One row in the program-grouped "File Claim" beneficiary picker.
     public class ClaimBeneficiaryRow
     {
         public int BenId { get; init; }
-        public string FamilyId { get; init; } = string.Empty;
+        public string BeneficiaryId { get; init; } = string.Empty;
         public string FullName { get; init; } = string.Empty;
         public string Relationship { get; init; } = string.Empty;
         public string Program { get; init; } = string.Empty;

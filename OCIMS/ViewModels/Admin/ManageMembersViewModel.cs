@@ -304,10 +304,21 @@ namespace eSureHi.ViewModels.Admin
             return FirstNonEmpty(last, first, beneficiary.FullName, "Unnamed Member");
         }
 
-        internal static string BuildFamilyRole(Beneficiary beneficiary) =>
-            beneficiary.IsPrimary
-                ? "Head of Family"
-                : FirstNonEmpty(beneficiary.Relationship, "Member");
+        internal static string BuildFamilyRole(Beneficiary beneficiary)
+        {
+            if (beneficiary.IsPrimary)
+                return "Head of Family";
+
+            var rel = beneficiary.Relationship;
+            if (string.IsNullOrWhiteSpace(rel) ||
+                string.Equals(rel, "None", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rel, "Not set", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rel, "Not specified", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Member";
+            }
+            return rel.Trim();
+        }
 
         internal static string BuildStatus(Beneficiary beneficiary)
         {
