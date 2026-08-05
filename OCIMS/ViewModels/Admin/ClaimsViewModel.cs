@@ -27,8 +27,8 @@ namespace eSureHi.ViewModels.Admin
 
         // ── File-claim beneficiary picker (grouped by program) ─────────
         private readonly ObservableCollection<ClaimBeneficiaryRow> _claimants = new();
-        private ListCollectionView? _groupedClaimants;
-        public ListCollectionView? GroupedClaimants => _groupedClaimants;
+        private readonly ListCollectionView _groupedClaimants;
+        public ListCollectionView GroupedClaimants => _groupedClaimants;
 
         private readonly ObservableCollection<string> _claimantPrograms = new();
         public ObservableCollection<string> ClaimantPrograms => _claimantPrograms;
@@ -226,6 +226,9 @@ namespace eSureHi.ViewModels.Admin
             ToggleClaimantPickerCommand = new RelayCommand(
                 () => IsClaimantPickerOpen = !IsClaimantPickerOpen);
             FileClaimForCommand = new RelayCommand<ClaimBeneficiaryRow>(FileClaimFor);
+
+            _groupedClaimants = (ListCollectionView)CollectionViewSource.GetDefaultView(_claimants);
+            _groupedClaimants.Filter = FilterClaimant;
 
             _ = LoadAsync();
         }
@@ -451,17 +454,7 @@ namespace eSureHi.ViewModels.Admin
                     HasOpenClaim = openClaimBenIds.Contains(b.BenId)
                 });
 
-            if (_groupedClaimants is null)
-            {
-                _groupedClaimants = (ListCollectionView)CollectionViewSource.GetDefaultView(_claimants);
-                _groupedClaimants.Filter = FilterClaimant;
-                // Grouping removed as requested
-                OnPropertyChanged(nameof(GroupedClaimants));
-            }
-            else
-            {
-                _groupedClaimants.Refresh();
-            }
+            _groupedClaimants.Refresh();
         }
 
         private bool FilterClaimant(object item)

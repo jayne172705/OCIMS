@@ -113,6 +113,26 @@ namespace eSureHi.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
+        [NotMapped]
+        public string DisplayBeneficiaryId
+        {
+            get
+            {
+                if (Beneficiary != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(Beneficiary.BeneficiaryId) &&
+                        !string.Equals(Beneficiary.BeneficiaryId, "None", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(Beneficiary.BeneficiaryId, "Not set", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(Beneficiary.BeneficiaryId, "Not specified", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Beneficiary.BeneficiaryId.Trim();
+                    }
+                    return $"BEN-{Beneficiary.BenId:000000}";
+                }
+                return string.Empty;
+            }
+        }
+
         // Navigation
         [ForeignKey("EmpId")]
         public Employee? Employee { get; set; }

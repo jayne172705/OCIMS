@@ -394,9 +394,9 @@
 
             <DataGrid.Columns>
 
-                <!-- Family ID -->
-                <DataGridTextColumn Header="Family ID"
-                                    Binding="{Binding Employee.EmployeeNo}" Width="160">
+                <!-- Beneficiary ID -->
+                <DataGridTextColumn Header="Beneficiary ID"
+                                    Binding="{Binding DisplayBeneficiaryId}" Width="160">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
