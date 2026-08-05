@@ -33,7 +33,7 @@ namespace eSureHi.ViewModels.Admin
         private readonly ObservableCollection<string> _claimantPrograms = new();
         public ObservableCollection<string> ClaimantPrograms => _claimantPrograms;
 
-        private string? _selectedClaimantProgram;
+        private string? _selectedClaimantProgram = "All";
         public string? SelectedClaimantProgram
         {
             get => _selectedClaimantProgram;
@@ -420,7 +420,7 @@ namespace eSureHi.ViewModels.Admin
                 .Distinct()
                 .ToList();
 
-            var progList = new System.Collections.Generic.List<string> { "Job Order", "Casual", "Regular", "Captain" };
+            var progList = new System.Collections.Generic.List<string> { "All", "Job Order", "Casual", "Regular", "Captain" };
             foreach (var fund in distinctFunds)
             {
                 if (!progList.Contains(fund, StringComparer.OrdinalIgnoreCase))
@@ -461,12 +461,13 @@ namespace eSureHi.ViewModels.Admin
         {
             if (item is not ClaimBeneficiaryRow row) return false;
 
-            // If no program selected, show nothing
-            if (string.IsNullOrEmpty(SelectedClaimantProgram)) return false;
-
-            // Program must match SelectedClaimantProgram (case-insensitive)
-            if (!string.Equals(row.Program, SelectedClaimantProgram, StringComparison.OrdinalIgnoreCase))
-                return false;
+            // If a program is selected and it is not "All", check for match
+            if (!string.IsNullOrEmpty(SelectedClaimantProgram) && !string.Equals(SelectedClaimantProgram, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                // Program must match SelectedClaimantProgram (case-insensitive)
+                if (!string.Equals(row.Program, SelectedClaimantProgram, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
 
             if (string.IsNullOrWhiteSpace(ClaimantSearch)) return true;
 
