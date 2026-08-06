@@ -41,6 +41,11 @@ namespace eSureHi.Services
         }
 
         /// <summary>
+        /// Returns the currently displayed page.
+        /// </summary>
+        public UserControl? CurrentPage => _frame?.Content as UserControl;
+
+        /// <summary>
         /// Returns the currently displayed page type (for nav highlighting).
         /// </summary>
         public Type? CurrentPageType => (_frame?.Content as UserControl)?.GetType();

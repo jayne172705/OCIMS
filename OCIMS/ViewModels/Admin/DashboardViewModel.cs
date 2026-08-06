@@ -502,7 +502,26 @@ namespace eSureHi.ViewModels.Admin
             QuickFileClaimCommand = new RelayCommand(() =>
             {
                 IsClaimsManagementPopupOpen = false;
-                OpenPage("File a Claim", () => new ClaimsView(ClaimsListMode.All));
+                if (!PermissionService.CanAccessPage("File a Claim"))
+                {
+                    ShowAccessDenied("File a Claim");
+                    return;
+                }
+                var dialog = AuthService.Instance.IsBeneficiary && AuthService.Instance.CurrentUser?.BenId is int benId
+                    ? new Views.Admin.Dialogs.ClaimFormDialog(benId, beneficiaryMode: true)
+                    : new Views.Admin.Dialogs.ClaimFormDialog();
+
+                dialog.SetSaveCallback(async () =>
+                {
+                    if (NavigationService.Instance.CurrentPage is ClaimsView claimsView && claimsView.DataContext is ClaimsViewModel claimsVm)
+                    {
+                        await claimsVm.LoadAsync();
+                    }
+                });
+
+                if (App.ActiveShell is not null && App.ActiveShell != dialog)
+                    dialog.Owner = App.ActiveShell;
+                dialog.ShowDialog();
             });
             QuickGroupClaimCommand = new RelayCommand(() =>
             {
