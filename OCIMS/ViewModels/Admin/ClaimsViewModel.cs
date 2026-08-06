@@ -30,27 +30,6 @@ namespace eSureHi.ViewModels.Admin
         private readonly ListCollectionView _groupedClaimants;
         public ListCollectionView GroupedClaimants => _groupedClaimants;
 
-        private readonly ObservableCollection<string> _claimantPrograms = new();
-        public ObservableCollection<string> ClaimantPrograms => _claimantPrograms;
-
-        private string? _selectedClaimantProgram = "All";
-        public string? SelectedClaimantProgram
-        {
-            get => _selectedClaimantProgram;
-            set
-            {
-                if (SetProperty(ref _selectedClaimantProgram, value))
-                {
-                    _groupedClaimants?.Refresh();
-                    OnPropertyChanged(nameof(ShowClaimantsList));
-                    OnPropertyChanged(nameof(ShowEmptyProgramState));
-                }
-            }
-        }
-
-        public bool ShowClaimantsList => !string.IsNullOrEmpty(SelectedClaimantProgram);
-        public bool ShowEmptyProgramState => string.IsNullOrEmpty(SelectedClaimantProgram);
-
         private bool _isClaimantPickerOpen;
         public bool IsClaimantPickerOpen
         {
@@ -398,8 +377,7 @@ namespace eSureHi.ViewModels.Admin
         }
 
         // ── Claimant picker ────────────────────────────────────────────
-        // Builds the program-grouped beneficiary list backing the "File Claim" panel.
-        // Grouping is display-only — it never touches the claim-amount formula.
+        // Builds the beneficiary list backing the "File Claim" panel.
         private async Task LoadClaimantsAsync(eSureHiDbContext db)
         {
             var beneficiaries = await db.Beneficiaries
@@ -413,31 +391,10 @@ namespace eSureHi.ViewModels.Admin
                 .Select(c => c.BenId!.Value)
                 .ToHashSet();
 
-            // Gather distinct program options from the database (via beneficiaries in-memory)
-            var distinctFunds = beneficiaries
-                .Where(b => !string.IsNullOrEmpty(b.SourceOfFunds))
-                .Select(b => b.SourceOfFunds!)
-                .Distinct()
-                .ToList();
-
-            var progList = new System.Collections.Generic.List<string> { "All", "Job Order", "Casual", "Regular", "Captain" };
-            foreach (var fund in distinctFunds)
-            {
-                if (!progList.Contains(fund, StringComparer.OrdinalIgnoreCase))
-                {
-                    progList.Add(fund);
-                }
-            }
-
-            _claimantPrograms.Clear();
-            foreach (var prog in progList)
-            {
-                _claimantPrograms.Add(prog);
-            }
-
             _claimants.Clear();
             foreach (var b in beneficiaries)
-                _claimants.Add(new ClaimBeneficiaryRow
+            {
+                var row = new ClaimBeneficiaryRow
                 {
                     BenId = b.BenId,
                     BeneficiaryId = FirstNonPlaceholder(
@@ -452,7 +409,9 @@ namespace eSureHi.ViewModels.Admin
                         b.Employee?.EmploymentType,
                         "Unassigned Program"),
                     HasOpenClaim = openClaimBenIds.Contains(b.BenId)
-                });
+                };
+                _claimants.Add(row);
+            }
 
             _groupedClaimants.Refresh();
         }
@@ -460,14 +419,6 @@ namespace eSureHi.ViewModels.Admin
         private bool FilterClaimant(object item)
         {
             if (item is not ClaimBeneficiaryRow row) return false;
-
-            // If a program is selected and it is not "All", check for match
-            if (!string.IsNullOrEmpty(SelectedClaimantProgram) && !string.Equals(SelectedClaimantProgram, "All", StringComparison.OrdinalIgnoreCase))
-            {
-                // Program must match SelectedClaimantProgram (case-insensitive)
-                if (!string.Equals(row.Program, SelectedClaimantProgram, StringComparison.OrdinalIgnoreCase))
-                    return false;
-            }
 
             if (string.IsNullOrWhiteSpace(ClaimantSearch)) return true;
 
