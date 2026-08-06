@@ -256,7 +256,6 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand NavGroupFundsCommand { get; }
         public RelayCommand NavAllocatedFundsCommand { get; }
         public RelayCommand NavPendingMembersCommand { get; }
-        public RelayCommand NavPendingClaimsCommand { get; }
         public RelayCommand NavCedulasCommand { get; }
         public RelayCommand NavReportsCommand { get; }
         public RelayCommand NavCompanyProfileCommand { get; }
@@ -367,7 +366,6 @@ namespace eSureHi.ViewModels.Admin
             NavGroupFundsCommand = new RelayCommand(() => NavigateFromSidebar("Group Funds"));
             NavAllocatedFundsCommand = new RelayCommand(() => NavigateFromSidebar("Allocated Funds"));
             NavPendingMembersCommand = new RelayCommand(() => OpenRestrictedDialog("Pending Members", OpenBeneficiaryQueue));
-            NavPendingClaimsCommand = new RelayCommand(() => NavigateFromSidebar("Pending Claims"));
             NavCedulasCommand = new RelayCommand(() => NavigateFromSidebar("Cedulas"));
             NavReportsCommand = new RelayCommand(() => NavigateFromSidebar("Reports"));
             NavCompanyProfileCommand = new RelayCommand(() => NavigateFromSidebar("Company Profile"));
@@ -378,7 +376,7 @@ namespace eSureHi.ViewModels.Admin
 
             // New rebuild targets
             NavDistributionCommand = new RelayCommand(() => NavigateFromSidebar("Distribution"));
-            NavFileClaimCommand = new RelayCommand(() => NavigateFromSidebar("File a Claim"));
+            NavFileClaimCommand = new RelayCommand(OpenFileClaimDialog);
             NavGroupClaimCommand = new RelayCommand(() => NavigateFromSidebar("Group Claim"));
             NavAdvancePaymentCommand = new RelayCommand(() => NavigateFromSidebar("Advance Payment"));
             NavPendingPaymentCommand = new RelayCommand(() => NavigateFromSidebar("Pending Payment"));
@@ -530,6 +528,26 @@ namespace eSureHi.ViewModels.Admin
             IsClaimsManagementPopupOpen = false;
             IsPaymentManagementPopupOpen = false;
             IsReportsPopupOpen = false;
+        }
+
+        private void OpenFileClaimDialog()
+        {
+            IsSidebarVisible = false;
+            var dialog = AuthService.Instance.IsBeneficiary && AuthService.Instance.CurrentUser?.BenId is int benId
+                ? new Views.Admin.Dialogs.ClaimFormDialog(benId, beneficiaryMode: true)
+                : new Views.Admin.Dialogs.ClaimFormDialog();
+
+            dialog.SetSaveCallback(async () =>
+            {
+                if (NavigationService.Instance.CurrentPage is ClaimsView claimsView && claimsView.DataContext is ClaimsViewModel claimsVm)
+                {
+                    await claimsVm.LoadAsync();
+                }
+            });
+
+            if (App.ActiveShell is not null && App.ActiveShell != dialog)
+                dialog.Owner = App.ActiveShell;
+            dialog.ShowDialog();
         }
 
         private static void OpenReviewQueue()

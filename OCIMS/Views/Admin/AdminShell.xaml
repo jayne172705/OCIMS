@@ -544,14 +544,6 @@
                                 <Border Style="{StaticResource SidebarGroupPanel}"
                                         Visibility="{Binding IsClaimsMenuPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <StackPanel>
-                                        <Button Command="{Binding NavPendingClaimsCommand}"
-                                                Style="{StaticResource SidebarGroupItemButton}"
-                                                Visibility="{Binding CanAccessPendingClaims, Converter={StaticResource BoolToVisibilityConverter}}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="ClipboardClock" Width="20" Height="20" Margin="0,0,12,0"/>
-                                                <TextBlock Text="Pending Claims" FontSize="13"/>
-                                            </StackPanel>
-                                        </Button>
                                         <Button Command="{Binding NavAllClaimsCommand}"
                                                 Style="{StaticResource SidebarGroupItemButton}">
                                             <StackPanel Orientation="Horizontal">
@@ -939,7 +931,6 @@
                             <TextBlock Text="CLAIM MANAGEMENT" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="16,16,16,4"/>
                             <Button Command="{Binding NavClaimsCommand}" Style="{StaticResource SidebarNavButton}"><StackPanel Orientation="Horizontal"><materialDesign:PackIcon Kind="ClipboardPlus" Width="20" Height="20" Margin="0,0,12,0"/><TextBlock Text="File / Manage Claims" FontSize="13"/></StackPanel></Button>
                             <Button Command="{Binding NavPendingMembersCommand}" Style="{StaticResource SidebarNavButton}"><StackPanel Orientation="Horizontal"><materialDesign:PackIcon Kind="AccountClock" Width="20" Height="20" Margin="0,0,12,0"/><TextBlock Text="Pending Members" FontSize="13"/></StackPanel></Button>
-                            <Button Command="{Binding NavPendingClaimsCommand}" Style="{StaticResource SidebarNavButton}"><StackPanel Orientation="Horizontal"><materialDesign:PackIcon Kind="ClipboardClock" Width="20" Height="20" Margin="0,0,12,0"/><TextBlock Text="Pending Claims" FontSize="13"/></StackPanel></Button>
                             <Button Command="{Binding NavReviewQueueCommand}" Style="{StaticResource SidebarNavButton}"><StackPanel Orientation="Horizontal"><materialDesign:PackIcon Kind="ClipboardList" Width="20" Height="20" Margin="0,0,12,0"/><TextBlock Text="All Reviews" FontSize="13"/></StackPanel></Button>
                             <Button Command="{Binding NavBenefitsCommand}" Style="{StaticResource SidebarNavButton}"><StackPanel Orientation="Horizontal"><materialDesign:PackIcon Kind="HeartPulse" Width="20" Height="20" Margin="0,0,12,0"/><TextBlock Text="Benefit Releases" FontSize="13"/></StackPanel></Button>
 
