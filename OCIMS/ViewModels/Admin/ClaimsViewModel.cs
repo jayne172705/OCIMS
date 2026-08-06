@@ -30,6 +30,22 @@ namespace eSureHi.ViewModels.Admin
         private readonly ListCollectionView _groupedClaimants;
         public ListCollectionView GroupedClaimants => _groupedClaimants;
 
+        private readonly ObservableCollection<string> _claimantPrograms = new();
+        public ObservableCollection<string> ClaimantPrograms => _claimantPrograms;
+
+        private string? _selectedClaimantProgram = "All";
+        public string? SelectedClaimantProgram
+        {
+            get => _selectedClaimantProgram;
+            set
+            {
+                if (SetProperty(ref _selectedClaimantProgram, value))
+                {
+                    _groupedClaimants?.Refresh();
+                }
+            }
+        }
+
         private bool _isClaimantPickerOpen;
         public bool IsClaimantPickerOpen
         {
@@ -391,6 +407,28 @@ namespace eSureHi.ViewModels.Admin
                 .Select(c => c.BenId!.Value)
                 .ToHashSet();
 
+            // Gather distinct program options from the database (via beneficiaries in-memory)
+            var distinctFunds = beneficiaries
+                .Where(b => !string.IsNullOrEmpty(b.SourceOfFunds))
+                .Select(b => b.SourceOfFunds!.Trim())
+                .Distinct()
+                .ToList();
+
+            var progList = new System.Collections.Generic.List<string> { "All", "Job Order", "Casual", "Regular", "Captain" };
+            foreach (var fund in distinctFunds)
+            {
+                if (!progList.Contains(fund, StringComparer.OrdinalIgnoreCase))
+                {
+                    progList.Add(fund);
+                }
+            }
+
+            _claimantPrograms.Clear();
+            foreach (var prog in progList)
+            {
+                _claimantPrograms.Add(prog);
+            }
+
             _claimants.Clear();
             foreach (var b in beneficiaries)
             {
@@ -416,9 +454,28 @@ namespace eSureHi.ViewModels.Admin
             _groupedClaimants.Refresh();
         }
 
+        private static string NormalizeProgramName(string? val)
+        {
+            if (string.IsNullOrWhiteSpace(val)) return string.Empty;
+            // Replace underscores, hyphens, and multiple spaces with a single space
+            var normalized = val.Replace('_', ' ').Replace('-', ' ').Trim();
+            normalized = System.Text.RegularExpressions.Regex.Replace(normalized, @"\s+", " ");
+            return normalized;
+        }
+
         private bool FilterClaimant(object item)
         {
             if (item is not ClaimBeneficiaryRow row) return false;
+
+            // If a program is selected and it is not "All", check for match
+            if (!string.IsNullOrEmpty(SelectedClaimantProgram) && !string.Equals(SelectedClaimantProgram, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                // Program must match SelectedClaimantProgram (case-insensitive and normalized)
+                var p1 = NormalizeProgramName(row.Program);
+                var p2 = NormalizeProgramName(SelectedClaimantProgram);
+                if (!string.Equals(p1, p2, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
 
             if (string.IsNullOrWhiteSpace(ClaimantSearch)) return true;
 

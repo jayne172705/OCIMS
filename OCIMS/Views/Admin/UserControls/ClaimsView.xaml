@@ -240,24 +240,42 @@
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="250"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="Select a beneficiary to file a claim for"
                                    FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"/>
-                        <TextBlock Text="Search by name or Beneficiary ID. Beneficiaries with a claim already in progress cannot file another."
+                        <TextBlock Text="Filter by program. Beneficiaries with a claim already in progress cannot file another."
                                    FontSize="11" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <TextBox Grid.Column="1"
+                    <!-- Program selector -->
+                    <Border Grid.Column="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8"
+                            Padding="12,6" Margin="0,0,10,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
+                                                     Foreground="#1B5E20"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Program:" FontWeight="Bold" Foreground="#0F172A"
+                                       FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox ItemsSource="{Binding ClaimantPrograms}" SelectedItem="{Binding SelectedClaimantProgram, Mode=TwoWay}"
+                                      Width="160" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"
+                                      Style="{StaticResource MaterialDesignComboBox}"
+                                      materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                                      BorderThickness="0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBox Grid.Column="2"
                              Text="{Binding ClaimantSearch, UpdateSourceTrigger=PropertyChanged}"
                              materialDesign:HintAssist.Hint="Search name or beneficiary ID..."
                              materialDesign:TextFieldAssist.HasLeadingIcon="True"
                              materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              VerticalAlignment="Center"
-                             Width="300" FontSize="12"/>
+                             Width="250" FontSize="12"/>
                 </Grid>
 
                 <!-- Column captions, aligned with the row template below -->
