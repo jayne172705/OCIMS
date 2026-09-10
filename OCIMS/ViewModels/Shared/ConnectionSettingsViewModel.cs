@@ -15,7 +15,7 @@ namespace eSureHi.ViewModels.Shared
         private string _eSureHiPassword = "Ims@2026";
         // Prefilled presets: Network = office LAN, Online = Hostinger cloud.
         // Local preset is hidden per requirements.
-        private const string NetworkServer = "192.168.0.42";
+        private const string NetworkServer = "192.168.0.47";
         private const string NetworkPort = "3306";
         private const string NetworkDatabase = "ims_db";
         private const string NetworkUser = "root";
