@@ -29,6 +29,23 @@ namespace eSureHi.ViewModels.Admin
         };
 
         // ── App Database Presets (Master Config) ───────────────────────
+        // Remote network prefilled credentials (office LAN 192.168.0.47)
+        // IMS_DB = main, GGMS_DB = ggms_db, CRS_DB = crs_db
+        private const string NetworkServer = "192.168.0.47";
+        private const string NetworkPort = "3306";
+        private const string NetworkUser = "root";
+        private const string NetworkPassword = "network@2026";
+        private const string NetworkImsDatabase = "ims_db";
+        private const string NetworkGgmsDatabase = "ggms_db";
+        private const string NetworkCrsDatabase = "crs_db";
+
+        // Online (Hostinger cloud) — IMS_DB only.
+        private const string OnlineServer = "194.59.164.58";
+        private const string OnlinePort = "3306";
+        private const string OnlinePassword = "Ims@2026";
+        private const string OnlineImsDatabase = "u621755393_ims";
+        private const string OnlineImsUser = "u621755393_ims_user";
+
         private bool _isLocalSelected;
         private bool _isNetworkSelected;
         private bool _isRemoteSelected;
@@ -37,11 +54,11 @@ namespace eSureHi.ViewModels.Admin
         public bool IsNetworkSelected { get => _isNetworkSelected; set => SetProperty(ref _isNetworkSelected, value); }
         public bool IsRemoteSelected { get => _isRemoteSelected; set => SetProperty(ref _isRemoteSelected, value); }
 
-        private string _appDbServer = string.Empty;
-        private string _appDbPort = "3306";
-        private string _appDbDatabase = string.Empty;
-        private string _appDbUser = string.Empty;
-        private string _appDbPassword = string.Empty;
+        private string _appDbServer = NetworkServer;
+        private string _appDbPort = NetworkPort;
+        private string _appDbDatabase = NetworkImsDatabase;
+        private string _appDbUser = NetworkUser;
+        private string _appDbPassword = NetworkPassword;
 
         public string AppDbServer { get => _appDbServer; set => SetProperty(ref _appDbServer, value); }
         public string AppDbPort { get => _appDbPort; set => SetProperty(ref _appDbPort, value); }
@@ -70,11 +87,11 @@ namespace eSureHi.ViewModels.Admin
         public string CurrentServer =>
             $"{App.DbConfig.Server}:{App.DbConfig.Port} / {App.DbConfig.Database}";
 
-        private string _ggmsServer = string.Empty;
-        private string _ggmsPort = "3306";
-        private string _ggmsDatabase = string.Empty;
-        private string _ggmsUser = string.Empty;
-        private string _ggmsPassword = string.Empty;
+        private string _ggmsServer = NetworkServer;
+        private string _ggmsPort = NetworkPort;
+        private string _ggmsDatabase = NetworkGgmsDatabase;
+        private string _ggmsUser = NetworkUser;
+        private string _ggmsPassword = NetworkPassword;
         private string _ggmsConnectionStatus = "Not tested";
         private bool _ggmsConnectionOk;
 
@@ -86,11 +103,11 @@ namespace eSureHi.ViewModels.Admin
         public string GgmsConnectionStatus { get => _ggmsConnectionStatus; set => SetProperty(ref _ggmsConnectionStatus, value); }
         public bool GgmsConnectionOk { get => _ggmsConnectionOk; set => SetProperty(ref _ggmsConnectionOk, value); }
 
-        private string _crsServer = string.Empty;
-        private string _crsPort = "3306";
-        private string _crsDatabase = string.Empty;
-        private string _crsUser = string.Empty;
-        private string _crsPassword = string.Empty;
+        private string _crsServer = NetworkServer;
+        private string _crsPort = NetworkPort;
+        private string _crsDatabase = NetworkCrsDatabase;
+        private string _crsUser = NetworkUser;
+        private string _crsPassword = NetworkPassword;
         private string _crsConnectionStatus = "Not tested";
         private bool _crsConnectionOk;
 
@@ -189,6 +206,8 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand ApplyLocalPresetCommand { get; }
         public RelayCommand ApplyNetworkPresetCommand { get; }
         public RelayCommand ApplyRemotePresetCommand { get; }
+        public RelayCommand ApplyGgmsNetworkPresetCommand { get; }
+        public RelayCommand ApplyCrsNetworkPresetCommand { get; }
         public RelayCommand SaveAppDbConfigCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
 
@@ -199,6 +218,8 @@ namespace eSureHi.ViewModels.Admin
             ApplyLocalPresetCommand = new RelayCommand(ApplyLocalPreset, () => CanEditSettings);
             ApplyNetworkPresetCommand = new RelayCommand(ApplyNetworkPreset, () => CanEditSettings);
             ApplyRemotePresetCommand = new RelayCommand(ApplyRemotePreset, () => CanEditSettings);
+            ApplyGgmsNetworkPresetCommand = new RelayCommand(ApplyGgmsNetworkPreset, () => CanEditSettings);
+            ApplyCrsNetworkPresetCommand = new RelayCommand(ApplyCrsNetworkPreset, () => CanEditSettings);
             SaveAppDbConfigCommand = new RelayCommand(SaveAppDbConfig, () => CanEditSettings);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
 
@@ -266,32 +287,45 @@ namespace eSureHi.ViewModels.Admin
         // ── External Configs ──────────────────────────────────────────
         private void LoadExternalConfigs()
         {
-            // Main App DB
+            // Main App DB (IMS_DB) — prefilled network, editable.
             var cfg = App.DbConfig;
-            AppDbServer = cfg.Server;
-            AppDbPort = cfg.Port.ToString();
-            AppDbDatabase = cfg.Database;
-            AppDbUser = cfg.User;
-            AppDbPassword = cfg.Password;
+            if (string.IsNullOrWhiteSpace(cfg.Server) || string.IsNullOrWhiteSpace(cfg.Database))
+                ApplyNetworkPreset();
+            else
+            {
+                AppDbServer = cfg.Server;
+                AppDbPort = cfg.Port.ToString();
+                AppDbDatabase = cfg.Database;
+                AppDbUser = cfg.User;
+                AppDbPassword = cfg.Password;
+            }
 
             // Detect current mode; Local hidden. Default to Online.
             IsLocalSelected = false;
-            if (AppDbServer == "192.168.0.47") { IsNetworkSelected = true; IsRemoteSelected = false; }
+            if (AppDbServer == NetworkServer) { IsNetworkSelected = true; IsRemoteSelected = false; }
             else { IsNetworkSelected = false; IsRemoteSelected = true; }
 
+            // GGMS_DB — prefilled network, editable. LoadGgms already returns network preset when file missing.
             var ggms = SharedDatabaseConfiguration.LoadGgms();
             GgmsServer = ggms.Server;
             GgmsPort = ggms.Port;
             GgmsDatabase = ggms.Database;
             GgmsUser = ggms.User;
             GgmsPassword = ggms.Password;
+            // Prefill network defaults when saved config is empty/placeholder.
+            if (string.IsNullOrWhiteSpace(GgmsServer) || string.IsNullOrWhiteSpace(GgmsDatabase))
+                ApplyGgmsNetworkPreset();
 
+            // CRS_DB — prefilled network, editable. LoadCrs already returns network preset when file missing.
             var crs = SharedDatabaseConfiguration.LoadCrs();
             CrsServer = crs.Server;
             CrsPort = crs.Port;
             CrsDatabase = crs.Database;
             CrsUser = crs.User;
             CrsPassword = crs.Password;
+            // Prefill network defaults when saved config is empty/placeholder.
+            if (string.IsNullOrWhiteSpace(CrsServer) || string.IsNullOrWhiteSpace(CrsDatabase))
+                ApplyCrsNetworkPreset();
         }
 
         private void ApplyLocalPreset()
@@ -303,14 +337,26 @@ namespace eSureHi.ViewModels.Admin
         private void ApplyNetworkPreset()
         {
             IsLocalSelected = false; IsNetworkSelected = true; IsRemoteSelected = false;
-            AppDbServer = "192.168.0.47"; AppDbPort = "3306"; AppDbDatabase = "ims_db"; AppDbUser = "root"; AppDbPassword = "network@2026";
+            AppDbServer = NetworkServer; AppDbPort = NetworkPort; AppDbDatabase = NetworkImsDatabase; AppDbUser = NetworkUser; AppDbPassword = NetworkPassword;
             OnPropertyChanged(nameof(IsAppDbEditable));
+        }
+
+        private void ApplyGgmsNetworkPreset()
+        {
+            GgmsServer = NetworkServer; GgmsPort = NetworkPort; GgmsDatabase = NetworkGgmsDatabase; GgmsUser = NetworkUser; GgmsPassword = NetworkPassword;
+            GgmsConnectionStatus = "Network GGMS database selected. Click Test Connection or Save.";
+        }
+
+        private void ApplyCrsNetworkPreset()
+        {
+            CrsServer = NetworkServer; CrsPort = NetworkPort; CrsDatabase = NetworkCrsDatabase; CrsUser = NetworkUser; CrsPassword = NetworkPassword;
+            CrsConnectionStatus = "Network CRS database selected. Click Test Connection or Save.";
         }
 
         private void ApplyRemotePreset()
         {
             IsLocalSelected = false; IsNetworkSelected = false; IsRemoteSelected = true;
-            AppDbServer = "194.59.164.58"; AppDbPort = "3306"; AppDbDatabase = "u621755393_ims"; AppDbUser = "u621755393_ims_user"; AppDbPassword = "Ims@2026";
+            AppDbServer = OnlineServer; AppDbPort = OnlinePort; AppDbDatabase = OnlineImsDatabase; AppDbUser = OnlineImsUser; AppDbPassword = OnlinePassword;
             OnPropertyChanged(nameof(IsAppDbEditable));
         }
 
@@ -396,7 +442,7 @@ namespace eSureHi.ViewModels.Admin
             await TestExternalConnectionAsync(
                 "GGMS",
                 BuildGgmsConfig(),
-                new[] { "yearlybudgets", "budget_allocations", "consolidated_transactions" },
+                new[] { "yearlybudgets", "officeallocations", "consolidated_transactions" },
                 ok =>
                 {
                     GgmsConnectionOk = ok;
