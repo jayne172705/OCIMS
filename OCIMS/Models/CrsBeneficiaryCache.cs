@@ -68,6 +68,9 @@ namespace eSureHi.Models
         [Column("is_household_head")]
         public bool IsHouseholdHead { get; set; }
 
+        [Column("cedula_no")]
+        public string? CedulaNo { get; set; }
+
         [Column("cached_at")]
         public DateTime CachedAt { get; set; } = DateTime.Now;
     }

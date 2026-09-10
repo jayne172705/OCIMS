@@ -26,6 +26,18 @@ namespace eSureHi.ViewModels.Admin
         public string Address { get; private set; } = "—";
         public string DateOfBirth { get; private set; } = "—";
 
+        private decimal _programLimit;
+        public decimal ProgramLimit { get => _programLimit; private set => SetProperty(ref _programLimit, value); }
+
+        private decimal _programRemaining;
+        public decimal ProgramRemaining { get => _programRemaining; private set => SetProperty(ref _programRemaining, value); }
+
+        private decimal _totalClaimed;
+        public decimal TotalClaimed { get => _totalClaimed; private set => SetProperty(ref _totalClaimed, value); }
+
+        private decimal _totalApproved;
+        public decimal TotalApproved { get => _totalApproved; private set => SetProperty(ref _totalApproved, value); }
+
         public ObservableCollection<FamilyMemberDisplay> FamilyMembers { get; } = new();
 
         private int _releasesThisMonth;
@@ -50,12 +62,18 @@ namespace eSureHi.ViewModels.Admin
         private string _statusBannerBackground = "#F1F5F9";
         public string StatusBannerBackground { get => _statusBannerBackground; private set => SetProperty(ref _statusBannerBackground, value); }
 
+        private string _statusBannerIcon = "ShieldCheck";
+        public string StatusBannerIcon { get => _statusBannerIcon; private set => SetProperty(ref _statusBannerIcon, value); }
+
         /// <summary>Remark stored on the record when routed to On Hold.</summary>
         public string HoldReason { get; private set; } = string.Empty;
 
-        public DistributionIdCardViewModel(int benId)
+        public string CurrentStatus { get; }
+
+        public DistributionIdCardViewModel(int benId, string currentStatus = "Unreleased")
         {
             BenId = benId;
+            CurrentStatus = currentStatus;
         }
 
         public async Task LoadAsync()
@@ -67,7 +85,7 @@ namespace eSureHi.ViewModels.Admin
                 var beneficiary = await db.Beneficiaries.FirstOrDefaultAsync(b => b.BenId == BenId);
                 if (beneficiary == null)
                 {
-                    SetVerdict(false, "Beneficiary record not found.", "#991B1B", "#FEE2E2");
+                    SetVerdict(false, "Beneficiary record not found.", "#991B1B", "#FEE2E2", "AlertCircle");
                     HoldReason = "Beneficiary record not found.";
                     return;
                 }
@@ -89,6 +107,34 @@ namespace eSureHi.ViewModels.Admin
                 OnPropertyChanged(nameof(Address));
                 foreach (var member in snapshot.Members)
                     FamilyMembers.Add(member);
+
+                // ── Check if they have filed a claim and calculate totals ──
+                var claims = await db.Claims
+                    .Where(c => c.BenId == BenId || (c.BenId == null && c.EmpId == beneficiary.EmpId))
+                    .ToListAsync();
+                bool hasClaim = claims.Any();
+                TotalClaimed = claims.Sum(c => c.AmountClaimed);
+                TotalApproved = claims.Sum(c => c.AmountApproved);
+                OnPropertyChanged(nameof(TotalClaimed));
+                OnPropertyChanged(nameof(TotalApproved));
+
+                // ── Load Program Benefit Limit ──
+                var benefit = await db.Benefits
+                    .Include(b => b.EmployeePolicy)
+                    .Where(b => b.EmployeePolicy != null && b.EmployeePolicy.EmpId == beneficiary.EmpId && b.YearPeriod == DateTime.Today.Year)
+                    .FirstOrDefaultAsync();
+                if (benefit != null)
+                {
+                    ProgramLimit = benefit.MaxBenefit;
+                    ProgramRemaining = benefit.Remaining;
+                }
+                else
+                {
+                    ProgramLimit = 0;
+                    ProgramRemaining = 0;
+                }
+                OnPropertyChanged(nameof(ProgramLimit));
+                OnPropertyChanged(nameof(ProgramRemaining));
 
                 // ── Release history + monthly-limit check ──
                 var releases = await db.DistributionRecords
@@ -114,19 +160,34 @@ namespace eSureHi.ViewModels.Admin
                     LastReleaseText = $"Last released {when} under \"{batchName}\"";
                 }
 
-                if (thisMonth.Any())
+                if (CurrentStatus == "Released")
+                {
+                    SetVerdict(false,
+                        "RELEASED — Benefit has been successfully released/claimed.",
+                        "#166534", "#DCFCE7", "CheckCircle");
+                    return;
+                }
+
+                if (!hasClaim)
+                {
+                    HoldReason = "No claim has been filed for this beneficiary.";
+                    SetVerdict(false,
+                        "ON HOLD — File claim first.",
+                        "#B45309", "#FEF3C7", "AlertCircle");
+                }
+                else if (thisMonth.Any())
                 {
                     var when = thisMonth.First().ProcessedAt?.ToString("MMM dd, yyyy") ?? "this month";
                     HoldReason = $"Already released this month ({when}) — monthly limit reached.";
                     SetVerdict(false,
                         "ON HOLD — monthly release limit already reached.",
-                        "#991B1B", "#FEE2E2");
+                        "#991B1B", "#FEE2E2", "AlertCircle");
                 }
                 else
                 {
                     SetVerdict(true,
                         "ELIGIBLE — no release recorded this month.",
-                        "#166534", "#DCFCE7");
+                        "#166534", "#DCFCE7", "ShieldCheck");
                 }
             }
             catch (Exception ex)
@@ -136,16 +197,26 @@ namespace eSureHi.ViewModels.Admin
                 HoldReason = "Could not verify release history — database unavailable.";
                 SetVerdict(false,
                     $"UNAVAILABLE — could not verify eligibility. {ex.Message}",
-                    "#991B1B", "#FEE2E2");
+                    "#991B1B", "#FEE2E2", "AlertCircle");
             }
         }
 
-        private void SetVerdict(bool eligible, string banner, string color, string background)
+        private void SetVerdict(bool eligible, string banner, string color, string background, string icon)
         {
             IsEligible = eligible;
             StatusBanner = banner;
             StatusBannerColor = color;
             StatusBannerBackground = background;
+            StatusBannerIcon = icon;
+        }
+
+        public void SetReleasedVerdict(string message)
+        {
+            IsEligible = false;
+            StatusBanner = message;
+            StatusBannerColor = "#166534";
+            StatusBannerBackground = "#DCFCE7";
+            StatusBannerIcon = "CheckCircle";
         }
     }
 }

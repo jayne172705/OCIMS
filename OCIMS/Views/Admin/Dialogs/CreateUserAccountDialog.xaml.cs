@@ -14,6 +14,7 @@ namespace eSureHi.Views.Admin.Dialogs
             _vm.CloseAction = () => Close();
             _vm.GetPassword = () => PasswordBox.Password;
             DataContext = _vm;
+            PasswordBox.PasswordChanged += (s, e) => _vm.ErrorMessage = string.Empty;
         }
 
         public CreateUserAccountDialog(int beneficiaryId, string beneficiaryName, bool isBeneficiary)
@@ -23,6 +24,7 @@ namespace eSureHi.Views.Admin.Dialogs
             _vm.CloseAction = () => Close();
             _vm.GetPassword = () => PasswordBox.Password;
             DataContext = _vm;
+            PasswordBox.PasswordChanged += (s, e) => _vm.ErrorMessage = string.Empty;
         }
 
         public void SetSaveCallback(System.Action onSave)

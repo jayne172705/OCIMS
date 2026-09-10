@@ -314,21 +314,25 @@ namespace eSureHi.ViewModels.Admin
             { StatusMessage = "Enter the released amount first."; return; }
 
             var online = await GgmsService.CheckReleaseConnectionAsync();
+            bool proceedOffline = false;
             if (!online.IsOnline)
             {
-                StatusMessage = online.Message;
-                MessageBox.Show(
-                    "Funds releasing requires an online GGMS/Hostinger connection.",
-                    "Online Required",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
+                var offlineConfirm = MessageBox.Show(
+                    $"GGMS budget system is offline ({online.Message}).\n\nWould you like to release this claim offline? It will be saved locally and synchronized automatically when the connection is restored.",
+                    "GGMS Offline - Release Locally?",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+                if (offlineConfirm != MessageBoxResult.Yes)
+                    return;
+                proceedOffline = true;
             }
-
-            var result = MessageBox.Show(
-                $"Release ₱{AmountReleased:N2} for this claim?",
-                "Confirm Release", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result != MessageBoxResult.Yes) return;
+            else
+            {
+                var result = MessageBox.Show(
+                    $"Release ₱{AmountReleased:N2} for this claim?",
+                    "Confirm Release", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result != MessageBoxResult.Yes) return;
+            }
 
             IsBusy = true;
             try
@@ -346,31 +350,9 @@ namespace eSureHi.ViewModels.Admin
                     return;
                 }
 
-                // ── Write to GGMS ──────────────────────────────────────────────
-                var (ggmsSuccess, ggmsMsg) = await GgmsService.RecordClaimReleaseAsync(
-                    claimId: Claim.ClaimId,
-                    beneficiaryIdentity: Claim.Beneficiary?.BeneficiaryId,
-                    civilRegistryId: Claim.Beneficiary?.CivilRegistryId,
-                    amountReleased: AmountReleased,
-                    claimType: Claim.ClaimType ?? "Insurance Claim",
-                    firstName: Claim.Beneficiary?.FirstName ?? Claim.Employee?.FirstName ?? string.Empty,
-                    middleName: Claim.Employee?.MiddleName,
-                    lastName: Claim.Beneficiary?.LastName ?? Claim.Employee?.LastName ?? string.Empty,
-                    recipientName: Claim.Beneficiary?.FullName ?? Claim.Employee?.FullName ?? string.Empty,
-                    claimNo: Claim.ClaimNo,
-                    purpose: "Insurance Claim",
-                    sourceOfFunds: SourceOfFunds
-                );
-
-                if (!ggmsSuccess)
-                {
-                    StatusMessage = $"GGMS Error: {ggmsMsg}";
-                    MessageBox.Show(StatusMessage, "GGMS Recording Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                else
-                {
-                    StatusMessage = "Released successfully and recorded in GGMS.";
-                }
+                StatusMessage = proceedOffline
+                    ? $"Released from {SourceOfFunds} and queued locally for GGMS sync."
+                    : "Released successfully and recorded in GGMS.";
 
                 await LoadAsync(Claim.ClaimId);
                 OnStatusChanged?.Invoke();
@@ -386,21 +368,25 @@ namespace eSureHi.ViewModels.Admin
             { StatusMessage = "Enter the released amount first."; return; }
 
             var online = await GgmsService.CheckReleaseConnectionAsync();
+            bool proceedOffline = false;
             if (!online.IsOnline)
             {
-                StatusMessage = online.Message;
-                MessageBox.Show(
-                    "Funds releasing requires an online GGMS/Hostinger connection. This claim was not released locally.",
-                    "Online Required",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
+                var offlineConfirm = MessageBox.Show(
+                    $"GGMS budget system is offline ({online.Message}).\n\nWould you like to release this claim offline? It will be saved locally and synchronized automatically when the connection is restored.",
+                    "GGMS Offline - Release Locally?",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+                if (offlineConfirm != MessageBoxResult.Yes)
+                    return;
+                proceedOffline = true;
             }
-
-            var result = MessageBox.Show(
-                $"Release ₱{AmountReleased:N2} for this claim?",
-                "Confirm Release", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result != MessageBoxResult.Yes) return;
+            else
+            {
+                var result = MessageBox.Show(
+                    $"Release ₱{AmountReleased:N2} for this claim?",
+                    "Confirm Release", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result != MessageBoxResult.Yes) return;
+            }
 
             IsBusy = true;
             try
@@ -449,7 +435,9 @@ namespace eSureHi.ViewModels.Admin
                 }
                 else
                 {
-                    StatusMessage = $"Released from {SourceOfFunds} and recorded in GGMS.";
+                    StatusMessage = proceedOffline
+                        ? $"Released from {SourceOfFunds} and queued locally for GGMS sync."
+                        : $"Released from {SourceOfFunds} and recorded in GGMS.";
                 }
 
                 await LoadAsync(Claim.ClaimId);

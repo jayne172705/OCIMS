@@ -1,0 +1,76 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.BarangayBeneficiariesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Registered Beneficiaries"
+        Width="850"
+        Height="600"
+        MinWidth="700"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Background="{StaticResource PrimaryBrush}" helpers:Adaptive.UseAdaptiveForeground="True" Padding="0,8">
+            <Grid Margin="22,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="AccountCheck" Width="25" Height="25" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Registered Beneficiaries" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding BarangayDisplay}" FontSize="12" Opacity="0.86"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBox Grid.Row="0"
+                     x:Name="SearchTextBox"
+                     TextChanged="SearchTextBox_TextChanged"
+                     materialDesign:HintAssist.Hint="Search registered beneficiaries by Name, Relationship, Family Head, Program or Status..."
+                     materialDesign:TextFieldAssist.HasClearButton="True"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,0,12"/>
+
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Beneficiaries}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="1.5*"/>
+                    <DataGridTextColumn Header="Relationship" Binding="{Binding Relationship}" Width="120"/>
+                    <DataGridTextColumn Header="Family Head" Binding="{Binding FamilyHead}" Width="1.2*"/>
+                    <DataGridTextColumn Header="Program" Binding="{Binding Program}" Width="120"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                    <DataGridTemplateColumn Header="Action" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Open Profile"
+                                        Command="{Binding DataContext.OpenProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Height="28"
+                                        Padding="8,0"
+                                        FontSize="11"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+    </Grid>
+</Window>

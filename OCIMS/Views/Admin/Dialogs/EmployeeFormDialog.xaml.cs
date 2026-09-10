@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using eSureHi.ViewModels.Admin;
+using eSureHi.Models;
 
 namespace eSureHi.Views.Admin.Dialogs
 {
@@ -21,6 +22,18 @@ namespace eSureHi.Views.Admin.Dialogs
         public EmployeeFormDialog(int empId) : this()
         {
             _ = _vm.InitEditAsync(empId);
+        }
+
+        // ── Prefilled Barangay ──────────────────────────────────────────
+        public EmployeeFormDialog(string prefilledBarangay) : this()
+        {
+            _vm.Barangay = prefilledBarangay;
+        }
+
+        // ── Prefilled from Staging ──────────────────────────────────────
+        public EmployeeFormDialog(BeneficiaryStaging record) : this()
+        {
+            _ = _vm.InitFromStagingAsync(record);
         }
 
         public async Task InitAsync()

@@ -256,22 +256,35 @@
                                    FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <!-- Program selector -->
-                    <Border Grid.Column="1" Style="{StaticResource SurfaceCard}" CornerRadius="8"
-                            Padding="16,8" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
-                                                     Foreground="{StaticResource StatusGreen}"
-                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Program:" FontWeight="Bold" Foreground="{StaticResource InkBrush}"
-                                       FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <ComboBox ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram}"
-                                      Width="180" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"
-                                      Style="{StaticResource MaterialDesignComboBox}"
-                                      materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                                      BorderThickness="0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+                    <!-- Batch parameters (Program, Fund, Amount) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Program -->
+                        <Border Style="{StaticResource SurfaceCard}" CornerRadius="8" Padding="12,6" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountGroup" Width="16" Height="16" Foreground="{StaticResource StatusGreen}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Program:" FontWeight="Bold" Foreground="{StaticResource InkBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram}" Width="110" FontSize="12" FontWeight="SemiBold" Style="{StaticResource MaterialDesignComboBox}" materialDesign:TextFieldAssist.DecorationVisibility="Collapsed" BorderThickness="0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Source of Fund -->
+                        <Border Style="{StaticResource SurfaceCard}" CornerRadius="8" Padding="12,6" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="WalletOutline" Width="16" Height="16" Foreground="{StaticResource StatusGreen}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Fund:" FontWeight="Bold" Foreground="{StaticResource InkBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox ItemsSource="{Binding SourceFunds}" SelectedValue="{Binding SelectedSourceFundId}" SelectedValuePath="SourceFundId" DisplayMemberPath="FundName" Width="110" FontSize="12" FontWeight="SemiBold" Style="{StaticResource MaterialDesignComboBox}" materialDesign:TextFieldAssist.DecorationVisibility="Collapsed" BorderThickness="0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Amount -->
+                        <Border Style="{StaticResource SurfaceCard}" CornerRadius="8" Padding="12,6">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CurrencyPhp" Width="16" Height="16" Foreground="{StaticResource StatusGreen}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock Text="Amount:" FontWeight="Bold" Foreground="{StaticResource InkBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBox Text="{Binding AmountPerBeneficiary, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="80" FontSize="12" FontWeight="SemiBold" Style="{StaticResource MaterialDesignTextBox}" materialDesign:TextFieldAssist.DecorationVisibility="Collapsed" BorderThickness="0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
 
                     <Button Grid.Column="2" Content="Confirm Batch" Command="{Binding ConfirmBatchCommand}"
                             Style="{StaticResource PrimaryAction}" Margin="14,0,0,0"/>
@@ -346,23 +359,23 @@
                     <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Text="{Binding UnreleasedRecords.Count}" Style="{StaticResource StatNumber}"
-                                           Foreground="{StaticResource StatusGreen}"/>
-                                <TextBlock Text="Unreleased" Style="{StaticResource StatLabel}"/>
+                                <TextBlock Text="{Binding TotalUnreleasedAmount, StringFormat='₱{0:N2}'}" Style="{StaticResource StatNumber}"
+                                           Foreground="{StaticResource MutedBrush}"/>
+                                <TextBlock Text="{Binding UnreleasedRecords.Count, StringFormat='{}{0} Unreleased'}" Style="{StaticResource StatLabel}"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Text="{Binding PendingRecords.Count}" Style="{StaticResource StatNumber}"
+                                <TextBlock Text="{Binding TotalPendingAmount, StringFormat='₱{0:N2}'}" Style="{StaticResource StatNumber}"
                                            Foreground="{StaticResource StatusOrange}"/>
-                                <TextBlock Text="On Hold" Style="{StaticResource StatLabel}"/>
+                                <TextBlock Text="{Binding PendingRecords.Count, StringFormat='{}{0} On Hold'}" Style="{StaticResource StatLabel}"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Text="{Binding RejectedRecords.Count}" Style="{StaticResource StatNumber}"
-                                           Foreground="{StaticResource StatusRed}"/>
-                                <TextBlock Text="Rejected" Style="{StaticResource StatLabel}"/>
+                                <TextBlock Text="{Binding TotalReleasedAmount, StringFormat='₱{0:N2}'}" Style="{StaticResource StatNumber}"
+                                           Foreground="{StaticResource StatusGreen}"/>
+                                <TextBlock Text="{Binding ReleasedRecords.Count, StringFormat='{}{0} Released'}" Style="{StaticResource StatLabel}"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -392,21 +405,21 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Border Background="{StaticResource StatusGreenTint}" Padding="18,15" CornerRadius="10,10,0,0">
+                        <Border Background="{StaticResource RowLineBrush}" Padding="18,15" CornerRadius="10,10,0,0">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                     <materialDesign:PackIcon Kind="AccountOutline" Width="20" Height="20"
-                                                             Foreground="{StaticResource StatusGreen}"
+                                                             Foreground="{StaticResource MutedBrush}"
                                                              VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <TextBlock Text="Unreleased" Style="{StaticResource ColumnTitle}"
-                                               Foreground="{StaticResource StatusGreen}"/>
-                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource StatusGreenSoft}">
+                                               Foreground="{StaticResource MutedBrush}"/>
+                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource LineBrush}">
                                         <TextBlock Text="{Binding UnreleasedRecords.Count}"
-                                                   Foreground="{StaticResource StatusGreen}" FontSize="12" FontWeight="Bold"/>
+                                                   Foreground="{StaticResource MutedBrush}" FontSize="12" FontWeight="Bold"/>
                                     </Border>
                                 </StackPanel>
                                 <Button Style="{StaticResource ColumnMenuButton}"
-                                        Foreground="{StaticResource StatusGreen}"
+                                        Foreground="{StaticResource MutedBrush}"
                                         Click="DotsButton_Click" ToolTip="Column options">
                                     <materialDesign:PackIcon Kind="DotsHorizontal" Width="20" Height="20"/>
                                 </Button>
@@ -418,11 +431,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.1*"/>
                                     <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="0.8*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
                                 <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
-                                <TextBlock Grid.Column="2" Text="DATE ADDED" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="2" Text="AMOUNT" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="3" Text="DATE ADDED" Style="{StaticResource ColumnHeaderLabel}"/>
                             </Grid>
                         </Border>
 
@@ -443,6 +458,7 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="1.1*"/>
                                                     <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="0.8*"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding BeneficiaryId}" Style="{StaticResource RecordId}"/>
@@ -451,7 +467,15 @@
                                                     <TextBlock Text="Waiting to claim" Style="{StaticResource RecordNote}"
                                                                Foreground="{StaticResource StatusOrange}"/>
                                                 </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="—" Style="{StaticResource RecordDate}"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource RecordId}" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}">
+                                                    <TextBlock.Text>
+                                                        <PriorityBinding>
+                                                            <Binding Path="Model.Batch.AmountPerBeneficiary" StringFormat="₱{0:N2}"/>
+                                                            <Binding Path="DataContext.AmountPerBeneficiary" RelativeSource="{RelativeSource AncestorType=UserControl}" StringFormat="₱{0:N2}"/>
+                                                        </PriorityBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="3" Text="—" Style="{StaticResource RecordDate}"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -527,11 +551,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.1*"/>
                                     <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="0.8*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
                                 <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
-                                <TextBlock Grid.Column="2" Text="DATE MOVED" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="2" Text="AMOUNT" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="3" Text="DATE MOVED" Style="{StaticResource ColumnHeaderLabel}"/>
                             </Grid>
                         </Border>
 
@@ -556,6 +582,7 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="1.1*"/>
                                                     <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="0.8*"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding BeneficiaryId}" Style="{StaticResource RecordId}"/>
@@ -565,19 +592,19 @@
                                                                Style="{StaticResource RecordNote}"
                                                                Foreground="{StaticResource StatusOrange}"/>
                                                 </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
+                                                <TextBlock Grid.Column="2" Style="{StaticResource RecordId}" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}">
+                                                    <TextBlock.Text>
+                                                        <PriorityBinding>
+                                                            <Binding Path="Model.Batch.AmountPerBeneficiary" StringFormat="₱{0:N2}"/>
+                                                            <Binding Path="DataContext.AmountPerBeneficiary" RelativeSource="{RelativeSource AncestorType=UserControl}" StringFormat="₱{0:N2}"/>
+                                                        </PriorityBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="3" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
                                                            Style="{StaticResource RecordDate}"/>
-                                                <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal"
+                                                <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Orientation="Horizontal"
                                                             HorizontalAlignment="Right" Margin="0,8,0,0"
                                                             Visibility="{Binding DataContext.ShowRowReviewActions, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource LocalBoolToVis}}">
-                                                    <Button Content="Reject"
-                                                            Command="{Binding DataContext.RejectRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                            Height="28" Padding="14,0" FontSize="11" Margin="0,0,8,0"
-                                                            Foreground="{StaticResource StatusRed}"
-                                                            BorderBrush="{StaticResource StatusRedSoft}"
-                                                            materialDesign:ButtonAssist.CornerRadius="8"/>
                                                     <Button Content="Approve"
                                                             Command="{Binding DataContext.ApproveRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
@@ -626,7 +653,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Rejected -->
+                <!-- Released -->
                 <Border Style="{StaticResource StatusColumnCard}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -636,21 +663,21 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Border Background="{StaticResource StatusRedTint}" Padding="18,15" CornerRadius="10,10,0,0">
+                        <Border Background="{StaticResource StatusGreenTint}" Padding="18,15" CornerRadius="10,10,0,0">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="20" Height="20"
-                                                             Foreground="{StaticResource StatusRed}"
+                                    <materialDesign:PackIcon Kind="CheckCircleOutline" Width="20" Height="20"
+                                                             Foreground="{StaticResource StatusGreen}"
                                                              VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Rejected" Style="{StaticResource ColumnTitle}"
-                                               Foreground="{StaticResource StatusRed}"/>
-                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource StatusRedSoft}">
-                                        <TextBlock Text="{Binding RejectedRecords.Count}"
-                                                   Foreground="{StaticResource StatusRed}" FontSize="12" FontWeight="Bold"/>
+                                    <TextBlock Text="Released" Style="{StaticResource ColumnTitle}"
+                                               Foreground="{StaticResource StatusGreen}"/>
+                                    <Border Style="{StaticResource CountBadge}" Background="{StaticResource StatusGreenSoft}">
+                                        <TextBlock Text="{Binding ReleasedRecords.Count}"
+                                                   Foreground="{StaticResource StatusGreen}" FontSize="12" FontWeight="Bold"/>
                                     </Border>
                                 </StackPanel>
                                 <Button Style="{StaticResource ColumnMenuButton}"
-                                        Foreground="{StaticResource StatusRed}"
+                                        Foreground="{StaticResource StatusGreen}"
                                         Click="DotsButton_Click" ToolTip="Column options">
                                     <materialDesign:PackIcon Kind="DotsHorizontal" Width="20" Height="20"/>
                                 </Button>
@@ -662,16 +689,18 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.1*"/>
                                     <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="0.8*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="BENEFICIARY ID /" Style="{StaticResource ColumnHeaderLabel}"/>
                                 <TextBlock Grid.Column="1" Text="BENEFICIARY NAME" Style="{StaticResource ColumnHeaderLabel}"/>
-                                <TextBlock Grid.Column="2" Text="DATE REJECTED" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="2" Text="AMOUNT" Style="{StaticResource ColumnHeaderLabel}"/>
+                                <TextBlock Grid.Column="3" Text="DATE RELEASED" Style="{StaticResource ColumnHeaderLabel}"/>
                             </Grid>
                         </Border>
 
                         <Grid Grid.Row="2">
-                            <ItemsControl ItemsSource="{Binding RejectedRecords}" Margin="0,4"
+                            <ItemsControl ItemsSource="{Binding ReleasedRecords}" Margin="0,4"
                                           ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <ItemsControl.Template>
                                     <ControlTemplate TargetType="ItemsControl">
@@ -687,16 +716,25 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="1.1*"/>
                                                     <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="0.8*"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding BeneficiaryId}" Style="{StaticResource RecordId}"/>
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding BeneficiaryName}" Style="{StaticResource RecordName}"/>
-                                                    <TextBlock Text="{Binding Remarks, TargetNullValue='Rejected'}"
+                                                    <TextBlock Text="{Binding Remarks, TargetNullValue='Released'}"
                                                                Style="{StaticResource RecordNote}"
-                                                               Foreground="{StaticResource StatusRed}"/>
+                                                               Foreground="{StaticResource StatusGreen}"/>
                                                 </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
+                                                <TextBlock Grid.Column="2" Style="{StaticResource RecordId}" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}">
+                                                    <TextBlock.Text>
+                                                        <PriorityBinding>
+                                                            <Binding Path="Model.Batch.AmountPerBeneficiary" StringFormat="₱{0:N2}"/>
+                                                            <Binding Path="DataContext.AmountPerBeneficiary" RelativeSource="{RelativeSource AncestorType=UserControl}" StringFormat="₱{0:N2}"/>
+                                                        </PriorityBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="3" Text="{Binding ProcessedAt, StringFormat='{}{0:MMM dd, yyyy}'}"
                                                            Style="{StaticResource RecordDate}"/>
                                             </Grid>
                                         </Border>
@@ -705,19 +743,19 @@
                             </ItemsControl>
 
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
-                                        Visibility="{Binding HasRejectedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
-                                <Border Style="{StaticResource EmptyStateMedallion}" Background="{StaticResource StatusRedTint}">
+                                        Visibility="{Binding HasReleasedRecords, Converter={StaticResource LocalBoolToVis}, ConverterParameter=Invert}">
+                                <Border Style="{StaticResource EmptyStateMedallion}" Background="{StaticResource StatusGreenTint}">
                                     <materialDesign:PackIcon Kind="InboxOutline" Style="{StaticResource EmptyStateGlyph}"
-                                                             Foreground="{StaticResource StatusRed}"/>
+                                                             Foreground="{StaticResource StatusGreen}"/>
                                 </Border>
-                                <TextBlock Text="No rejected beneficiaries." Style="{StaticResource EmptyStateText}"/>
+                                <TextBlock Text="No released beneficiaries." Style="{StaticResource EmptyStateText}"/>
                             </StackPanel>
                         </Grid>
 
                         <Border Grid.Row="3" Style="{StaticResource ColumnFooter}">
                             <Grid>
                                 <TextBlock Style="{StaticResource FooterText}"
-                                           Text="{Binding RejectedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
+                                           Text="{Binding ReleasedRecords.Count, StringFormat='Showing {0} of {0}'}"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Style="{StaticResource PagerButton}" ToolTip="First page">
                                         <materialDesign:PackIcon Kind="PageFirst" Width="16" Height="16"/>
@@ -743,7 +781,7 @@
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
                                              Foreground="#2563EB" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock Text="Search or scan a beneficiary to release, hold, or reject their distribution."
+                    <TextBlock Text="Search or scan a beneficiary to release or hold their distribution."
                                FontSize="12" Foreground="#475569" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>

@@ -32,7 +32,7 @@ namespace eSureHi.Services
                 using var conn = new MySqlConnection(connStr);
                 await conn.OpenAsync();
 
-                foreach (var table in new[] { "yearlybudgets", "budget_allocations", "consolidated_transactions" })
+                foreach (var table in new[] { "yearlybudgets", "officeallocations", "consolidated_transactions", "project_details" })
                 {
                     using var tableCmd = new MySqlCommand(
                         "SELECT COUNT(*) FROM information_schema.tables " +
@@ -85,15 +85,20 @@ namespace eSureHi.Services
                     .Where(a => a.OfficeCode == OfficeCode && a.YearlyBudgetId == budget.Id)
                     .FirstOrDefaultAsync();
 
-                if (alloc is null)
+                var projectDetail = await db.ProjectDetails
+                    .Where(p => p.OfficeCode == OfficeCode && p.YearlyBudgetId == budget.Id)
+                    .OrderByDescending(p => p.Id)
+                    .FirstOrDefaultAsync();
+
+                if (alloc is null && projectDetail is null)
                 {
                     summary.ErrorMessage = $"No allocation found for office {OfficeCode}.";
                     return summary;
                 }
 
                 summary.Year = budget.Year;
-                summary.AllocatedAmount = alloc.AllocatedAmount;
-                summary.SpentAmount = alloc.SpentAmount;
+                summary.AllocatedAmount = projectDetail?.TotalBudget ?? (alloc?.AllocatedAmount ?? 0);
+                summary.SpentAmount = alloc?.SpentAmount ?? 0;
                 summary.IsLoaded = true;
                 await SaveAllocationCacheAsync(summary);
                 return summary;
@@ -213,6 +218,172 @@ namespace eSureHi.Services
             return $"{text} - {sourceOfFunds.Trim()}";
         }
 
+        public static async Task SyncQueueAsync()
+        {
+            try
+            {
+                var connectionTest = await CheckReleaseConnectionAsync();
+                if (!connectionTest.IsOnline)
+                    return; // GGMS is offline, do nothing.
+
+                await using var localDb = eSureHiDbContextFactory.Create();
+                var pendingItems = await localDb.GgmsQueueItems
+                    .Where(q => q.Status == "Pending" || q.Status == "Failed")
+                    .OrderBy(q => q.CreatedAt)
+                    .ToListAsync();
+
+                if (pendingItems.Count == 0)
+                    return;
+
+                var connStr = GgmsDbContextFactory.GetConnectionString();
+                using var conn = new MySqlConnection(connStr);
+                await conn.OpenAsync();
+
+                // Load dynamic project details for the current year
+                string dynamicProjectCode = "IMS";
+                string dynamicProjectName = "Insurance Management System";
+                using (var detailCmd = new MySqlCommand(@"
+                    SELECT project_details_id, project
+                    FROM project_details
+                    WHERE office_code = @office_code AND yearly_budget_id = (
+                        SELECT Id FROM yearlybudgets WHERE Year = @year ORDER BY Id DESC LIMIT 1
+                    )
+                    ORDER BY id DESC LIMIT 1", conn))
+                {
+                    detailCmd.Parameters.AddWithValue("@office_code", OfficeCode);
+                    detailCmd.Parameters.AddWithValue("@year", DateTime.Today.Year);
+                    using (var detailReader = await detailCmd.ExecuteReaderAsync())
+                    {
+                        if (await detailReader.ReadAsync())
+                        {
+                            dynamicProjectCode = detailReader.GetString(0);
+                            dynamicProjectName = detailReader.GetString(1);
+                        }
+                    }
+                }
+
+                foreach (var item in pendingItems)
+                {
+                    await using var transaction = await conn.BeginTransactionAsync();
+                    try
+                    {
+                        var transDate = DateOnly.FromDateTime(item.TransactionDate);
+
+                        // Resolve dynamic code and name
+                        var resolvedProjectCode = ResolveProjectCode(item.ProjectCode, dynamicProjectCode);
+                        var resolvedProjectName = Truncate($"{dynamicProjectName} - {item.ProjectName}", 45) ?? dynamicProjectName;
+
+                        // Prevent duplicates by checking if the transaction is already uploaded to GGMS
+                        using (var checkCmd = new MySqlCommand(
+                            "SELECT COUNT(*) FROM consolidated_transactions WHERE project_code = @code", conn, transaction))
+                        {
+                            checkCmd.Parameters.AddWithValue("@code", resolvedProjectCode);
+                            var exists = Convert.ToInt32(await checkCmd.ExecuteScalarAsync()) > 0;
+                            if (exists)
+                            {
+                                await transaction.CommitAsync();
+                                item.Status = "Success";
+                                item.ErrorMessage = null;
+                                item.UpdatedAt = DateTime.Now;
+                                continue;
+                            }
+                        }
+
+                        CurrentAllocation? allocation = null;
+                        if (item.Amount > 0)
+                        {
+                            allocation = await LoadCurrentAllocationForUpdateAsync(conn, transaction);
+                            if (allocation is null)
+                            {
+                                throw new InvalidOperationException($"No GGMS fund allocation found for {OfficeCode} in {DateTime.Today.Year}.");
+                            }
+
+                            decimal dynamicBudget = allocation.AllocatedAmount;
+                            using (var budgetCmd = new MySqlCommand(@"
+                                SELECT total_budget FROM project_details
+                                WHERE office_code = @office_code AND yearly_budget_id = (
+                                    SELECT YearlyBudgetId FROM officeallocations WHERE Id = @alloc_id
+                                )
+                                ORDER BY id DESC LIMIT 1", conn, transaction))
+                            {
+                                budgetCmd.Parameters.AddWithValue("@office_code", OfficeCode);
+                                budgetCmd.Parameters.AddWithValue("@alloc_id", allocation.Id);
+                                var budgetVal = await budgetCmd.ExecuteScalarAsync();
+                                if (budgetVal != null && budgetVal != DBNull.Value)
+                                {
+                                    dynamicBudget = Convert.ToDecimal(budgetVal);
+                                }
+                            }
+
+                            var remaining = dynamicBudget - allocation.SpentAmount;
+                            if (item.Amount > remaining)
+                            {
+                                throw new InvalidOperationException($"Insufficient GGMS funds. Remaining: {remaining:N2}, requested: {item.Amount:N2}.");
+                            }
+                        }
+
+                        using var cmd = new MySqlCommand(@"
+                            INSERT INTO consolidated_transactions
+                                (beneficiary_id, civil_registry_id, project_code, project_name,
+                                 office_id, full_name, first_name, middle_name, last_name,
+                                 office_name, transaction_type, amount, transaction_date, status)
+                            VALUES
+                                (@beneficiary_id, @civil_registry_id, @project_code, @project_name,
+                                 @office_id, @full_name, @first_name, @middle_name, @last_name,
+                                 @office_name, @transaction_type, @amount, @transaction_date, 'Released')",
+                            conn, transaction);
+
+                        cmd.Parameters.AddWithValue("@beneficiary_id", (object?)Truncate(item.BeneficiaryId, 45) ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@civil_registry_id", (object?)Truncate(item.CivilRegistryId, 45) ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@project_code", Truncate(resolvedProjectCode, 45)!);
+                        cmd.Parameters.AddWithValue("@project_name", Truncate(resolvedProjectName, 45)!);
+                        cmd.Parameters.AddWithValue("@office_id", OfficeCode);
+                        cmd.Parameters.AddWithValue("@full_name", Truncate(item.FullName, 45)!);
+                        cmd.Parameters.AddWithValue("@first_name", Truncate(item.FirstName, 45)!);
+                        cmd.Parameters.AddWithValue("@middle_name", (object?)Truncate(item.MiddleName, 45) ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@last_name", Truncate(item.LastName, 45)!);
+                        cmd.Parameters.AddWithValue("@office_name", Truncate(dynamicProjectName, 45) ?? OfficeName);
+                        cmd.Parameters.AddWithValue("@transaction_type", Truncate(item.TransactionType, 45)!);
+                        cmd.Parameters.AddWithValue("@amount", item.Amount);
+                        cmd.Parameters.AddWithValue("@transaction_date", transDate.ToString("yyyy-MM-dd"));
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        if (item.Amount > 0 && allocation != null)
+                        {
+                            using var updateCmd = new MySqlCommand(@"
+                                UPDATE officeallocations
+                                SET SpentAmount = SpentAmount + @amount
+                                WHERE Id = @allocation_id",
+                                conn, transaction);
+                            updateCmd.Parameters.AddWithValue("@amount", item.Amount);
+                            updateCmd.Parameters.AddWithValue("@allocation_id", allocation.Id);
+                            await updateCmd.ExecuteNonQueryAsync();
+                        }
+
+                        await transaction.CommitAsync();
+
+                        item.Status = "Success";
+                        item.ErrorMessage = null;
+                        item.UpdatedAt = DateTime.Now;
+                    }
+                    catch (Exception itemEx)
+                    {
+                        await transaction.RollbackAsync();
+                        item.Status = "Failed";
+                        item.ErrorMessage = itemEx.Message;
+                        item.UpdatedAt = DateTime.Now;
+                    }
+                }
+
+                await localDb.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GGMS Queue Sync failed: {ex.Message}");
+            }
+        }
+
         private static async Task<(bool Success, string Message)> RecordConsolidatedTransactionAsync(
             string projectCode,
             string projectName,
@@ -233,6 +404,46 @@ namespace eSureHi.Services
                 await conn.OpenAsync();
                 await using var transaction = await conn.BeginTransactionAsync();
 
+                // Load dynamic project details for the transaction's year
+                string dynamicProjectCode = "IMS";
+                string dynamicProjectName = "Insurance Management System";
+                using (var detailCmd = new MySqlCommand(@"
+                    SELECT project_details_id, project
+                    FROM project_details
+                    WHERE office_code = @office_code AND yearly_budget_id = (
+                        SELECT Id FROM yearlybudgets WHERE Year = @year ORDER BY Id DESC LIMIT 1
+                    )
+                    ORDER BY id DESC LIMIT 1", conn, transaction))
+                {
+                    detailCmd.Parameters.AddWithValue("@office_code", OfficeCode);
+                    detailCmd.Parameters.AddWithValue("@year", transactionDate.Year);
+                    using (var detailReader = await detailCmd.ExecuteReaderAsync())
+                    {
+                        if (await detailReader.ReadAsync())
+                        {
+                            dynamicProjectCode = detailReader.GetString(0);
+                            dynamicProjectName = detailReader.GetString(1);
+                        }
+                    }
+                }
+
+                // Resolve dynamic code and name
+                var resolvedProjectCode = ResolveProjectCode(projectCode, dynamicProjectCode);
+                var resolvedProjectName = Truncate($"{dynamicProjectName} - {projectName}", 45) ?? dynamicProjectName;
+
+                // Prevent duplicates by checking if the transaction is already uploaded to GGMS
+                using (var checkCmd = new MySqlCommand(
+                    "SELECT COUNT(*) FROM consolidated_transactions WHERE project_code = @code", conn, transaction))
+                {
+                    checkCmd.Parameters.AddWithValue("@code", resolvedProjectCode);
+                    var exists = Convert.ToInt32(await checkCmd.ExecuteScalarAsync()) > 0;
+                    if (exists)
+                    {
+                        await transaction.CommitAsync();
+                        return (true, "GGMS transaction already recorded.");
+                    }
+                }
+
                 var allocation = await LoadCurrentAllocationForUpdateAsync(conn, transaction);
                 if (allocation is null)
                 {
@@ -240,7 +451,24 @@ namespace eSureHi.Services
                     return (false, $"No GGMS fund allocation found for {OfficeCode} in {DateTime.Today.Year}.");
                 }
 
-                var remaining = allocation.AllocatedAmount - allocation.SpentAmount;
+                decimal dynamicBudget = allocation.AllocatedAmount;
+                using (var budgetCmd = new MySqlCommand(@"
+                    SELECT total_budget FROM project_details
+                    WHERE office_code = @office_code AND yearly_budget_id = (
+                        SELECT YearlyBudgetId FROM officeallocations WHERE Id = @alloc_id
+                    )
+                    ORDER BY id DESC LIMIT 1", conn, transaction))
+                {
+                    budgetCmd.Parameters.AddWithValue("@office_code", OfficeCode);
+                    budgetCmd.Parameters.AddWithValue("@alloc_id", allocation.Id);
+                    var budgetVal = await budgetCmd.ExecuteScalarAsync();
+                    if (budgetVal != null && budgetVal != DBNull.Value)
+                    {
+                        dynamicBudget = Convert.ToDecimal(budgetVal);
+                    }
+                }
+
+                var remaining = dynamicBudget - allocation.SpentAmount;
                 if (amount > remaining)
                 {
                     await transaction.RollbackAsync();
@@ -260,16 +488,14 @@ namespace eSureHi.Services
 
                 cmd.Parameters.AddWithValue("@beneficiary_id", (object?)Truncate(beneficiaryId, 45) ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@civil_registry_id", (object?)Truncate(civilRegistryId, 45) ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@project_code", Truncate(projectCode, 45)!);
-                cmd.Parameters.AddWithValue("@project_name", Truncate(projectName, 45)!);
-                // consolidated_transactions.office_id is a varchar code, unlike
-                // budget_allocations.office_id (bigint) — string OfficeCode is correct here.
+                cmd.Parameters.AddWithValue("@project_code", Truncate(resolvedProjectCode, 45)!);
+                cmd.Parameters.AddWithValue("@project_name", Truncate(resolvedProjectName, 45)!);
                 cmd.Parameters.AddWithValue("@office_id", OfficeCode);
                 cmd.Parameters.AddWithValue("@full_name", Truncate(fullName, 45)!);
                 cmd.Parameters.AddWithValue("@first_name", Truncate(firstName, 45)!);
                 cmd.Parameters.AddWithValue("@middle_name", (object?)Truncate(middleName, 45) ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@last_name", Truncate(lastName, 45)!);
-                cmd.Parameters.AddWithValue("@office_name", OfficeName);
+                cmd.Parameters.AddWithValue("@office_name", Truncate(dynamicProjectName, 45) ?? OfficeName);
                 cmd.Parameters.AddWithValue("@transaction_type", Truncate(transactionType, 45)!);
                 cmd.Parameters.AddWithValue("@amount", amount);
                 cmd.Parameters.AddWithValue("@transaction_date", transactionDate.ToString("yyyy-MM-dd"));
@@ -290,7 +516,37 @@ namespace eSureHi.Services
             }
             catch (Exception ex)
             {
-                return (false, $"GGMS consolidated write failed: {ex.Message}");
+                // Queue the transaction locally!
+                try
+                {
+                    await using var localDb = eSureHiDbContextFactory.Create();
+                    var queueItem = new GgmsQueueItem
+                    {
+                        ProjectCode = projectCode,
+                        ProjectName = projectName,
+                        BeneficiaryId = beneficiaryId,
+                        CivilRegistryId = civilRegistryId,
+                        FirstName = firstName,
+                        MiddleName = middleName,
+                        LastName = lastName,
+                        FullName = fullName,
+                        TransactionType = transactionType,
+                        Amount = amount,
+                        TransactionDate = new DateTime(transactionDate.Year, transactionDate.Month, transactionDate.Day),
+                        Status = "Pending",
+                        ErrorMessage = ex.Message,
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    localDb.GgmsQueueItems.Add(queueItem);
+                    await localDb.SaveChangesAsync();
+
+                    return (true, $"Queued locally (GGMS offline: {ex.Message})");
+                }
+                catch (Exception dbEx)
+                {
+                    return (false, $"Failed to record to GGMS and failed to save to local queue: {dbEx.Message}");
+                }
             }
         }
 
@@ -321,11 +577,15 @@ namespace eSureHi.Services
             if (!await reader.ReadAsync())
                 return null;
 
+            var idOrdinal = reader.GetOrdinal("Id");
+            var allocOrdinal = reader.GetOrdinal("AllocatedAmount");
+            var spentOrdinal = reader.GetOrdinal("SpentAmount");
+
             return new CurrentAllocation
             {
-                Id = reader.GetInt32("Id"),
-                AllocatedAmount = reader.GetDecimal("AllocatedAmount"),
-                SpentAmount = reader.GetDecimal("SpentAmount")
+                Id = reader.IsDBNull(idOrdinal) ? 0 : reader.GetInt32(idOrdinal),
+                AllocatedAmount = reader.IsDBNull(allocOrdinal) ? 0 : reader.GetDecimal(allocOrdinal),
+                SpentAmount = reader.IsDBNull(spentOrdinal) ? 0 : reader.GetDecimal(spentOrdinal)
             };
         }
 
@@ -389,6 +649,16 @@ namespace eSureHi.Services
             {
                 return new GgmsFundSummary();
             }
+        }
+
+        private static string ResolveProjectCode(string originalCode, string dynamicDetailsId)
+        {
+            if (string.IsNullOrWhiteSpace(originalCode))
+                return dynamicDetailsId;
+
+            var parts = originalCode.Split('-');
+            var suffix = parts.Length > 1 ? parts[^1] : originalCode;
+            return $"{dynamicDetailsId}-{suffix}";
         }
     }
 }

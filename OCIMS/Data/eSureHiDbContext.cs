@@ -36,7 +36,8 @@ namespace eSureHi.Data
             typeof(Cedula),
             typeof(SourceFund),
             typeof(DistributionBatch),
-            typeof(DistributionRecord)
+            typeof(DistributionRecord),
+            typeof(GgmsQueueItem)
         };
 
         // ── Core Tables ────────────────────────────────────────────────
@@ -70,6 +71,7 @@ namespace eSureHi.Data
         public DbSet<CrsBeneficiaryCache> CrsBeneficiaryCache { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<GgmsAllocationCache> GgmsAllocationCache { get; set; }
+        public DbSet<GgmsQueueItem> GgmsQueueItems { get; set; }
 
         // ── Read-Only Views ────────────────────────────────────────────
         public DbSet<VwClaimsSummary> VwClaimsSummary { get; set; }

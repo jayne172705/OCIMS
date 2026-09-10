@@ -153,8 +153,37 @@
                                             <Border Background="#EDE9FE" CornerRadius="8" Padding="6,2" Margin="8,0">
                                                 <TextBlock Text="{Binding ResidentSearchRoleBadge}" FontSize="9" FontWeight="SemiBold" Foreground="#5B21B6"/>
                                             </Border>
+                                            
+                                            <!-- Registration Status Badge -->
+                                            <Border CornerRadius="8" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#F8D7DA"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding LinkStatus}" Value="Linked">
+                                                                <Setter Property="Background" Value="#D6EFD8"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="9" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Unregistered"/>
+                                                            <Setter Property="Foreground" Value="#842029"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding LinkStatus}" Value="Linked">
+                                                                    <Setter Property="Text" Value="Registered"/>
+                                                                    <Setter Property="Foreground" Value="#0F5132"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+
                                             <TextBlock FontSize="11" Foreground="#64748B" VerticalAlignment="Center">
-                                                <Run Text="  |  "/>
+                                                <Run Text="|  "/>
                                                 <Run Text="{Binding DateOfBirth, TargetNullValue='No birth date'}"/>
                                             </TextBlock>
                                         </StackPanel>

@@ -77,8 +77,18 @@ namespace eSureHi.ViewModels.Admin
                 foreach (var claim in claims)
                     Claims.Add(claim);
 
-                HasActiveClaim = await db.Claims.AnyAsync(c => c.BenId == benId &&
-                    c.ClaimStatus != "Rejected" && c.ClaimStatus != "Paid");
+                if (Beneficiary != null && Beneficiary.IsPrimary)
+                {
+                    HasActiveClaim = await db.Claims.AnyAsync(c =>
+                        (c.BenId == benId || (c.BenId == null && c.EmpId == Beneficiary.EmpId)) &&
+                        (c.ClaimStatus == "Submitted" || c.ClaimStatus == "Under Review" || c.ClaimStatus == "Approved" || c.ClaimStatus == "Partially Approved"));
+                }
+                else
+                {
+                    HasActiveClaim = await db.Claims.AnyAsync(c =>
+                        c.BenId == benId &&
+                        (c.ClaimStatus == "Submitted" || c.ClaimStatus == "Under Review" || c.ClaimStatus == "Approved" || c.ClaimStatus == "Partially Approved"));
+                }
             }
             catch (Exception ex)
             {

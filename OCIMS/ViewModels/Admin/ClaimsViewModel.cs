@@ -203,12 +203,31 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand<Claim> PrintVoucherCommand { get; }
         public RelayCommand ToggleClaimantPickerCommand { get; }
         public RelayCommand<ClaimBeneficiaryRow> FileClaimForCommand { get; }
+        public RelayCommand<ClaimBeneficiaryRow> ViewClaimCommand { get; }
 
         // ── Constructor ────────────────────────────────────────────────
-        public ClaimsViewModel(ClaimsListMode listMode = ClaimsListMode.All)
+        public ClaimsViewModel(ClaimsListMode listMode = ClaimsListMode.All, string? initialSearch = null, string? initialProgram = null)
         {
             _listMode = listMode;
             _statusFilter = _listMode == ClaimsListMode.PendingOnly ? "All Pending" : "All";
+
+            if (!string.IsNullOrEmpty(initialSearch))
+            {
+                _searchText = initialSearch;
+                _claimantSearch = initialSearch;
+            }
+
+            if (!string.IsNullOrEmpty(initialProgram) && !string.Equals(initialProgram, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                _groupFilter = initialProgram;
+                _selectedClaimantProgram = initialProgram;
+            }
+
+            if (!string.IsNullOrEmpty(initialSearch) || (!string.IsNullOrEmpty(initialProgram) && !string.Equals(initialProgram, "All", StringComparison.OrdinalIgnoreCase)))
+            {
+                _isClaimantPickerOpen = true;
+            }
+
             NewCommand = new RelayCommand(OpenNewDialog);
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
             ViewCommand = new RelayCommand(OpenDetailDialog,
@@ -221,6 +240,7 @@ namespace eSureHi.ViewModels.Admin
             ToggleClaimantPickerCommand = new RelayCommand(
                 () => IsClaimantPickerOpen = !IsClaimantPickerOpen);
             FileClaimForCommand = new RelayCommand<ClaimBeneficiaryRow>(FileClaimFor);
+            ViewClaimCommand = new RelayCommand<ClaimBeneficiaryRow>(OpenDetailDialogForClaim);
 
             _groupedClaimants = (ListCollectionView)CollectionViewSource.GetDefaultView(_claimants);
             _groupedClaimants.Filter = FilterClaimant;
@@ -402,10 +422,47 @@ namespace eSureHi.ViewModels.Admin
                 .OrderBy(b => b.LastName).ThenBy(b => b.FirstName)
                 .ToListAsync();
 
-            var openClaimBenIds = _allClaims
-                .Where(c => c.BenId.HasValue && IsOpenClaim(c.ClaimStatus))
-                .Select(c => c.BenId!.Value)
-                .ToHashSet();
+            var primaryBenIdMap = beneficiaries
+                .Where(b => b.IsPrimary)
+                .ToDictionary(b => b.EmpId, b => b.BenId);
+
+            var openClaimBenIds = new System.Collections.Generic.HashSet<int>();
+            foreach (var c in _allClaims)
+            {
+                if (!IsOpenClaim(c.ClaimStatus))
+                    continue;
+
+                if (c.BenId.HasValue)
+                {
+                    openClaimBenIds.Add(c.BenId.Value);
+                }
+                else if (primaryBenIdMap.TryGetValue(c.EmpId, out var primaryBenId))
+                {
+                    openClaimBenIds.Add(primaryBenId);
+                }
+            }
+
+            var releasedClaimBenIds = new System.Collections.Generic.HashSet<int>();
+            foreach (var c in _allClaims)
+            {
+                if (c.ClaimStatus != "Released")
+                    continue;
+
+                if (c.BenId.HasValue)
+                {
+                    releasedClaimBenIds.Add(c.BenId.Value);
+                }
+                else if (primaryBenIdMap.TryGetValue(c.EmpId, out var primaryBenId))
+                {
+                    releasedClaimBenIds.Add(primaryBenId);
+                }
+            }
+
+            var releasedDistBenIds = await db.DistributionRecords
+                .Where(r => r.Status == "Released")
+                .Select(r => r.BeneficiaryId)
+                .ToListAsync();
+            var releasedDistSet = releasedDistBenIds.ToHashSet();
 
             // Gather distinct program options from the database (via beneficiaries in-memory)
             var distinctFunds = beneficiaries
@@ -429,9 +486,33 @@ namespace eSureHi.ViewModels.Admin
                 _claimantPrograms.Add(prog);
             }
 
+            var benefitsList = await db.Benefits
+                .Include(x => x.EmployeePolicy)
+                .Where(x => x.YearPeriod == DateTime.Today.Year)
+                .ToListAsync();
+
+            var benefitByEmpId = benefitsList
+                .Where(x => x.EmployeePolicy != null)
+                .GroupBy(x => x.EmployeePolicy!.EmpId)
+                .ToDictionary(g => g.Key, g => g.First());
+
             _claimants.Clear();
             foreach (var b in beneficiaries)
             {
+                var claimsForBen = _allClaims
+                    .Where(c => c.BenId == b.BenId || (c.BenId == null && c.EmpId == b.EmpId))
+                    .ToList();
+                var totalClaimed = claimsForBen.Sum(c => c.AmountClaimed);
+                var totalApproved = claimsForBen.Sum(c => c.AmountApproved);
+
+                decimal progLimit = 0;
+                decimal progRemaining = 0;
+                if (benefitByEmpId.TryGetValue(b.EmpId, out var benefit))
+                {
+                    progLimit = benefit.MaxBenefit;
+                    progRemaining = benefit.Remaining;
+                }
+
                 var row = new ClaimBeneficiaryRow
                 {
                     BenId = b.BenId,
@@ -446,7 +527,13 @@ namespace eSureHi.ViewModels.Admin
                         b.SourceOfFunds,
                         b.Employee?.EmploymentType,
                         "Unassigned Program"),
-                    HasOpenClaim = openClaimBenIds.Contains(b.BenId)
+                    HasOpenClaim = openClaimBenIds.Contains(b.BenId),
+                    IsReleased = releasedClaimBenIds.Contains(b.BenId),
+                    IsReleasedInDistribution = releasedDistSet.Contains(b.BenId),
+                    ProgramLimit = progLimit,
+                    ProgramRemaining = progRemaining,
+                    TotalClaimed = totalClaimed,
+                    TotalApproved = totalApproved
                 };
                 _claimants.Add(row);
             }
@@ -494,8 +581,25 @@ namespace eSureHi.ViewModels.Admin
             dialog.ShowDialog();
         }
 
+        private async void OpenDetailDialogForClaim(ClaimBeneficiaryRow? row)
+        {
+            if (row is null) return;
+            using var db = eSureHiDbContextFactory.Create();
+            var claim = await db.Claims
+                .Where(c => c.BenId == row.BenId)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync();
+            if (claim != null)
+            {
+                var dialog = new Views.Admin.Dialogs.ClaimDetailDialog(claim.ClaimId);
+                dialog.SetStatusChangedCallback(async () => await LoadAsync());
+                if (App.ActiveShell != null && App.ActiveShell != dialog) dialog.Owner = App.ActiveShell;
+                dialog.ShowDialog();
+            }
+        }
+
         private static bool IsOpenClaim(string status) =>
-            status is not ("Rejected" or "Cancelled" or "Released" or "Paid");
+            status is "Submitted" or "Under Review" or "Approved" or "Partially Approved";
 
         private bool MatchesScope(Claim claim) =>
             _listMode != ClaimsListMode.PendingOnly ||
@@ -526,6 +630,18 @@ namespace eSureHi.ViewModels.Admin
         public string Relationship { get; init; } = string.Empty;
         public string Program { get; init; } = string.Empty;
         public bool HasOpenClaim { get; init; }
-        public bool CanFile => !HasOpenClaim;
+        public bool IsReleased { get; init; }
+        public bool IsReleasedInDistribution { get; init; }
+        public bool CanFile => !HasOpenClaim || IsReleasedInDistribution;
+        public bool ShowClaimInProgress => HasOpenClaim && !IsReleasedInDistribution;
+        public bool ShowViewTransaction => IsReleasedInDistribution;
+
+        public decimal ProgramLimit { get; init; }
+        public decimal ProgramRemaining { get; init; }
+        public decimal TotalClaimed { get; init; }
+        public decimal TotalApproved { get; init; }
+
+        public string ProgramInfo => $"₱{ProgramLimit:N2} (Rem: ₱{ProgramRemaining:N2})";
+        public string ClaimsInfo => $"₱{TotalClaimed:N2} (Appr: ₱{TotalApproved:N2})";
     }
 }

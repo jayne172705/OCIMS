@@ -182,6 +182,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand TwoWaySyncCommand { get; }
         public RelayCommand SeedAdminCommand { get; }
         public RelayCommand SeedDocumentTypesCommand { get; }
+        public RelayCommand PurgeDemoDataCommand { get; }
 
         public RelayCommand<string> SelectSectionCommand { get; }
         public RelayCommand ApplyLocalPresetCommand { get; }
@@ -218,6 +219,7 @@ namespace eSureHi.ViewModels.Admin
             TwoWaySyncCommand = new RelayCommand(async () => await RunSyncAsync(SyncDirection.TwoWay), () => CanEditSettings);
             SeedAdminCommand = new RelayCommand(async () => await SeedAdminAsync(), () => CanEditSettings);
             SeedDocumentTypesCommand = new RelayCommand(async () => await SeedDocumentTypesAsync(), () => CanEditSettings);
+            PurgeDemoDataCommand = new RelayCommand(async () => await PurgeDemoDataAsync(), () => CanEditSettings);
 
             RefreshBackupInfo();
             LoadExternalConfigs();
@@ -652,6 +654,33 @@ namespace eSureHi.ViewModels.Admin
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
+        }
+
+        private async Task PurgeDemoDataAsync()
+        {
+            var result = MessageBox.Show(
+                "Are you sure you want to delete all seeded demo data? This will clear all pre-populated employees, claims, and beneficiaries, leaving only manual entries.",
+                "Purge Demo Data",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            IsBusy = true;
+            try
+            {
+                await DemoDataSeederService.PurgeDemoDataAsync();
+                MessageBox.Show("Demo data successfully purged!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Purge failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         private void RefreshBackupInfo()

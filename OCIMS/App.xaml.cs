@@ -140,6 +140,7 @@ namespace eSureHi
                 await EnsurePolicyTrackSchemaAsync();
                 await EnsureSourceFundsTableAsync();
                 await EnsureResidentDemographicsTableAsync();
+                await EnsureGgmsQueueTableOnCloudAsync();
                 await AuthService.EnsureCloudUserPermissionsTableAsync();
                 await EnsureOptionalColumnAsync("employees", "barangay", "LONGTEXT NULL");
                 await EnsureOptionalColumnAsync("beneficiaries", "email", "VARCHAR(160) NULL");
@@ -150,6 +151,12 @@ namespace eSureHi
                 await EnsureNullableDateColumnAsync("employees", "date_of_birth");
                 await EnsureNullableDateColumnAsync("beneficiaries", "date_of_birth");
                 await EnsureSourceOfFundsColumnAsync("claims");
+                await EnsureOptionalColumnAsync("claims", "amount_claimed", "DECIMAL(18,2) NOT NULL DEFAULT 0");
+                await EnsureOptionalColumnAsync("claims", "excess_bill_amount", "DECIMAL(18,2) NOT NULL DEFAULT 0");
+                await EnsureOptionalColumnAsync("claims", "outside_diagnostics_amount", "DECIMAL(18,2) NOT NULL DEFAULT 0");
+                await EnsureOptionalColumnAsync("claims", "total_covered", "DECIMAL(18,2) NOT NULL DEFAULT 0");
+                await EnsureOptionalColumnAsync("claims", "amount_approved", "DECIMAL(18,2) NOT NULL DEFAULT 0");
+                await EnsureOptionalColumnAsync("claims", "amount_released", "DECIMAL(18,2) NOT NULL DEFAULT 0");
                 await EnsureOptionalColumnAsync("claims", "admission_days", "INT NOT NULL DEFAULT 0");
                 await EnsureOptionalColumnAsync("claims", "covered_allowance_days", "INT NOT NULL DEFAULT 0");
                 await EnsureOptionalColumnAsync("claims", "daily_allowance_rate", "DECIMAL(18,2) NOT NULL DEFAULT 0");
@@ -279,6 +286,46 @@ namespace eSureHi
             await EnsureOptionalColumnAsync("resident_demographics", "created_at", "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
             await EnsureOptionalColumnAsync("resident_demographics", "updated_at", "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
             await EnsureOptionalColumnAsync("resident_demographics", "SyncId", "CHAR(36) NULL");
+        }
+
+        private static async System.Threading.Tasks.Task EnsureGgmsQueueTableOnCloudAsync()
+        {
+            try
+            {
+                await using var conn = new MySqlConnection(DbConfig.ToConnectionString());
+                await conn.OpenAsync();
+
+                await using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        CREATE TABLE IF NOT EXISTS ggms_queue_items (
+                            id BIGINT NOT NULL AUTO_INCREMENT,
+                            project_code VARCHAR(45) NOT NULL,
+                            project_name VARCHAR(120) NOT NULL,
+                            beneficiary_id VARCHAR(45) NULL,
+                            civil_registry_id VARCHAR(45) NULL,
+                            first_name VARCHAR(45) NOT NULL,
+                            middle_name VARCHAR(45) NULL,
+                            last_name VARCHAR(45) NOT NULL,
+                            full_name VARCHAR(120) NOT NULL,
+                            transaction_type VARCHAR(45) NOT NULL,
+                            amount DECIMAL(18,2) NOT NULL,
+                            transaction_date DATETIME NOT NULL,
+                            status VARCHAR(30) NOT NULL DEFAULT 'Pending',
+                            error_message VARCHAR(500) NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            `SyncId` CHAR(36) NOT NULL,
+                            PRIMARY KEY (id),
+                            UNIQUE KEY ux_ggms_queue_items_syncid (`SyncId`)
+                        );";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("EnsureGgmsQueueTableOnCloudAsync Failed", ex);
+            }
         }
 
         private static async System.Threading.Tasks.Task EnsurePolicyTrackSchemaAsync()

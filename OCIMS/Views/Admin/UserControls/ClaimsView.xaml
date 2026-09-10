@@ -2,671 +2,722 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:helpers="clr-namespace:eSureHi.Helpers">
+             xmlns:helpers="clr-namespace:eSureHi.Helpers">
 
     <UserControl.Resources>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="64"/>
-            <RowDefinition Height="3"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <materialDesign:DialogHost Identifier="ClaimsDialogHost" CloseOnClickAway="True">
+        <Grid Background="{StaticResource BackgroundBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="64"/>
+                <RowDefinition Height="3"/>
+                <RowDefinition Height="Auto"/> <!-- Filters -->
+                <RowDefinition Height="*"/>    <!-- Beneficiary Picker in All Mode -->
+                <RowDefinition Height="*"/>    <!-- DataGrid in standard Mode -->
+                <RowDefinition Height="Auto"/> <!-- Status Bar -->
+            </Grid.RowDefinitions>
 
-        <!-- ── Header ── -->
-        <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
-                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
-            <Grid Margin="24,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ClipboardList"
-                                             Width="24" Height="24"
-                                             Foreground="{StaticResource PrimaryBrush}"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,10,0"/>
-                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding PageSummaryText}"
-                                   FontSize="11"
-                                   Foreground="{StaticResource MutedTextBrush}"
-                                   Margin="0,2,0,0"/>
-                    </StackPanel>
-                    <Border Background="White"
-                            BorderBrush="#1B5E20"
-                            BorderThickness="1"
-                            CornerRadius="10"
-                            Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock FontSize="11" Foreground="#0F172A" FontWeight="Bold">
-                            <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
-                            <Run Text="of"/>
-                            <Run Text="{Binding TotalCount, Mode=OneWay}"/>
-                        </TextBlock>
-                    </Border>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal"
-            HorizontalAlignment="Right" VerticalAlignment="Center">
-
-                    <Button Command="{Binding RefreshCommand}"
-            Style="{StaticResource MaterialDesignOutlinedButton}"
-            Foreground="#64748B"
-            BorderBrush="#CBD5E1"
-            Height="34" Padding="12,0" Margin="0,0,8,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
-                                     Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Refresh" FontSize="12" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding ToggleClaimantPickerCommand}"
-            Visibility="{Binding CanPickClaimant, Converter={StaticResource BoolToVisibilityConverter}}"
-            Background="{StaticResource PrimaryBrush}"
-            Foreground="White"
-            Style="{StaticResource MaterialDesignRaisedButton}"
-            Height="34" Padding="16,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ClipboardPlus" Width="16" Height="16"
-                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="File Claim" FontSize="12"
-                       FontWeight="Medium" VerticalAlignment="Center"/>
-                            <materialDesign:PackIcon Width="16" Height="16"
-                                     Margin="8,0,0,0" VerticalAlignment="Center">
-                                <materialDesign:PackIcon.Style>
-                                    <Style TargetType="materialDesign:PackIcon">
-                                        <Setter Property="Kind" Value="ChevronDown"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsClaimantPickerOpen}" Value="True">
-                                                <Setter Property="Kind" Value="ChevronUp"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </materialDesign:PackIcon.Style>
-                            </materialDesign:PackIcon>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Beneficiary self-service: files only for themselves, no picker -->
-                    <Button Command="{Binding NewCommand}"
-            Visibility="{Binding CanFileOwnClaim, Converter={StaticResource BoolToVisibilityConverter}}"
-            Background="{StaticResource PrimaryBrush}"
-            Foreground="White"
-            Style="{StaticResource MaterialDesignRaisedButton}"
-            Height="34" Padding="16,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ClipboardPlus" Width="16" Height="16"
-                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="File Claim" FontSize="12"
-                       FontWeight="Medium" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding BackToDashboardCommand}"
-                            Background="#D32F2F"
-                            Foreground="White"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="34" Padding="16,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16"
-                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Exit" FontSize="12"
-                                       FontWeight="Medium" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- ── Loading Bar ── -->
-        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3"
-                     Foreground="{StaticResource PrimaryBrush}"
-                     Visibility="{Binding IsLoading,
-                         Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-        <!-- ── Filters ── -->
-        <Border Grid.Row="2" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
-                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1"
-                Padding="16,10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.7*" MinWidth="190"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="1.1*" MinWidth="130"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="1*" MinWidth="120"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="0.9*" MinWidth="110"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="0.9*" MinWidth="110"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="0.9*" MinWidth="110"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="0.75*" MinWidth="90"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBox Grid.Column="0"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Search claim no, beneficiary, employee..."
-                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
-                         materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="46" FontSize="12"/>
-
-                <ComboBox Grid.Column="2"
-                          ItemsSource="{Binding StatusOptions}"
-                          SelectedItem="{Binding StatusFilter}"
-                          materialDesign:HintAssist.Hint="Status"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="46" FontSize="12"/>
-
-                <!-- Type (All/PendingOnly modes) -->
-                <ComboBox Grid.Column="4"
-                          ItemsSource="{Binding TypeOptions}"
-                          SelectedItem="{Binding TypeFilter}"
-                          materialDesign:HintAssist.Hint="Type"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="46" FontSize="12"
-                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
-
-                <!-- Group (Group Claim mode only) -->
-                <ComboBox Grid.Column="4"
-                          ItemsSource="{Binding GroupOptions}"
-                          SelectedItem="{Binding GroupFilter}"
-                          materialDesign:HintAssist.Hint="Group"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="46" FontSize="12"
-                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                <DatePicker Grid.Column="6"
-                            SelectedDate="{Binding DateFrom}"
-                            materialDesign:HintAssist.Hint="From"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="46" FontSize="12"/>
-
-                <DatePicker Grid.Column="8"
-                            SelectedDate="{Binding DateTo}"
-                            materialDesign:HintAssist.Hint="To"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                            Height="46" FontSize="12"/>
-
-                <!-- Month / Year (Group Claim mode only) -->
-                <ComboBox Grid.Column="10"
-                          ItemsSource="{Binding MonthOptions}"
-                          SelectedItem="{Binding MonthFilter}"
-                          materialDesign:HintAssist.Hint="Month"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="46" FontSize="12"
-                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                <ComboBox Grid.Column="12"
-                          ItemsSource="{Binding YearOptions}"
-                          SelectedItem="{Binding YearFilter}"
-                          materialDesign:HintAssist.Hint="Year"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="46" FontSize="12"
-                          Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                <Button Grid.Column="14"
-                        Command="{Binding ClearFilterCommand}"
-                        Style="{StaticResource MaterialDesignFlatButton}"
-                        Foreground="#64748B" Height="46">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
-                                                 Margin="0,0,4,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Clear" FontSize="12" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </Grid>
-        </Border>
-
-        <!-- ── File Claim: beneficiary picker drawer ── -->
-        <Border Grid.Row="3" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
-                BorderBrush="#DDE4EF" BorderThickness="0,0,0,1"
-                Visibility="{Binding IsClaimantPickerOpen, Converter={StaticResource BoolToVisibilityConverter}}">
-            <Grid Margin="16,12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0" Margin="0,0,0,10">
+            <!-- ── Header ── -->
+            <Border Grid.Row="0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                    BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
+                <Grid Margin="24,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="250"/>
                     </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="Select a beneficiary to file a claim for"
-                                   FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"/>
-                        <TextBlock Text="Filter by program. Beneficiaries with a claim already in progress cannot file another."
-                                   FontSize="11" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
-                    </StackPanel>
-
-                    <!-- Program selector -->
-                    <Border Grid.Column="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8"
-                            Padding="12,6" Margin="0,0,10,0" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
-                                                     Foreground="#1B5E20"
-                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Program:" FontWeight="Bold" Foreground="#0F172A"
-                                       FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <ComboBox ItemsSource="{Binding ClaimantPrograms}" SelectedItem="{Binding SelectedClaimantProgram, Mode=TwoWay}"
-                                      Width="160" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"
-                                      Style="{StaticResource MaterialDesignComboBox}"
-                                      materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                                      BorderThickness="0" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="ClipboardList"
+                                                 Width="24" Height="24"
+                                                 Foreground="{StaticResource PrimaryBrush}"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,10,0"/>
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PageSummaryText}"
+                                       FontSize="11"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       Margin="0,2,0,0"/>
                         </StackPanel>
-                    </Border>
-
-                    <TextBox Grid.Column="2"
-                             Text="{Binding ClaimantSearch, UpdateSourceTrigger=PropertyChanged}"
-                             materialDesign:HintAssist.Hint="Search name or beneficiary ID..."
-                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
-                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             VerticalAlignment="Center"
-                             Width="250" FontSize="12"/>
-                </Grid>
-
-                <!-- Column captions, aligned with the row template below -->
-                <Border Grid.Row="1" BorderBrush="#E5EAF2" BorderThickness="1" CornerRadius="4">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Border Grid.Row="0" Background="#F8FAFC" Padding="16,8"
-                                BorderBrush="#E5EAF2" BorderThickness="0,0,0,1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="180"/>
-                                    <ColumnDefinition Width="150"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Beneficiary ID" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
-                                <TextBlock Grid.Column="1" Text="Name" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
-                                <TextBlock Grid.Column="2" Text="Relationship" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
-                                <TextBlock Grid.Column="3" Text="Action" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
-                            </Grid>
+                        <Border Background="White"
+                                BorderBrush="#1B5E20"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock FontSize="11" Foreground="#0F172A" FontWeight="Bold">
+                                <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
+                                <Run Text="of"/>
+                                <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                            </TextBlock>
                         </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                HorizontalAlignment="Right" VerticalAlignment="Center">
 
-                        <ListBox Grid.Row="1"
-                                 ItemsSource="{Binding GroupedClaimants}"
-                                 MaxHeight="320"
-                                 BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                    <Setter Property="Padding" Value="0"/>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border BorderBrush="#EEF2F7" BorderThickness="0,0,0,1" Padding="16,8">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="160"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="180"/>
-                                                <ColumnDefinition Width="150"/>
-                                            </Grid.ColumnDefinitions>
+                        <Button Command="{Binding RefreshCommand}"
+                Style="{StaticResource MaterialDesignOutlinedButton}"
+                Foreground="#64748B"
+                BorderBrush="#CBD5E1"
+                Height="34" Padding="12,0" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
+                                         Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Refresh" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                                            <TextBlock Text="{Binding BeneficiaryId}"
-                                                       VerticalAlignment="Center"
-                                                       FontSize="12" FontWeight="Medium"
-                                                       Foreground="{StaticResource PrimaryBrush}"/>
-
-                                            <TextBlock Grid.Column="1" Text="{Binding FullName}"
-                                                       VerticalAlignment="Center"
-                                                       FontSize="12" FontWeight="SemiBold"
-                                                       Foreground="#0F172A"
-                                                       TextTrimming="CharacterEllipsis"/>
-
-                                            <TextBlock Grid.Column="2" Text="{Binding Relationship}"
-                                                       VerticalAlignment="Center"
-                                                       FontSize="12" Foreground="#1E293B"/>
-
-                                            <Grid Grid.Column="3">
-                                                <Button Command="{Binding DataContext.FileClaimForCommand,
-                                                            RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                        CommandParameter="{Binding}"
-                                                        Visibility="{Binding CanFile,
-                                                            Converter={StaticResource BoolToVisibilityConverter}}"
-                                                        Background="{StaticResource PrimaryBrush}"
-                                                        Foreground="White"
-                                                        Style="{StaticResource MaterialDesignRaisedButton}"
-                                                        HorizontalAlignment="Left"
-                                                        Height="30" Padding="12,0">
-                                                    <TextBlock Text="File Claim" FontSize="11" FontWeight="Medium"/>
-                                                </Button>
-                                                <Border Visibility="{Binding HasOpenClaim,
-                                                            Converter={StaticResource BoolToVisibilityConverter}}"
-                                                        Background="#FFF3E0" BorderBrush="#FFCC80" BorderThickness="1"
-                                                        CornerRadius="10" Padding="10,3"
-                                                        HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                    <TextBlock Text="CLAIM IN PROGRESS" FontSize="10"
-                                                               FontWeight="Bold" Foreground="#E65100"/>
-                                                </Border>
-                                            </Grid>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-                </Border>
-            </Grid>
-        </Border>
-
-        <!-- ── DataGrid ── -->
-        <DataGrid Grid.Row="4"
-                  ItemsSource="{Binding DisplayedClaims}"
-                  SelectedItem="{Binding SelectedClaim}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  SelectionMode="Single"
-                  GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#E5EAF2"
-                  RowHeight="48"
-                  BorderThickness="0"
-                  Background="White"
-                  RowBackground="White"
-                  AlternatingRowBackground="#F8FAFC"
-                  MouseDoubleClick="DataGrid_MouseDoubleClick"
-                  materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
-                  Style="{StaticResource ReadableDataGrid}">
-
-            <DataGrid.Columns>
-
-                <!-- Beneficiary ID -->
-                <DataGridTextColumn Header="Beneficiary ID"
-                                    Binding="{Binding DisplayBeneficiaryId}" Width="160">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0,0"/>
-                            <Setter Property="FontWeight" Value="Medium"/>
-                            <Setter Property="Foreground"
-                                    Value="{StaticResource PrimaryBrush}"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Claimant -->
-                <DataGridTextColumn Header="Claimant"
-                                    Binding="{Binding Beneficiary.FullName}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="FontSize" Value="12"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Foreground" Value="#0F172A"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Barangay -->
-                <DataGridTextColumn Header="Barangay"
-                                    Binding="{Binding Employee.Barangay}" Width="170">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0,0"/>
-                            <Setter Property="FontWeight" Value="Medium"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Employment Type -->
-                <DataGridTextColumn Header="Employment Type"
-                                    Binding="{Binding Employee.EmploymentType}" Width="160">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0,0"/>
-                            <Setter Property="Foreground" Value="#1E293B"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- For -->
-                <DataGridTemplateColumn Header="For" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border CornerRadius="10"
-                                    Padding="10,3"
-                                    Background="White"
-                                    BorderBrush="#1B5E20"
-                                    BorderThickness="1"
-                                    HorizontalAlignment="Left"
-                                    Margin="0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ClaimType}"
-                                           FontSize="11" FontWeight="Bold"
-                                           Foreground="#0F172A"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Total -->
-                <DataGridTextColumn Header="Total"
-                                    Binding="{Binding AmountClaimed,
-                                        StringFormat=₱{0:N2}}"
-                                    Width="120">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0,0"/>
-                            <Setter Property="FontWeight" Value="Medium"/>
-                            <Setter Property="Foreground" Value="#0F172A"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Budget Source -->
-                <DataGridTextColumn Header="Budget Source"
-                                    Binding="{Binding SourceOfFunds}" Width="160">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0,0"/>
-                            <Setter Property="Foreground" Value="#1E293B"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Status Badge -->
-                <DataGridTemplateColumn Header="Status" Width="130">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border CornerRadius="10"
-                                    Padding="10,3"
-                                    BorderBrush="#CBD5E1"
-                                    BorderThickness="1"
-                                    HorizontalAlignment="Left"
-                                    Margin="0,0" VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                         Value="Submitted">
-                                                <Setter Property="Background" Value="#ECFDF3"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                         Value="Under Review">
-                                                <Setter Property="Background" Value="#FFF3E0"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                         Value="Approved">
-                                                <Setter Property="Background" Value="#E8F5E9"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                         Value="Partially Approved">
-                                                <Setter Property="Background" Value="#F1F8E9"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                         Value="Rejected">
-                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                         Value="Released">
-                                                <Setter Property="Background" Value="#E0F7FA"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="{Binding ClaimStatus}"
-                                           FontSize="11" FontWeight="Bold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            
-                                            <Setter Property="Foreground" Value="#334155"/>
+                        <Button Command="{Binding ToggleClaimantPickerCommand}"
+                Visibility="Collapsed"
+                Background="{StaticResource PrimaryBrush}"
+                Foreground="White"
+                Style="{StaticResource MaterialDesignRaisedButton}"
+                Height="34" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClipboardPlus" Width="16" Height="16"
+                                         Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="File Claim" FontSize="12"
+                            FontWeight="Medium" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Width="16" Height="16"
+                                         Margin="8,0,0,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="materialDesign:PackIcon">
+                                            <Setter Property="Kind" Value="ChevronDown"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ClaimStatus}"
-                                                             Value="Submitted">
-                                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ClaimStatus}"
-                                                             Value="Under Review">
-                                                    <Setter Property="Foreground" Value="#E65100"/>
-                                                </DataTrigger>
-                                            <DataTrigger Binding="{Binding ClaimStatus}"
-                                                             Value="Approved">
-                                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ClaimStatus}"
-                                                             Value="Partially Approved">
-                                                    <Setter Property="Foreground" Value="#33691E"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ClaimStatus}"
-                                                             Value="Rejected">
-                                                    <Setter Property="Foreground" Value="#C62828"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ClaimStatus}"
-                                                             Value="Released">
-                                                    <Setter Property="Foreground" Value="#00838F"/>
+                                                <DataTrigger Binding="{Binding IsClaimantPickerOpen}" Value="True">
+                                                    <Setter Property="Kind" Value="ChevronUp"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Claim Date -->
-                <DataGridTextColumn Header="Claim Date"
-                                    Binding="{Binding ClaimDate,
-                                        StringFormat={}{0:MMM dd, yyyy}}"
-                                    Width="110">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0,0"/>
-                            
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Actions -->
-                <DataGridTemplateColumn Header="Actions" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal"
-                                        VerticalAlignment="Center" Margin="0,0">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Opacity" Value="0.85"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSelected,
-                                                RelativeSource={RelativeSource AncestorType=DataGridRow}}"
-                                                Value="True">
-                                                <Setter Property="Opacity" Value="1"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-
-                                <!-- View -->
-                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Command="{Binding DataContext.ViewCommand,
-                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        ToolTip="View / Process Claim"
-                                        Width="32" Height="32"
-                                        Foreground="{StaticResource PrimaryBrush}">
-                                    <materialDesign:PackIcon Kind="Eye"
-                                                             Width="16" Height="16"/>
-                                </Button>
-
-                                <!-- Edit (Draft only) -->
-                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Command="{Binding DataContext.EditCommand,
-                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        ToolTip="Edit (Draft only)"
-                                        Width="32" Height="32"
-                                        Foreground="{StaticResource WarningBrush}">
-                                    <materialDesign:PackIcon Kind="Pencil"
-                                                             Width="16" Height="16"/>
-                                </Button>
-
-                                <!-- Print Voucher (Group Claim mode only) -->
-                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Command="{Binding DataContext.PrintVoucherCommand,
-                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip="Print Voucher"
-                                        Width="32" Height="32"
-                                        Foreground="{StaticResource PrimaryBrush}"
-                                        Visibility="{Binding DataContext.IsGroupClaimMode,
-                                            RelativeSource={RelativeSource AncestorType=DataGrid},
-                                            Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <materialDesign:PackIcon Kind="Printer"
-                                                             Width="16" Height="16"/>
-                                </Button>
-
+                                    </materialDesign:PackIcon.Style>
+                                </materialDesign:PackIcon>
                             </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                        </Button>
 
-            </DataGrid.Columns>
-        </DataGrid>
+                        <!-- Beneficiary self-service: files only for themselves, no picker -->
+                        <Button Command="{Binding NewCommand}"
+                Visibility="{Binding CanFileOwnClaim, Converter={StaticResource BoolToVisibilityConverter}}"
+                Background="{StaticResource PrimaryBrush}"
+                Foreground="White"
+                Style="{StaticResource MaterialDesignRaisedButton}"
+                Height="34" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClipboardPlus" Width="16" Height="16"
+                                         Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="File Claim" FontSize="12"
+                            FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-        <!-- ── Empty State ── -->
-        <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Visibility="{Binding NoResults, Converter={StaticResource BoolToVisibilityConverter}}">
-            <materialDesign:PackIcon Kind="ClipboardTextOffOutline" Width="48" Height="48"
-                                     Foreground="#CBD5E1" HorizontalAlignment="Center"/>
-            <TextBlock Text="{Binding EmptyStateText}" FontSize="13" Foreground="#94A3B8"
-                       Margin="0,10,0,0" HorizontalAlignment="Center"/>
-        </StackPanel>
+                        <Button Command="{Binding BackToDashboardCommand}"
+                                Background="#D32F2F"
+                                Foreground="White"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="34" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Close" Width="16" Height="16"
+                                                         Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Exit" FontSize="12"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-        <!-- ── Status Bar ── -->
-        <Border Grid.Row="5" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
-                BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
-                Padding="16,8">
-            <TextBlock FontSize="11">
-                <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
-                <Run Text="beneficiary claim(s) shown · Double-click or Eye icon to review, approve, reject, or release"/>
-            </TextBlock>
-        </Border>
+            <!-- ── Loading Bar ── -->
+            <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3"
+                         Foreground="{StaticResource PrimaryBrush}"
+                         Visibility="{Binding IsLoading,
+                             Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-    </Grid>
+            <!-- ── Filters ── -->
+            <Border Grid.Row="2" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                    BorderBrush="#DDE4EF" BorderThickness="0,0,0,1"
+                    Padding="16,10"
+                    Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.7*" MinWidth="190"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="1.1*" MinWidth="130"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="1*" MinWidth="120"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="0.9*" MinWidth="110"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="0.9*" MinWidth="110"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="0.9*" MinWidth="110"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="0.75*" MinWidth="90"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Search claim no, beneficiary, employee..."
+                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Height="46" FontSize="12"/>
+
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding StatusOptions}"
+                              SelectedItem="{Binding StatusFilter}"
+                              materialDesign:HintAssist.Hint="Status"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="46" FontSize="12"/>
+
+                    <!-- Type (All/PendingOnly modes) -->
+                    <ComboBox Grid.Column="4"
+                              ItemsSource="{Binding TypeOptions}"
+                              SelectedItem="{Binding TypeFilter}"
+                              materialDesign:HintAssist.Hint="Type"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="46" FontSize="12"
+                              Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+
+                    <!-- Group (Group Claim mode only) -->
+                    <ComboBox Grid.Column="4"
+                              ItemsSource="{Binding GroupOptions}"
+                              SelectedItem="{Binding GroupFilter}"
+                              materialDesign:HintAssist.Hint="Group"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="46" FontSize="12"
+                              Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <DatePicker Grid.Column="6"
+                                SelectedDate="{Binding DateFrom}"
+                                materialDesign:HintAssist.Hint="From"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                Height="46" FontSize="12"/>
+
+                    <DatePicker Grid.Column="8"
+                                SelectedDate="{Binding DateTo}"
+                                materialDesign:HintAssist.Hint="To"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                Height="46" FontSize="12"/>
+
+                    <!-- Month / Year (Group Claim mode only) -->
+                    <ComboBox Grid.Column="10"
+                              ItemsSource="{Binding MonthOptions}"
+                              SelectedItem="{Binding MonthFilter}"
+                              materialDesign:HintAssist.Hint="Month"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="46" FontSize="12"
+                              Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <ComboBox Grid.Column="12"
+                              ItemsSource="{Binding YearOptions}"
+                              SelectedItem="{Binding YearFilter}"
+                              materialDesign:HintAssist.Hint="Year"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="46" FontSize="12"
+                              Visibility="{Binding IsGroupClaimMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <Button Grid.Column="14"
+                            Command="{Binding ClearFilterCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="#64748B" Height="46">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FilterRemove" Width="16" Height="16"
+                                                     Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Clear" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ── File Claim: beneficiary picker drawer ── -->
+            <Border Grid.Row="3" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                    BorderBrush="#DDE4EF" BorderThickness="0,0,0,1"
+                    Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid Margin="16,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="250"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Select a beneficiary to file a claim for"
+                                       FontSize="14" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="Filter by program. Beneficiaries with a claim already in progress cannot file another."
+                                       FontSize="11" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <!-- Program selector -->
+                        <Border Grid.Column="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8"
+                                Padding="12,6" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20"
+                                                         Foreground="#1B5E20"
+                                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Program:" FontWeight="Bold" Foreground="#0F172A"
+                                           FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <ComboBox ItemsSource="{Binding ClaimantPrograms}" SelectedItem="{Binding SelectedClaimantProgram, Mode=TwoWay}"
+                                          Width="160" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"
+                                          Style="{StaticResource MaterialDesignComboBox}"
+                                          materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                                          BorderThickness="0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBox Grid.Column="2"
+                                 Text="{Binding ClaimantSearch, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Search name or beneficiary ID..."
+                                 materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                 materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 VerticalAlignment="Center"
+                                 Width="250" FontSize="12"/>
+                    </Grid>
+
+                    <!-- Column captions, aligned with the row template below -->
+                    <Border Grid.Row="1" BorderBrush="#E5EAF2" BorderThickness="1" CornerRadius="4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Background="#F8FAFC" Padding="16,8"
+                                    BorderBrush="#E5EAF2" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Beneficiary ID" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock Grid.Column="1" Text="Name" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock Grid.Column="2" Text="Relationship" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock Grid.Column="3" Text="Program Benefit" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock Grid.Column="4" Text="Claims Info" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock Grid.Column="5" Text="Action" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                </Grid>
+                            </Border>
+
+                            <ListBox Grid.Row="1"
+                                     ItemsSource="{Binding GroupedClaimants}"
+                                     BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#EEF2F7" BorderThickness="0,0,0,1" Padding="16,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="130"/>
+                                                    <ColumnDefinition Width="200"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="180"/>
+                                                    <ColumnDefinition Width="200"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Text="{Binding BeneficiaryId}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="12" FontWeight="Medium"
+                                                           Foreground="{StaticResource PrimaryBrush}"/>
+
+                                                <TextBlock Grid.Column="1" Text="{Binding FullName}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="#0F172A"
+                                                           TextTrimming="CharacterEllipsis"/>
+
+                                                <TextBlock Grid.Column="2" Text="{Binding Relationship}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="12" Foreground="#1E293B"/>
+
+                                                <TextBlock Grid.Column="3" Text="{Binding ProgramInfo}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="12" Foreground="#475569"/>
+
+                                                <TextBlock Grid.Column="4" Text="{Binding ClaimsInfo}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="12" Foreground="#475569"/>
+
+                                                <StackPanel Grid.Column="5" Orientation="Horizontal">
+                                                    <Button Command="{Binding DataContext.FileClaimForCommand,
+                                                                RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding CanFile,
+                                                                Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Background="{StaticResource PrimaryBrush}"
+                                                            Foreground="White"
+                                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                                            HorizontalAlignment="Left"
+                                                            Height="30" Padding="12,0" Margin="0,0,8,0">
+                                                        <TextBlock Text="File Claim" FontSize="11" FontWeight="Medium"/>
+                                                    </Button>
+                                                    <Border Visibility="{Binding ShowClaimInProgress,
+                                                                Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Background="#FFF3E0" BorderBrush="#FFCC80" BorderThickness="1"
+                                                            CornerRadius="10" Padding="10,3"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                        <TextBlock Text="CLAIM IN PROGRESS" FontSize="10"
+                                                                   FontWeight="Bold" Foreground="#E65100"/>
+                                                    </Border>
+                                                    <Button Command="{Binding DataContext.ViewClaimCommand,
+                                                                RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding ShowViewTransaction,
+                                                                Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Background="#FFF3E0" BorderBrush="#FFCC80" BorderThickness="1"
+                                                            Foreground="#E65100"
+                                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                            HorizontalAlignment="Left"
+                                                            Height="30" Padding="8,0" Margin="0,0,8,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="Eye" Width="14" Height="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="VIEW TRANSACTION" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Command="{Binding DataContext.ViewClaimCommand,
+                                                                RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding IsReleased,
+                                                                Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Background="#E8F5E9" BorderBrush="#81C784" BorderThickness="1"
+                                                            Foreground="#1B5E20"
+                                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                            HorizontalAlignment="Left"
+                                                            Height="30" Padding="8,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="CheckDecagram" Width="14" Height="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="RELEASED / VIEW CLAIM" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ── DataGrid ── -->
+            <DataGrid Grid.Row="4"
+                      ItemsSource="{Binding DisplayedClaims}"
+                      SelectedItem="{Binding SelectedClaim}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      SelectionMode="Single"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#E5EAF2"
+                      RowHeight="48"
+                      BorderThickness="0"
+                      Background="White"
+                      RowBackground="White"
+                      AlternatingRowBackground="#F8FAFC"
+                      MouseDoubleClick="DataGrid_MouseDoubleClick"
+                      materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                      Style="{StaticResource ReadableDataGrid}"
+                      Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+
+                <DataGrid.Columns>
+
+                    <!-- Beneficiary ID -->
+                    <DataGridTextColumn Header="Beneficiary ID"
+                                        Binding="{Binding DisplayBeneficiaryId}" Width="160">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,0"/>
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="Foreground"
+                                        Value="{StaticResource PrimaryBrush}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Claimant -->
+                    <DataGridTextColumn Header="Claimant"
+                                        Binding="{Binding Beneficiary.FullName}" Width="200">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="#0F172A"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Barangay -->
+                    <DataGridTextColumn Header="Barangay"
+                                        Binding="{Binding Employee.Barangay}" Width="170">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,0"/>
+                                <Setter Property="FontWeight" Value="Medium"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Employment Type -->
+                    <DataGridTextColumn Header="Employment Type"
+                                        Binding="{Binding Employee.EmploymentType}" Width="160">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,0"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- For -->
+                    <DataGridTemplateColumn Header="For" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10"
+                                        Padding="10,3"
+                                        Background="White"
+                                        BorderBrush="#1B5E20"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ClaimType}"
+                                               FontSize="11" FontWeight="Bold"
+                                               Foreground="#0F172A"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Total -->
+                    <DataGridTextColumn Header="Total"
+                                        Binding="{Binding AmountClaimed,
+                                            StringFormat=₱{0:N2}}"
+                                        Width="120">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,0"/>
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="Foreground" Value="#0F172A"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Budget Source -->
+                    <DataGridTextColumn Header="Budget Source"
+                                        Binding="{Binding SourceOfFunds}" Width="160">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,0"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Status Badge -->
+                    <DataGridTemplateColumn Header="Status" Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10"
+                                        Padding="10,3"
+                                        BorderBrush="#CBD5E1"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                             Value="Submitted">
+                                                    <Setter Property="Background" Value="#ECFDF3"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                             Value="Under Review">
+                                                    <Setter Property="Background" Value="#FFF3E0"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                             Value="Approved">
+                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                             Value="Partially Approved">
+                                                    <Setter Property="Background" Value="#F1F8E9"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                             Value="Rejected">
+                                                    <Setter Property="Background" Value="#FFEBEE"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                             Value="Released">
+                                                    <Setter Property="Background" Value="#E0F7FA"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding ClaimStatus}"
+                                               FontSize="11" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                
+                                                <Setter Property="Foreground" Value="#334155"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ClaimStatus}"
+                                                                 Value="Submitted">
+                                                        <Setter Property="Foreground" Value="#2E7D32"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ClaimStatus}"
+                                                                 Value="Under Review">
+                                                        <Setter Property="Foreground" Value="#E65100"/>
+                                                    </DataTrigger>
+                                                <DataTrigger Binding="{Binding ClaimStatus}"
+                                                                 Value="Approved">
+                                                        <Setter Property="Foreground" Value="#2E7D32"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ClaimStatus}"
+                                                                 Value="Partially Approved">
+                                                        <Setter Property="Foreground" Value="#33691E"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ClaimStatus}"
+                                                                 Value="Rejected">
+                                                        <Setter Property="Foreground" Value="#C62828"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ClaimStatus}"
+                                                                 Value="Released">
+                                                        <Setter Property="Foreground" Value="#00838F"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Claim Date -->
+                    <DataGridTextColumn Header="Claim Date"
+                                        Binding="{Binding ClaimDate,
+                                            StringFormat={}{0:MMM dd, yyyy}}"
+                                        Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,0"/>
+                                
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Actions -->
+                    <DataGridTemplateColumn Header="Actions" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            VerticalAlignment="Center" Margin="0,0">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Opacity" Value="0.85"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected,
+                                                    RelativeSource={RelativeSource AncestorType=DataGridRow}}"
+                                                    Value="True">
+                                                    <Setter Property="Opacity" Value="1"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+
+                                    <!-- View -->
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DataContext.ViewCommand,
+                                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            ToolTip="View / Process Claim"
+                                            Width="32" Height="32"
+                                            Foreground="{StaticResource PrimaryBrush}">
+                                        <materialDesign:PackIcon Kind="Eye"
+                                                                 Width="16" Height="16"/>
+                                    </Button>
+
+                                    <!-- Edit (Draft only) -->
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DataContext.EditCommand,
+                                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            ToolTip="Edit (Draft only)"
+                                            Width="32" Height="32"
+                                            Foreground="{StaticResource WarningBrush}">
+                                        <materialDesign:PackIcon Kind="Pencil"
+                                                                 Width="16" Height="16"/>
+                                    </Button>
+
+                                    <!-- Print Voucher (Group Claim mode only) -->
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DataContext.PrintVoucherCommand,
+                                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Print Voucher"
+                                            Width="32" Height="32"
+                                            Foreground="{StaticResource PrimaryBrush}"
+                                            Visibility="{Binding DataContext.IsGroupClaimMode,
+                                                RelativeSource={RelativeSource AncestorType=DataGrid},
+                                                Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <materialDesign:PackIcon Kind="Printer"
+                                                                 Width="16" Height="16"/>
+                                    </Button>
+
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- ── Empty State ── -->
+            <Border Grid.Row="4" Background="Transparent"
+                    Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+                <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Visibility="{Binding NoResults, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <materialDesign:PackIcon Kind="ClipboardTextOffOutline" Width="48" Height="48"
+                                             Foreground="#CBD5E1" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding EmptyStateText}" FontSize="13" Foreground="#94A3B8"
+                               Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ── Status Bar ── -->
+            <Border Grid.Row="5" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+                    BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
+                    Padding="16,8"
+                    Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+                <TextBlock FontSize="11">
+                    <Run Text="{Binding FilteredCount, Mode=OneWay}"/>
+                    <Run Text="beneficiary claim(s) shown · Double-click or Eye icon to review, approve, reject, or release"/>
+                </TextBlock>
+            </Border>
+
+        </Grid>
+    </materialDesign:DialogHost>
 </UserControl>

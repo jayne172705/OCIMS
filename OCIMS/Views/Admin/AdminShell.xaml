@@ -516,44 +516,14 @@
                                 </StackPanel>
                             </Button>
 
-                            <StackPanel Visibility="{Binding CanAccessClaims, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <Button Command="{Binding OpenClaimsMenuCommand}"
-                                        Style="{StaticResource SidebarGroupButton}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon Kind="ClipboardList" Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="Claim" FontSize="13" VerticalAlignment="Center"/>
-                                        <Grid Grid.Column="2">
-                                            <materialDesign:PackIcon Kind="ChevronDown"
-                                                                     Width="18"
-                                                                     Height="18"
-                                                                     VerticalAlignment="Center"
-                                                                     Visibility="{Binding IsClaimsMenuPopupOpen, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
-                                            <materialDesign:PackIcon Kind="ChevronUp"
-                                                                     Width="18"
-                                                                     Height="18"
-                                                                     VerticalAlignment="Center"
-                                                                     Visibility="{Binding IsClaimsMenuPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                        </Grid>
-                                    </Grid>
-                                </Button>
-                                <Border Style="{StaticResource SidebarGroupPanel}"
-                                        Visibility="{Binding IsClaimsMenuPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <StackPanel>
-                                        <Button Command="{Binding NavAllClaimsCommand}"
-                                                Style="{StaticResource SidebarGroupItemButton}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="ClipboardCheck" Width="20" Height="20" Margin="0,0,12,0"/>
-                                                <TextBlock Text="All Claims" FontSize="13"/>
-                                            </StackPanel>
-                                        </Button>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+                            <Button Command="{Binding OpenClaimsSearchCommand}"
+                                    Style="{StaticResource SidebarNavButton}"
+                                    Visibility="{Binding CanAccessClaims, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ClipboardList" Width="20" Height="20" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Claims" FontSize="13"/>
+                                </StackPanel>
+                            </Button>
 
                             <StackPanel Visibility="{Binding CanAccessSourceFunds, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Button Command="{Binding OpenBudgetFundsCommand}"

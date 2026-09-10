@@ -1,0 +1,205 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.AddDependentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Add Dependent to Primary Member"
+        Width="550" Height="680"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="NoResize"
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="64"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title Bar -->
+        <Border Grid.Row="0" Background="#1E293B">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Add Dependent to Primary Member"
+                           Foreground="White"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="20,0"/>
+                <Button Grid.Column="1"
+                        Click="CancelButton_Click"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Foreground="White"
+                        Width="48" Height="48">
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+                <!-- Search Primary Member -->
+                <StackPanel Margin="0,0,0,16">
+                    <TextBlock Text="Search Primary Member *" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="EmployeeSearchCombo"
+                              ItemsSource="{Binding FilteredEmployees}"
+                              SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
+                              DisplayMemberPath="FullName"
+                              IsEditable="True"
+                              IsTextSearchEnabled="False"
+                              TextBoxBase.TextChanged="EmployeeSearchCombo_TextChanged"
+                              materialDesign:HintAssist.Hint="Search by name..."
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="48"/>
+                    <TextBlock Text="Search for the primary member who will cover this dependent." FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Resident details -->
+                <Border Background="#F1F5F9" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Resident: " FontWeight="Bold" FontSize="14" Foreground="#1E293B"/>
+                        <TextBlock Text="{Binding ResidentName}" FontSize="14" Foreground="#1E293B"/>
+                        <TextBlock Text=" (Age: " FontSize="14" Foreground="#1E293B"/>
+                        <TextBlock Text="{Binding ResidentAge}" FontSize="14" Foreground="#1E293B"/>
+                        <TextBlock Text=")" FontSize="14" Foreground="#1E293B"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Member Type -->
+                <StackPanel Margin="0,0,0,16">
+                    <TextBlock Text="Member Type *" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <ComboBox ItemsSource="{Binding MemberTypeOptions}"
+                              SelectedItem="{Binding SelectedMemberType, Mode=TwoWay}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="48"/>
+                    <TextBlock Text="New: pending status, payments generated." FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Date Registered -->
+                <StackPanel Margin="0,0,0,16">
+                    <TextBlock Text="Date Registered *" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <DatePicker SelectedDate="{Binding DateRegistered, Mode=TwoWay}"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                Height="48"/>
+                    <TextBlock Text="Set to today (locked for new members)." FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Dependent details: Relationship & Source of Funds -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Relationship *" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding RelationshipOptions}"
+                                  SelectedItem="{Binding Relationship, Mode=TwoWay}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Height="48"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Source of Funds *" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding SourceOfFundsOptions}"
+                                  SelectedItem="{Binding SourceOfFunds, Mode=TwoWay}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Height="48"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Cedula No & Initial Balance -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Cedula No (optional)" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding CedulaNo, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="48"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Initial Balance *" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding Contribution, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Height="48"/>
+                    </StackPanel>
+                </Grid>
+
+                <CheckBox IsChecked="{Binding Received, Mode=TwoWay}"
+                          Content="Verified for insurance records"
+                          VerticalAlignment="Center"
+                          Margin="0,0,0,16"/>
+
+                <!-- Upload Supporting Document -->
+                <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="Upload Supporting Document" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,8"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Click="ChooseFileButton_Click"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#E2E8F0"
+                                    Foreground="#1E293B"
+                                    BorderThickness="0"
+                                    Height="36"
+                                    Content="Choose File"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding DisplayFileName, FallbackValue='No file chosen'}"
+                                       VerticalAlignment="Center"
+                                       Foreground="#64748B"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </Grid>
+                        <TextBlock Text="Max file size: 5MB" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="1"
+                        Click="AddDependentButton_Click"
+                        Background="#15803D"
+                        BorderBrush="#15803D"
+                        Foreground="White"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        MinWidth="120" Height="40">
+                    <TextBlock Text="Add Dependent" FontWeight="Bold"/>
+                </Button>
+                <Button Grid.Column="3"
+                        Click="CancelButton_Click"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Foreground="#DC2626"
+                        BorderBrush="#DC2626"
+                        MinWidth="100" Height="40">
+                    <TextBlock Text="Cancel" FontWeight="Bold"/>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

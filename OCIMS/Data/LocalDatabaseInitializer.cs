@@ -19,6 +19,8 @@ namespace eSureHi.Data
             await EnsureLocalViewsAsync(db);
             await EnsureBeneficiaryStagingIndexesAsync(db);
             await EnsureBeneficiaryConfirmationColumnAsync(db);
+            await EnsureCedulaColumnsAsync(db);
+            await EnsureGgmsQueueTableAsync(db);
             await BackfillSyncIdsAsync(db);
         }
 
@@ -373,8 +375,36 @@ namespace eSureHi.Data
                 $"ALTER TABLE \"{Escape(tableName)}\" ADD COLUMN \"{Escape(columnName)}\" {columnDefinition};");
         }
 
+        private static async Task EnsureCedulaColumnsAsync(eSureHiDbContext db)
+        {
+            await EnsureSqliteColumnAsync(db, "beneficiary_staging", "cedula_no", "TEXT NULL");
+            await EnsureSqliteColumnAsync(db, "crs_beneficiary_cache", "cedula_no", "TEXT NULL");
+        }
+
         private static string Escape(string value) =>
             value.Replace("\"", "\"\"", StringComparison.Ordinal);
 
+        private static async Task EnsureGgmsQueueTableAsync(eSureHiDbContext db)
+        {
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ggms_queue_items (
+                    id INTEGER NOT NULL CONSTRAINT PK_ggms_queue_items PRIMARY KEY AUTOINCREMENT,
+                    project_code TEXT NOT NULL,
+                    project_name TEXT NOT NULL,
+                    beneficiary_id TEXT NULL,
+                    civil_registry_id TEXT NULL,
+                    first_name TEXT NOT NULL,
+                    middle_name TEXT NULL,
+                    last_name TEXT NOT NULL,
+                    full_name TEXT NOT NULL,
+                    transaction_type TEXT NOT NULL,
+                    amount TEXT NOT NULL,
+                    transaction_date TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    error_message TEXT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );");
+        }
     }
 }

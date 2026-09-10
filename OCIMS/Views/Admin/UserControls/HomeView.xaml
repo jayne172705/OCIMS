@@ -24,6 +24,7 @@
         <SolidColorBrush x:Key="TileDistributionBrush" Color="#2E7D32"/>
         <SolidColorBrush x:Key="TileSettingsBrush" Color="#414141"/>
 
+        <!-- Dashboard Header Gradient -->
         <LinearGradientBrush x:Key="DashboardHeaderBrush" StartPoint="0,0" EndPoint="1,0">
             <GradientStop Color="#1B5E20" Offset="0"/>
             <GradientStop Color="#43A047" Offset="1"/>
@@ -255,7 +256,7 @@
                         Grid.Column="0"
                         Style="{StaticResource DashboardTileButton}"
                         Background="{StaticResource TileBeneficiariesBrush}"
-                        Command="{Binding ToggleMemberManagementCommand}">
+                        Command="{Binding QuickManageMembersCommand}">
                     <StackPanel VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="AccountGroup"
                                                  Width="42"
@@ -263,70 +264,9 @@
                                                  Foreground="White"
                                                  HorizontalAlignment="Center"/>
                         <TextBlock Text="MEMBER MANAGEMENT" Style="{StaticResource TileTitle}" FontSize="14"/>
-                        <TextBlock Text="Register SURE HI member" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                        <TextBlock Text="Manage member records" Style="{StaticResource TileSubtext}" FontSize="11"/>
                     </StackPanel>
                 </Button>
-
-                <Popup IsOpen="{Binding IsMemberManagementPopupOpen, Mode=TwoWay}"
-                       DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                       PlacementTarget="{Binding ElementName=UserMemberManagementTile}"
-                       Placement="Bottom"
-                       StaysOpen="False"
-                       AllowsTransparency="True"
-                       PopupAnimation="Slide">
-                    <Border Width="250"
-                            Background="White"
-                            BorderBrush="#DDE4EF"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="8"
-                            helpers:Adaptive.UseAdaptiveForeground="True">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="14"
-                                              ShadowDepth="3"
-                                              Opacity="0.22"
-                                              Color="#000000"/>
-                        </Border.Effect>
-                        <StackPanel>
-                            <Button Command="{Binding QuickRegisterMemberCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Height="48"
-                                    HorizontalContentAlignment="Left"
-                                    Margin="0,0,0,4"
-                                    Foreground="#0F766E">
-                                <StackPanel Orientation="Horizontal" Margin="8,0">
-                                    <materialDesign:PackIcon Kind="AccountPlus"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Register Member"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding QuickManageMembersCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Height="48"
-                                    HorizontalContentAlignment="Left"
-                                    Foreground="#0F766E"
-                                    Visibility="{Binding CanAccessManageMembers, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <StackPanel Orientation="Horizontal" Margin="8,0">
-                                    <materialDesign:PackIcon Kind="AccountCheck"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text="Manage Members"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </Popup>
 
                 <Button x:Name="UserClaimsManagementTile"
                         Grid.Row="0"
@@ -345,78 +285,78 @@
                     </StackPanel>
                 </Button>
 
-                <Popup IsOpen="{Binding IsClaimsManagementPopupOpen, Mode=TwoWay}"
-                       DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                       PlacementTarget="{Binding ElementName=UserClaimsManagementTile}"
-                       Placement="Bottom"
-                       StaysOpen="False"
-                       AllowsTransparency="True"
-                       PopupAnimation="Slide">
-                    <Border Width="290"
-                            Background="White"
-                            BorderBrush="#DDE4EF"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="8"
-                            helpers:Adaptive.UseAdaptiveForeground="True">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="14"
-                                              ShadowDepth="3"
-                                              Opacity="0.22"
-                                              Color="#000000"/>
-                        </Border.Effect>
-                        <StackPanel>
-                            <Border BorderBrush="#DDE4EF"
-                                    BorderThickness="0,0,0,1"
-                                    Padding="8,6"
-                                    Margin="0,0,0,6">
-                                <TextBlock Text="Claims Management"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"/>
-                            </Border>
-                            <Button Command="{Binding QuickFileClaimCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#0F766E">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="ClipboardPlus"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="File a Claim" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Create a new individual claim."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                            <Button Command="{Binding QuickGroupClaimCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#0F766E">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="ClipboardList"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Group Claim" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Open the claims management list."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </Popup>
+                <Border Grid.Row="1"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="3"
+                        Panel.ZIndex="99"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Width="290"
+                        Background="White"
+                        BorderBrush="#DDE4EF"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="8"
+                        helpers:Adaptive.UseAdaptiveForeground="True"
+                        Visibility="{Binding IsClaimsManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Margin="2,0,0,0">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="14"
+                                          ShadowDepth="3"
+                                          Opacity="0.22"
+                                          Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <Border BorderBrush="#DDE4EF"
+                                BorderThickness="0,0,0,1"
+                                Padding="8,6"
+                                Margin="0,0,0,6">
+                            <TextBlock Text="Claims Management"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"/>
+                        </Border>
+                        <Button Command="{Binding QuickFileClaimCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#0F766E">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="ClipboardPlus"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="File a Claim" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Create a new individual claim."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding QuickGroupClaimCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#0F766E">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="ClipboardList"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Group Claim" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Open the claims management list."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
 
                 <Button x:Name="UserPaymentManagementTile"
                         Grid.Row="0"
@@ -435,98 +375,98 @@
                     </StackPanel>
                 </Button>
 
-                <Popup IsOpen="{Binding IsPaymentManagementPopupOpen, Mode=TwoWay}"
-                       DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                       PlacementTarget="{Binding ElementName=UserPaymentManagementTile}"
-                       Placement="Bottom"
-                       StaysOpen="False"
-                       AllowsTransparency="True"
-                       PopupAnimation="Slide">
-                    <Border Width="310"
-                            Background="White"
-                            BorderBrush="#DDE4EF"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="8"
-                            helpers:Adaptive.UseAdaptiveForeground="True">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="14"
-                                              ShadowDepth="3"
-                                              Opacity="0.22"
-                                              Color="#000000"/>
-                        </Border.Effect>
-                        <StackPanel>
-                            <Border BorderBrush="#DDE4EF"
-                                    BorderThickness="0,0,0,1"
-                                    Padding="8,6"
-                                    Margin="0,0,0,6">
-                                <TextBlock Text="Payment Management"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"/>
-                            </Border>
-                            <Button Command="{Binding QuickAdvancePaymentCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#2E7D32">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="CashCheck"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Advance Payment" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Open payment records and select a member."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                            <Button Command="{Binding QuickPendingPaymentsCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#2E7D32">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="CashClock"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Pending Payments" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="View unpaid and pending balances."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                            <Button Command="{Binding QuickPaymentLedgerCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#2E7D32">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="CashMultiple"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="All Payments Ledger" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Open the complete payments ledger."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </Popup>
+                <Border Grid.Row="1"
+                        Grid.Column="2"
+                        Grid.ColumnSpan="3"
+                        Panel.ZIndex="99"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Width="310"
+                        Background="White"
+                        BorderBrush="#DDE4EF"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="8"
+                        helpers:Adaptive.UseAdaptiveForeground="True"
+                        Visibility="{Binding IsPaymentManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Margin="2,0,0,0">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="14"
+                                          ShadowDepth="3"
+                                          Opacity="0.22"
+                                          Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <Border BorderBrush="#DDE4EF"
+                                BorderThickness="0,0,0,1"
+                                Padding="8,6"
+                                Margin="0,0,0,6">
+                            <TextBlock Text="Payment Management"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"/>
+                        </Border>
+                        <Button Command="{Binding QuickAdvancePaymentCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#2E7D32">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="CashCheck"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Advance Payment" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Open payment records and select a member."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding QuickPendingPaymentsCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#2E7D32">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="CashClock"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Pending Payments" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="View unpaid and pending balances."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding QuickPaymentLedgerCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#2E7D32">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="CashMultiple"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="All Payments Ledger" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Open the complete payments ledger."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
 
                 <Button x:Name="UserReportsTile"
                         Grid.Row="0"
@@ -545,98 +485,98 @@
                     </StackPanel>
                 </Button>
 
-                <Popup IsOpen="{Binding IsReportsPopupOpen, Mode=TwoWay}"
-                       DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                       PlacementTarget="{Binding ElementName=UserReportsTile}"
-                       Placement="Bottom"
-                       StaysOpen="False"
-                       AllowsTransparency="True"
-                       PopupAnimation="Slide">
-                    <Border Width="310"
-                            Background="White"
-                            BorderBrush="#DDE4EF"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="8"
-                            helpers:Adaptive.UseAdaptiveForeground="True">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="14"
-                                              ShadowDepth="3"
-                                              Opacity="0.22"
-                                              Color="#000000"/>
-                        </Border.Effect>
-                        <StackPanel>
-                            <Border BorderBrush="#DDE4EF"
-                                    BorderThickness="0,0,0,1"
-                                    Padding="8,6"
-                                    Margin="0,0,0,6">
-                                <TextBlock Text="Generate Reports"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"/>
-                            </Border>
-                            <Button Command="{Binding QuickMonthlyPaymentReportCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#B40058">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="CashMultiple"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Monthly Payment" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Open premium status reports."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                            <Button Command="{Binding QuickMonthlyClaimsReportCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#B40058">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="ClipboardList"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Monthly Claims" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Open claims summary reports."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                            <Button Command="{Binding QuickMemberReportsCommand}"
-                                    Style="{StaticResource LandingPopupActionButton}"
-                                    Foreground="#B40058">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Kind="AccountGroup"
-                                                             Width="22"
-                                                             Height="22"
-                                                             Margin="0,0,12,0"
-                                                             VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Member Reports" Style="{StaticResource LandingPopupTitle}"/>
-                                        <TextBlock Text="Open member coverage reports."
-                                                   Style="{StaticResource LandingPopupSubtext}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </Popup>
+                <Border Grid.Row="1"
+                        Grid.Column="3"
+                        Grid.ColumnSpan="2"
+                        Panel.ZIndex="99"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Width="310"
+                        Background="White"
+                        BorderBrush="#DDE4EF"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="8"
+                        helpers:Adaptive.UseAdaptiveForeground="True"
+                        Visibility="{Binding IsReportsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Margin="2,0,0,0">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="14"
+                                          ShadowDepth="3"
+                                          Opacity="0.22"
+                                          Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <Border BorderBrush="#DDE4EF"
+                                BorderThickness="0,0,0,1"
+                                Padding="8,6"
+                                Margin="0,0,0,6">
+                            <TextBlock Text="Generate Reports"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"/>
+                        </Border>
+                        <Button Command="{Binding QuickMonthlyPaymentReportCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#B40058">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="CashMultiple"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Monthly Payment" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Open premium status reports."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding QuickMonthlyClaimsReportCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#B40058">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="ClipboardList"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Monthly Claims" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Open claims summary reports."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding QuickMemberReportsCommand}"
+                                Style="{StaticResource LandingPopupActionButton}"
+                                Foreground="#B40058">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="AccountGroup"
+                                                         Width="22"
+                                                         Height="22"
+                                                         Margin="0,0,12,0"
+                                                         VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Member Reports" Style="{StaticResource LandingPopupTitle}"/>
+                                    <TextBlock Text="Open member coverage reports."
+                                               Style="{StaticResource LandingPopupSubtext}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
 
                 <Border Grid.Row="0"
                         Grid.Column="4"
@@ -784,9 +724,26 @@
             </Grid.RowDefinitions>
 
             <!-- ROW 0 -->
-            <Button x:Name="AdminMemberManagementTile"
+            <Button Style="{StaticResource DashboardTileButton}"
                     Grid.Row="0"
                     Grid.Column="0"
+                    Margin="4"
+                    Background="{StaticResource TileDashboardBrush}"
+                    Command="{Binding QuickDashboardCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ViewDashboard"
+                                             Width="34"
+                                             Height="34"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="DASHBOARD" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="View analytics and announcements" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
+
+            <Button x:Name="AdminMemberManagementTile"
+                    Grid.Row="0"
+                    Grid.Column="1"
                     Margin="4"
                     Style="{StaticResource DashboardTileButton}"
                     Background="{StaticResource TileBeneficiariesBrush}"
@@ -802,39 +759,88 @@
                 </StackPanel>
             </Button>
 
-            <Button Style="{StaticResource DashboardTileButton}"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Margin="4"
-                    Background="{StaticResource TileDistributionBrush}"
-                    Command="{Binding QuickBarangayFundsCommand}">
-                <StackPanel VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="BankTransferOut"
-                                             Width="34"
-                                             Height="34"
-                                             Foreground="White"
-                                             HorizontalAlignment="Center"/>
-                    <TextBlock Text="DISTRIBUTION" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="Release and monitor barangay funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
-                </StackPanel>
-            </Button>
-
-            <Button Style="{StaticResource DashboardTileButton}"
+            <Button x:Name="AdminClaimsTile"
                     Grid.Row="0"
                     Grid.Column="2"
                     Margin="4"
-                    Background="{StaticResource TileTransactionsBrush}"
-                    Command="{Binding QuickTransactionsCommand}">
+                    Style="{StaticResource DashboardTileButton}"
+                    Background="{StaticResource TileClaimsBrush}"
+                    Command="{Binding QuickNewClaimCommand}">
                 <StackPanel VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="History"
-                                             Width="34"
-                                             Height="34"
+                    <materialDesign:PackIcon Kind="ClipboardCheck"
+                                             Width="38"
+                                             Height="38"
                                              Foreground="White"
                                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="TRANSACTION" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="View transaction history and logs" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    <TextBlock Text="CLAIMS" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Pending claims and all claims" Style="{StaticResource TileSubtext}" FontSize="11"/>
                 </StackPanel>
             </Button>
+
+            <Border Grid.Row="0"
+                    Grid.Column="2"
+                    Grid.ColumnSpan="2"
+                    Panel.ZIndex="99"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Left"
+                    Width="290"
+                    Background="White"
+                    BorderBrush="#DDE4EF"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="8"
+                    helpers:Adaptive.UseAdaptiveForeground="True"
+                    Visibility="{Binding IsClaimsManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Margin="4,0,0,92">
+                <Border.Effect>
+                     <DropShadowEffect BlurRadius="14"
+                                       ShadowDepth="3"
+                                       Opacity="0.22"
+                                       Color="#000000"/>
+                </Border.Effect>
+                <StackPanel>
+                    <Button Command="{Binding QuickPendingClaimsCommand}"
+                            Style="{StaticResource LandingPopupActionButton}"
+                            Foreground="#0F766E">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Kind="ClipboardClock"
+                                                     Width="22"
+                                                     Height="22"
+                                                     Margin="0,0,12,0"
+                                                     VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Pending Claims" Style="{StaticResource LandingPopupTitle}"/>
+                                <TextBlock Text="Open submitted and under-review claims."
+                                           Style="{StaticResource LandingPopupSubtext}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+                    <Button Command="{Binding QuickAllClaimsCommand}"
+                            Style="{StaticResource LandingPopupActionButton}"
+                            Foreground="#0F766E">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Kind="ClipboardList"
+                                                     Width="22"
+                                                     Height="22"
+                                                     Margin="0,0,12,0"
+                                                     VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="All Claims" Style="{StaticResource LandingPopupTitle}"/>
+                                <TextBlock Text="Browse the full claims list."
+                                           Style="{StaticResource LandingPopupSubtext}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
 
             <Border Grid.Row="0"
                     Grid.Column="3"
@@ -883,7 +889,6 @@
             <!-- ROW 1 -->
             <Border Grid.Row="1"
                     Grid.Column="0"
-                    Grid.ColumnSpan="2"
                     Margin="4"
                     CornerRadius="7"
                     Background="#0B1F31"
@@ -894,10 +899,10 @@
                                FontWeight="Bold"
                                Foreground="White"
                                TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding CurrentTimeDisplay}"
-                               FontSize="16"
-                               Foreground="#B8D5EA"
-                               Margin="0,8,0,0"/>
+                     <TextBlock Text="{Binding CurrentTimeDisplay}"
+                                FontSize="16"
+                                Foreground="#B8D5EA"
+                                Margin="0,8,0,0"/>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Ellipse Width="10"
                                  Height="10"
@@ -914,7 +919,7 @@
 
             <Button x:Name="AdminBudgetFundsTile"
                     Grid.Row="1"
-                    Grid.Column="2"
+                    Grid.Column="1"
                     Margin="4"
                     Style="{StaticResource DashboardTileButton}"
                     Background="{StaticResource TilePremiumsBrush}"
@@ -926,114 +931,49 @@
                                              Foreground="White"
                                              HorizontalAlignment="Center"/>
                     <TextBlock Text="BUDGET FUNDS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="Group and allocated funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    <TextBlock Text="Manage group and local funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
                 </StackPanel>
             </Button>
 
-            <!-- ROW 2 -->
-            <Button x:Name="AdminClaimsTile"
-                    Grid.Row="2"
-                    Grid.Column="0"
+            <Button x:Name="AdminAllocatedBudgetTile"
+                    Grid.Row="1"
+                    Grid.Column="2"
                     Margin="4"
                     Style="{StaticResource DashboardTileButton}"
-                    Background="{StaticResource TileClaimsBrush}"
-                    Command="{Binding QuickNewClaimCommand}">
+                    Background="{StaticResource TileDistributionBrush}"
+                    Command="{Binding QuickAllocatedFundsCommand}">
                 <StackPanel VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ClipboardCheck"
+                    <materialDesign:PackIcon Kind="BankTransfer"
                                              Width="38"
                                              Height="38"
                                              Foreground="White"
                                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="CLAIMS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="Pending claims and all claims" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    <TextBlock Text="ALLOCATED BUDGET" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Configured track budgets and allocations" Style="{StaticResource TileSubtext}" FontSize="11"/>
                 </StackPanel>
             </Button>
 
-            <Popup IsOpen="{Binding IsClaimsManagementPopupOpen, Mode=TwoWay}"
-                   DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                   PlacementTarget="{Binding ElementName=AdminClaimsTile}"
-                   Placement="Bottom"
-                   StaysOpen="False"
-                   AllowsTransparency="True"
-                   PopupAnimation="Slide">
-                <Border Width="290"
-                        Background="White"
-                        BorderBrush="#DDE4EF"
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        Padding="8"
-                        helpers:Adaptive.UseAdaptiveForeground="True">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="14"
-                                          ShadowDepth="3"
-                                          Opacity="0.22"
-                                          Color="#000000"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <Button Command="{Binding QuickPendingClaimsCommand}"
-                                Style="{StaticResource LandingPopupActionButton}"
-                                Foreground="#0F766E">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Kind="ClipboardClock"
-                                                         Width="22"
-                                                         Height="22"
-                                                         Margin="0,0,12,0"
-                                                         VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Pending Claims" Style="{StaticResource LandingPopupTitle}"/>
-                                    <TextBlock Text="Open submitted and under-review claims."
-                                               Style="{StaticResource LandingPopupSubtext}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Button>
-                        <Button Command="{Binding QuickAllClaimsCommand}"
-                                Style="{StaticResource LandingPopupActionButton}"
-                                Foreground="#0F766E">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Kind="ClipboardList"
-                                                         Width="22"
-                                                         Height="22"
-                                                         Margin="0,0,12,0"
-                                                         VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="All Claims" Style="{StaticResource LandingPopupTitle}"/>
-                                    <TextBlock Text="Browse the full claims list."
-                                               Style="{StaticResource LandingPopupSubtext}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Button>
-                    </StackPanel>
-                </Border>
-            </Popup>
-
+            <!-- ROW 2 -->
             <Button Style="{StaticResource DashboardTileButton}"
                     Grid.Row="2"
-                    Grid.Column="1"
+                    Grid.Column="0"
                     Margin="4"
-                    Background="{StaticResource TileDashboardBrush}"
-                    Command="{Binding QuickDashboardCommand}">
+                    Background="{StaticResource TileSettingsBrush}"
+                    Command="{Binding QuickManageAccountsCommand}">
                 <StackPanel VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ViewDashboard"
+                    <materialDesign:PackIcon Kind="ShieldAccount"
                                              Width="34"
                                              Height="34"
                                              Foreground="White"
                                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="DASHBOARD" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="View analytics and announcements" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    <TextBlock Text="MANAGE ACCOUNTS" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Open access and account controls" Style="{StaticResource TileSubtext}" FontSize="11"/>
                 </StackPanel>
             </Button>
 
             <Button Style="{StaticResource DashboardTileButton}"
                     Grid.Row="2"
-                    Grid.Column="2"
+                    Grid.Column="1"
                     Margin="4"
                     Background="{StaticResource TileAnnouncementsBrush}"
                     Command="{Binding QuickAnnouncementsCommand}">
@@ -1050,18 +990,35 @@
 
             <Button Style="{StaticResource DashboardTileButton}"
                     Grid.Row="2"
-                    Grid.Column="3"
+                    Grid.Column="2"
                     Margin="4"
-                    Background="{StaticResource TileSettingsBrush}"
-                    Command="{Binding QuickManageAccountsCommand}">
+                    Background="{StaticResource TileDistributionBrush}"
+                    Command="{Binding QuickBarangayFundsCommand}">
                 <StackPanel VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ShieldAccount"
+                    <materialDesign:PackIcon Kind="BankTransferOut"
                                              Width="34"
                                              Height="34"
                                              Foreground="White"
                                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="MANAGE ACCOUNTS" Style="{StaticResource TileTitle}" FontSize="14"/>
-                    <TextBlock Text="Open access and account controls" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                    <TextBlock Text="DISTRIBUTION" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="Release and monitor barangay funds" Style="{StaticResource TileSubtext}" FontSize="11"/>
+                </StackPanel>
+            </Button>
+
+            <Button Style="{StaticResource DashboardTileButton}"
+                    Grid.Row="2"
+                    Grid.Column="3"
+                    Margin="4"
+                    Background="{StaticResource TileTransactionsBrush}"
+                    Command="{Binding QuickTransactionsCommand}">
+                <StackPanel VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="History"
+                                             Width="34"
+                                             Height="34"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="TRANSACTION" Style="{StaticResource TileTitle}" FontSize="14"/>
+                    <TextBlock Text="View transaction history and logs" Style="{StaticResource TileSubtext}" FontSize="11"/>
                 </StackPanel>
             </Button>
 		</Grid>
@@ -1292,4 +1249,3 @@
         </Border>
     </Grid>
 </UserControl>
-

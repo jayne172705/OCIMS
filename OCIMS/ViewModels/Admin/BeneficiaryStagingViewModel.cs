@@ -21,6 +21,8 @@ namespace eSureHi.ViewModels.Admin
         public string RegistrationStatus { get; init; } = string.Empty;
         public string RegistrationStatusBackground { get; init; } = "#F1F5F9";
         public string RegistrationStatusForeground { get; init; } = "#475569";
+        public string CivilRegistryId { get; init; } = string.Empty;
+        public string BeneficiaryId { get; init; } = string.Empty;
     }
 
     /// <summary>
@@ -164,6 +166,19 @@ namespace eSureHi.ViewModels.Admin
             }
         }
 
+        private FamilyMemberDisplay? _selectedFamilyMember;
+        public FamilyMemberDisplay? SelectedFamilyMember
+        {
+            get => _selectedFamilyMember;
+            set
+            {
+                if (SetProperty(ref _selectedFamilyMember, value) && value is not null)
+                {
+                    _ = OpenFamilyMemberProfileAsync(value);
+                }
+            }
+        }
+
         private void ApplyEmployeeFilter()
         {
             FilteredEmployees.Clear();
@@ -186,6 +201,8 @@ namespace eSureHi.ViewModels.Admin
             {
                 SetProperty(ref _selectedRecord, value);
                 OnPropertyChanged(nameof(HasSelection));
+                OnPropertyChanged(nameof(IsProfileOpen));
+                OnPropertyChanged(nameof(ShowRegistrationButtons));
                 LinkCommand.RaiseCanExecuteChanged();
                 SkipCommand.RaiseCanExecuteChanged();
                 RemoveBeneficiaryCommand.RaiseCanExecuteChanged();
@@ -199,6 +216,10 @@ namespace eSureHi.ViewModels.Admin
             CanAddBeneficiary;
         public bool CanAddBeneficiary =>
             SelectedRecord is not null;
+
+        public bool ShowRegistrationButtons =>
+            SelectedRecord is not null && SelectedRecord.LinkStatus != "Linked";
+
         public string AddMemberButtonText =>
             PermissionService.CanApproveWorkflow
                 ? "ADD TO INSURANCE"
@@ -365,7 +386,7 @@ namespace eSureHi.ViewModels.Admin
         }
 
         public string[] RelationshipOptions { get; } =
-            { "Spouse", "Child", "Parent", "Sibling", "Other" };
+            { "Spouse", "Son", "Daughter", "Child", "Parent", "Sibling", "Other" };
         public ObservableCollection<string> SourceOfFundsOptions { get; } = new()
         {
             "Job Order",
@@ -375,8 +396,26 @@ namespace eSureHi.ViewModels.Admin
         public string SourceOfFunds
         {
             get => _sourceOfFunds;
-            set => SetProperty(ref _sourceOfFunds, value);
+            set
+            {
+                if (SetProperty(ref _sourceOfFunds, value))
+                {
+                    if (!_isLoadingProfile && !_isSyncingSystemBeneficiarySelection)
+                    {
+                        Contribution = GetDefaultMonthlyContribution(value);
+                    }
+                }
+            }
         }
+
+        private static decimal GetDefaultMonthlyContribution(string? programType) =>
+            programType?.Trim() switch
+            {
+                "Job Order" => 50m,
+                "Casual" => 100m,
+                "Regular" => 200m,
+                _ => 0m
+            };
 
         // ── Filters ────────────────────────────────────────────────────
         private string _searchText = string.Empty;
@@ -430,6 +469,10 @@ namespace eSureHi.ViewModels.Admin
                     }
                     OnPropertyChanged(nameof(IsCrsSource));
                     OnPropertyChanged(nameof(IsSystemSource));
+                    OnPropertyChanged(nameof(HasSelection));
+                    OnPropertyChanged(nameof(IsProfileOpen));
+                    OnPropertyChanged(nameof(ShowRegistrationButtons));
+                    OnPropertyChanged(nameof(CanApproveMember));
                     OnPropertyChanged(nameof(SourceCaption));
                     OnPropertyChanged(nameof(ActiveTotalCount));
                     OnPropertyChanged(nameof(ActiveFilteredCount));
@@ -498,6 +541,7 @@ namespace eSureHi.ViewModels.Admin
 
         // ── State ──────────────────────────────────────────────────────
         private bool _isLoading;
+        private bool _isLoadingProfile;
         private string _errorMessage = string.Empty;
         private bool _hasAutoSyncedCrs;
 
@@ -721,7 +765,8 @@ namespace eSureHi.ViewModels.Admin
                 using var db = eSureHiDbContextFactory.Create();
                 var names = (await db.SourceFunds
                     .Where(f => f.Status == "Active" &&
-                                (f.FundName == "Job Order" ||
+                                (f.FundType == "Employee Track" ||
+                                 f.FundName == "Job Order" ||
                                  f.FundName == "Casual" ||
                                  f.FundName == "Regular"))
                     .Select(f => f.FundName)
@@ -1235,8 +1280,84 @@ namespace eSureHi.ViewModels.Admin
             SystemTotalCount = _allSystemBeneficiaries.Count;
         }
 
+        private static string MapRoleToRelationship(string? role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                return "Other";
+
+            var mapped = BeneficiaryStaging.MapPositionToLabel(role);
+            if (string.IsNullOrWhiteSpace(mapped))
+                return "Other";
+
+            return mapped.ToUpperInvariant() switch
+            {
+                "SPOUSE" => "Spouse",
+                "SON" => "Son",
+                "DAUGHTER" => "Daughter",
+                "CHILD" or "CHILDREN" => "Child",
+                "FATHER" or "MOTHER" or "PARENT" => "Parent",
+                "BROTHER" or "SISTER" or "SIBLING" => "Sibling",
+                _ => "Other"
+            };
+        }
+
+        private async Task OpenFamilyMemberProfileAsync(FamilyMemberDisplay familyMember)
+        {
+            try
+            {
+                using var db = eSureHiDbContextFactory.Create();
+                
+                var stagingRecord = await db.BeneficiaryStaging
+                    .FirstOrDefaultAsync(b => b.CivilRegistryId == familyMember.CivilRegistryId || 
+                                              (!string.IsNullOrEmpty(familyMember.BeneficiaryId) && b.BeneficiaryId == familyMember.BeneficiaryId));
+
+                if (stagingRecord == null)
+                {
+                    var crsRecord = await db.CrsBeneficiaryCache
+                        .FirstOrDefaultAsync(c => c.CivilRegistryId == familyMember.CivilRegistryId || 
+                                                  (!string.IsNullOrEmpty(familyMember.BeneficiaryId) && c.BeneficiaryId == familyMember.BeneficiaryId));
+
+                    if (crsRecord != null)
+                    {
+                        stagingRecord = new BeneficiaryStaging
+                        {
+                            BeneficiaryId = crsRecord.BeneficiaryId,
+                            CivilRegistryId = crsRecord.CivilRegistryId,
+                            FirstName = crsRecord.FirstName,
+                            LastName = crsRecord.LastName,
+                            Sex = crsRecord.Sex,
+                            DateOfBirth = crsRecord.DateOfBirth,
+                            Address = crsRecord.Address,
+                            DemographicFamilyId = crsRecord.FamilyId ?? string.Empty,
+                            DemographicFamilyRole = crsRecord.FamilyRole ?? string.Empty,
+                            LinkStatus = "Unlinked",
+                            CedulaNo = crsRecord.CedulaNo
+                        };
+                    }
+                }
+
+                if (stagingRecord != null)
+                {
+                    SelectedRecord = stagingRecord;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to open family member profile: {ex.Message}";
+            }
+            finally
+            {
+                _selectedFamilyMember = null;
+                OnPropertyChanged(nameof(SelectedFamilyMember));
+            }
+        }
+
         private async Task OpenProfileAsync(BeneficiaryStaging record)
         {
+            if (record is null)
+                return;
+
+            _isLoadingProfile = true;
             IsLoading = true;
             ErrorMessage = string.Empty;
             ResetLinkFormFields();
@@ -1257,6 +1378,32 @@ namespace eSureHi.ViewModels.Admin
             try
             {
                 using var db = eSureHiDbContextFactory.Create();
+
+                if (string.IsNullOrWhiteSpace(record.DemographicFamilyId))
+                {
+                    CrsBeneficiaryCache? cacheMatch = null;
+                    if (!string.IsNullOrWhiteSpace(record.BeneficiaryId))
+                    {
+                        cacheMatch = await db.CrsBeneficiaryCache
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(c => c.BeneficiaryId == record.BeneficiaryId);
+                    }
+                    if (cacheMatch is null && !string.IsNullOrWhiteSpace(record.CivilRegistryId))
+                    {
+                        cacheMatch = await db.CrsBeneficiaryCache
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(c => c.CivilRegistryId == record.CivilRegistryId);
+                    }
+                    if (cacheMatch is not null)
+                    {
+                        record.FamilyRole = cacheMatch.FamilyRole;
+                        record.DemographicFamilyRole = cacheMatch.FamilyRole ?? string.Empty;
+                        record.DemographicFamilyId = cacheMatch.FamilyId ?? string.Empty;
+                        record.DemographicRelationshipToHead = cacheMatch.RelationshipToHead ?? string.Empty;
+                        record.IsDemographicHeadOfFamily = cacheMatch.IsHouseholdHead;
+                        record.HasDemographicProfile = !string.IsNullOrWhiteSpace(cacheMatch.FamilyRole);
+                    }
+                }
 
                 if (record.LinkedBenId.HasValue)
                 {
@@ -1302,6 +1449,18 @@ namespace eSureHi.ViewModels.Admin
                 {
                     ProfileEmployee = await db.Employees
                         .FirstOrDefaultAsync(e => e.EmpId == record.LinkedEmpId.Value);
+                }
+
+                if (ProfileBeneficiary == null)
+                {
+                    // Autofill for fresh CRS/unlinked record
+                    var role = record.DemographicFamilyRole;
+                    Relationship = MapRoleToRelationship(role);
+                    IsPrimary = record.IsDemographicHeadOfFamily || 
+                                (!string.IsNullOrEmpty(role) && role.Equals("Head of Family", StringComparison.OrdinalIgnoreCase));
+                    SourceOfFunds = SourceOfFundsOptions.FirstOrDefault() ?? "Job Order";
+                    Contribution = GetDefaultMonthlyContribution(SourceOfFunds);
+                    CedulaNo = record.CedulaNo ?? string.Empty;
                 }
 
                 if (ProfileEmployee is not null)
@@ -1418,6 +1577,17 @@ namespace eSureHi.ViewModels.Admin
 
                     foreach (var member in familyMembers.OrderBy(m => m.IsHouseholdHead ? 0 : 1).ThenBy(m => m.FullName))
                     {
+                        var matchesCivilRegistryId = !string.IsNullOrWhiteSpace(member.CivilRegistryId) && 
+                                                    !string.IsNullOrWhiteSpace(record.CivilRegistryId) && 
+                                                    member.CivilRegistryId == record.CivilRegistryId;
+
+                        var matchesBeneficiaryId = !string.IsNullOrWhiteSpace(member.BeneficiaryId) && 
+                                                   !string.IsNullOrWhiteSpace(record.BeneficiaryId) && 
+                                                   member.BeneficiaryId == record.BeneficiaryId;
+
+                        if (matchesCivilRegistryId || matchesBeneficiaryId)
+                            continue;
+
                         var status = "Not Registered";
                         var bg = "#F1F5F9";
                         var fg = "#64748B";
@@ -1448,19 +1618,26 @@ namespace eSureHi.ViewModels.Admin
                             FamilyRole = string.IsNullOrWhiteSpace(member.FamilyRole) ? "MEMBER" : member.FamilyRole.ToUpper(),
                             RegistrationStatus = status,
                             RegistrationStatusBackground = bg,
-                            RegistrationStatusForeground = fg
+                            RegistrationStatusForeground = fg,
+                            CivilRegistryId = member.CivilRegistryId ?? string.Empty,
+                            BeneficiaryId = member.BeneficiaryId ?? string.Empty
                         });
                     }
                 }
 
                 BuildRequirements(record);
                 OnPropertyChanged(nameof(IsProfileOpen));
+                OnPropertyChanged(nameof(ShowRegistrationButtons));
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Load beneficiary profile failed: {ex.Message}";
             }
-            finally { IsLoading = false; }
+            finally 
+            { 
+                _isLoadingProfile = false;
+                IsLoading = false; 
+            }
         }
 
         private void ResetLinkFormFields()
@@ -2004,6 +2181,18 @@ namespace eSureHi.ViewModels.Admin
         private async Task LinkAsync()
         {
             await AddSelectedRecordToInsuranceAsync();
+        }
+
+        public async Task RefreshCurrentRecordAsync()
+        {
+            if (SelectedRecord is null) return;
+            using var db = eSureHiDbContextFactory.Create();
+            var reloaded = await db.BeneficiaryStaging
+                .FirstOrDefaultAsync(b => b.StagingId == SelectedRecord.StagingId);
+            if (reloaded != null)
+            {
+                SelectedRecord = reloaded;
+            }
         }
 
         private static DateOnly? ParseDateOnlyOrNull(string? value)

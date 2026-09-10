@@ -85,7 +85,8 @@
                             </Grid.ColumnDefinitions>
                             <ComboBox Grid.Column="0"
                                       ItemsSource="{Binding PolicyTypes}"
-                                      SelectedItem="{Binding PolicyType}"
+                                      Text="{Binding PolicyType, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
                                       materialDesign:HintAssist.Hint="Employment Type *"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       FontSize="13"/>

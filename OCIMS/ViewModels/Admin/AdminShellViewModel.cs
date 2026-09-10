@@ -240,6 +240,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand NavBeneficiariesCommand { get; }
         public RelayCommand OpenMemberManagementCommand { get; }
         public RelayCommand OpenClaimsMenuCommand { get; }
+        public RelayCommand OpenClaimsSearchCommand { get; }
         public RelayCommand OpenBudgetFundsCommand { get; }
         public RelayCommand OpenAdminToolsCommand { get; }
         public RelayCommand NavRegisterMemberCommand { get; }
@@ -344,6 +345,7 @@ namespace eSureHi.ViewModels.Admin
             {
                 IsClaimsMenuPopupOpen = !IsClaimsMenuPopupOpen;
             });
+            OpenClaimsSearchCommand = new RelayCommand(OpenClaimsSearchDialog);
             OpenBudgetFundsCommand = new RelayCommand(() =>
             {
                 IsBudgetFundsPopupOpen = !IsBudgetFundsPopupOpen;
@@ -452,6 +454,8 @@ namespace eSureHi.ViewModels.Admin
                 return;
             }
 
+
+
             CurrentPageTitle = page;
             if (closeSidebar)
                 CloseSidebarMenus();
@@ -528,6 +532,24 @@ namespace eSureHi.ViewModels.Admin
             IsClaimsManagementPopupOpen = false;
             IsPaymentManagementPopupOpen = false;
             IsReportsPopupOpen = false;
+        }
+
+        private void OpenClaimsSearchDialog()
+        {
+            IsSidebarVisible = false;
+            CurrentPageTitle = "Claims";
+            var view = new Views.Admin.UserControls.ClaimsView(ClaimsListMode.All);
+            NavigationService.Instance.NavigateTo(view);
+        }
+
+        public void NavigateToClaimsWithFilters(string searchText, string program)
+        {
+            IsSidebarVisible = false;
+            CloseSidebarMenus();
+
+            CurrentPageTitle = "Claims";
+            var view = new Views.Admin.UserControls.ClaimsView(ClaimsListMode.All, searchText, program);
+            NavigationService.Instance.NavigateTo(view);
         }
 
         private void OpenFileClaimDialog()

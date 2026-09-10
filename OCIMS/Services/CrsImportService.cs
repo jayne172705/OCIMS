@@ -89,6 +89,7 @@ namespace eSureHi.Services
                 FamilyRole = r.FamilyRole,
                 RelationshipToHead = r.RelationshipToHead,
                 IsHouseholdHead = r.IsHouseholdHead,
+                CedulaNo = r.CedulaNo,
                 CachedAt = cachedAt
             }));
             await db.SaveChangesAsync(cancellationToken);
@@ -104,6 +105,35 @@ namespace eSureHi.Services
 
             var rows = new List<BeneficiaryStaging>();
             var total = 0;
+
+            var residenceMap = new Dictionary<string, string>();
+            try
+            {
+                await using var resConn = new MySqlConnection(connStr);
+                await resConn.OpenAsync(cancellationToken);
+                await using (var resCmd = new MySqlCommand("SELECT certificate_no, resident_first_name, resident_last_name FROM residence_records", resConn))
+                await using (var resReader = await resCmd.ExecuteReaderAsync(cancellationToken))
+                {
+                    var certNoOrdinal = resReader.GetOrdinal("certificate_no");
+                    var fnOrdinal = resReader.GetOrdinal("resident_first_name");
+                    var lnOrdinal = resReader.GetOrdinal("resident_last_name");
+                    while (await resReader.ReadAsync(cancellationToken))
+                    {
+                        var certNo = resReader.IsDBNull(certNoOrdinal) ? string.Empty : resReader.GetString(certNoOrdinal);
+                        var fn = resReader.IsDBNull(fnOrdinal) ? string.Empty : resReader.GetString(fnOrdinal)?.Trim().ToLower() ?? "";
+                        var ln = resReader.IsDBNull(lnOrdinal) ? string.Empty : resReader.GetString(lnOrdinal)?.Trim().ToLower() ?? "";
+                        var key = $"{fn}|{ln}";
+                        if (!string.IsNullOrEmpty(key) && !residenceMap.ContainsKey(key))
+                        {
+                            residenceMap[key] = certNo;
+                        }
+                    }
+                }
+            }
+            catch (Exception resEx)
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to fetch remote residence records: " + resEx.Message);
+            }
 
             await using var countConn = new MySqlConnection(connStr);
             await countConn.OpenAsync(cancellationToken);
@@ -166,6 +196,15 @@ namespace eSureHi.Services
                                    normalizedRole.Equals("household head", StringComparison.OrdinalIgnoreCase) ||
                                    normalizedRole.Equals("head", StringComparison.OrdinalIgnoreCase));
 
+                    var fnLower = (ReadString(reader, "first_name") ?? "").Trim().ToLower();
+                    var lnLower = (ReadString(reader, "last_name") ?? "").Trim().ToLower();
+                    var resKey = $"{fnLower}|{lnLower}";
+                    string? matchedCedula = null;
+                    if (residenceMap.TryGetValue(resKey, out var cNo))
+                    {
+                        matchedCedula = cNo;
+                    }
+
                     rows.Add(new BeneficiaryStaging
                     {
                         ResidentsId = ReadLong(reader, "residents_id"),
@@ -197,6 +236,7 @@ namespace eSureHi.Services
                         DemographicRelationshipToHead = ReadString(reader, "relationship_to_head") ?? "",
                         IsDemographicHeadOfFamily = isHead,
                         LinkStatus = "Unlinked",
+                        CedulaNo = matchedCedula,
                         ImportedAt = DateTime.Now
                     });
                 }
@@ -248,6 +288,7 @@ namespace eSureHi.Services
                 DemographicRelationshipToHead = c.RelationshipToHead ?? "",
                 IsDemographicHeadOfFamily = c.IsHouseholdHead,
                 LinkStatus = "Unlinked",
+                CedulaNo = c.CedulaNo,
                 ImportedAt = DateTime.Now
             }).ToList();
         }

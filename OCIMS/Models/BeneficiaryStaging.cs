@@ -74,6 +74,9 @@ namespace eSureHi.Models
         [Column("linked_ben_id")]
         public int? LinkedBenId { get; set; }
 
+        [Column("cedula_no")]
+        public string? CedulaNo { get; set; }
+
         [Column("imported_at")]
         public DateTime ImportedAt { get; set; } = DateTime.Now;
 
@@ -84,7 +87,11 @@ namespace eSureHi.Models
                 : $"{LastName}, {FirstName} {MiddleName}".Trim();
 
         [NotMapped]
-        public bool IsRegisteredMember { get; set; }
+        public bool IsRegisteredMember
+        {
+            get => LinkStatus == "Linked";
+            set { }
+        }
 
         [NotMapped]
         public string RegisteredRole { get; set; } = string.Empty;

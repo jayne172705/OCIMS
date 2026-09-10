@@ -129,7 +129,7 @@ namespace eSureHi.ViewModels.Admin
         // ── Static lists ───────────────────────────────────────────────
         public string[] GenderOptions { get; } = { "Male", "Female", "Other" };
         public string[] CivilStatusOptions { get; } = { "Single", "Married", "Widowed", "Separated" };
-        public string[] EmploymentTypes { get; } = { "Job Order", "Casual", "Regular" };
+        public ObservableCollection<string> EmploymentTypes { get; } = new();
         public string[] StatusOptions { get; } = { "Active", "Inactive", "Retired", "Resigned", "Terminated" };
 
         // ── Commands ───────────────────────────────────────────────────
@@ -157,9 +157,12 @@ namespace eSureHi.ViewModels.Admin
             DeleteBeneficiaryCommand = new RelayCommand(DeleteBeneficiary, () => SelectedBeneficiary != null);
         }
 
+        private long? _prefilledStagingId;
+
         // ── Load for New ───────────────────────────────────────────────
         public async Task InitNewAsync()
         {
+            _prefilledStagingId = null;
             IsEditMode = false;
             EmployeeNo = string.Empty;
             EmploymentType = string.Empty;
@@ -167,6 +170,47 @@ namespace eSureHi.ViewModels.Admin
             DateHired = DateTime.Today;
             DateOfBirth = DateTime.Today.AddYears(-25);
             await LoadDepartmentsAsync();
+            await LoadEmploymentTypesAsync();
+        }
+
+        public async Task InitFromStagingAsync(BeneficiaryStaging record)
+        {
+            _prefilledStagingId = record.StagingId;
+            IsEditMode = false;
+            EmployeeNo = record.BeneficiaryId ?? string.Empty;
+            FirstName = record.FirstName ?? string.Empty;
+            MiddleName = string.Empty;
+            LastName = record.LastName ?? string.Empty;
+            Suffix = string.Empty;
+            
+            var dob = ParseDateOnlyOrNull(record.DateOfBirth);
+            DateOfBirth = dob.HasValue
+                ? dob.Value.ToDateTime(TimeOnly.MinValue)
+                : DateTime.Today.AddYears(-25);
+
+            Gender = record.Sex?.ToUpper() switch
+            {
+                "MALE" or "M" => "Male",
+                "FEMALE" or "F" => "Female",
+                _ => "Other"
+            };
+
+            AddressLine1 = record.Address ?? string.Empty;
+            
+            DateHired = DateTime.Today;
+            EmploymentType = "Job Order"; // default/fallback
+            MonthlyContribution = GetDefaultMonthlyContribution(EmploymentType);
+
+            await LoadDepartmentsAsync();
+            await LoadEmploymentTypesAsync();
+        }
+
+        private static DateOnly? ParseDateOnlyOrNull(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            if (DateOnly.TryParse(value, out var parsedDate)) return parsedDate;
+            if (DateTime.TryParse(value, out var parsedDateTime)) return DateOnly.FromDateTime(parsedDateTime);
+            return null;
         }
 
         // ── Load for Edit ──────────────────────────────────────────────
@@ -175,6 +219,7 @@ namespace eSureHi.ViewModels.Admin
             IsEditMode = true;
             _editEmpId = empId;
             await LoadDepartmentsAsync();
+            await LoadEmploymentTypesAsync();
 
             using var db = eSureHiDbContextFactory.Create();
             var emp = await db.Employees
@@ -255,6 +300,36 @@ namespace eSureHi.ViewModels.Admin
             catch (Exception ex)
             {
                 ErrorMessage = $"Load departments failed: {ex.Message}";
+            }
+        }
+
+        private async Task LoadEmploymentTypesAsync()
+        {
+            try
+            {
+                using var db = eSureHiDbContextFactory.Create();
+                var types = await db.SourceFunds
+                    .Where(f => f.Status == "Active" && f.FundType == "Employee Track")
+                    .Select(f => f.FundName)
+                    .ToListAsync();
+
+                if (!types.Any())
+                {
+                    types = new System.Collections.Generic.List<string> { "Job Order", "Casual", "Regular" };
+                }
+
+                EmploymentTypes.Clear();
+                foreach (var t in types)
+                {
+                    EmploymentTypes.Add(t);
+                }
+            }
+            catch
+            {
+                EmploymentTypes.Clear();
+                EmploymentTypes.Add("Job Order");
+                EmploymentTypes.Add("Casual");
+                EmploymentTypes.Add("Regular");
             }
         }
 
@@ -412,7 +487,7 @@ namespace eSureHi.ViewModels.Admin
             if (DateOfBirth is null)
             { ErrorMessage = "Date of birth is required."; return false; }
             if (string.IsNullOrWhiteSpace(EmploymentType))
-            { ErrorMessage = "Employment type is required. Select Job Order, Casual, or Regular."; return false; }
+            { ErrorMessage = "Employment type is required."; return false; }
             if (MonthlyContribution <= 0)
             { ErrorMessage = "Monthly contribution is required and must be greater than zero."; return false; }
             if (DateHired is null)
@@ -501,6 +576,44 @@ namespace eSureHi.ViewModels.Admin
 
                     db.Employees.Add(emp);
                     await db.SaveChangesAsync();
+
+                    if (!emp.Beneficiaries.Any(b => b.IsPrimary))
+                    {
+                        var primaryBen = new Beneficiary
+                        {
+                            EmpId = emp.EmpId,
+                            BeneficiaryId = emp.EmployeeNo,
+                            CivilRegistryId = emp.EmployeeNo,
+                            FirstName = emp.FirstName,
+                            LastName = emp.LastName,
+                            Relationship = "Self",
+                            DateOfBirth = emp.DateOfBirth,
+                            Gender = emp.Gender,
+                            IsPrimary = true,
+                            Received = true,
+                            Contribution = MonthlyContribution,
+                            SourceOfFunds = emp.EmploymentType,
+                            WorkflowStatus = "Approved",
+                            StatusRemarks = "Registered as Primary Member",
+                            IsActive = true,
+                            IsAdminConfirmed = true,
+                            CreatedAt = DateTime.Now
+                        };
+                        db.Beneficiaries.Add(primaryBen);
+                        await db.SaveChangesAsync();
+                    }
+
+                    if (_prefilledStagingId.HasValue)
+                    {
+                        var staging = await db.BeneficiaryStaging.FindAsync(_prefilledStagingId.Value);
+                        if (staging != null)
+                        {
+                            staging.LinkStatus = "Linked";
+                            staging.LinkedEmpId = emp.EmpId;
+                            await db.SaveChangesAsync();
+                        }
+                    }
+
                     await EnsureMatchingPolicyAssignmentAsync(db, emp, MonthlyContribution);
                     await LinkEmployeeCrsStagingRecordAsync(db, emp);
                     await LinkCrsStagingRecordsAsync(db, emp);

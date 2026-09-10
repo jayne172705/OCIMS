@@ -1,0 +1,362 @@
+<Window x:Class="eSureHi.Views.Admin.Dialogs.RegisterPrimaryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:eSureHi.Helpers"
+        Title="Register Primary Member"
+        Width="840" Height="740"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="NoResize"
+        Background="#F1F5F9"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="52"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="64"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Title Bar ── -->
+        <Border Grid.Row="0" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
+                    <materialDesign:PackIcon Kind="AccountPlus" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+                    <TextBlock Text="Register Primary Member" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="White"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Click="CancelButton_Click"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Foreground="White"
+                        Width="52" Height="52">
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ── Content ── -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+                <!-- Official Profile Data Border with Rounded Corners -->
+                <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Background="#F8FAFC" Margin="0,0,0,20" Padding="4">
+                    <Expander ExpandDirection="Down" IsExpanded="False" Background="Transparent" BorderThickness="0" Padding="12,8">
+                        <Expander.Header>
+                            <TextBlock Text="Official Profile Data (Click to view)" FontSize="13" FontWeight="Bold" Foreground="#1E293B"/>
+                        </Expander.Header>
+                        <Grid Margin="4,10,4,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Column 0: Name, DOB, Gender -->
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="Full Name" FontWeight="SemiBold" Foreground="#64748B" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBlock Text="{Binding ResidentName}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="13" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="Date of Birth" FontWeight="SemiBold" Foreground="#64748B" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBlock Text="{Binding ResidentDob}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="13" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="Gender" FontWeight="SemiBold" Foreground="#64748B" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBlock Text="{Binding ResidentSex}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="13"/>
+                            </StackPanel>
+                            <!-- Column 1: Barangay, Family ID, Resident ID -->
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                <TextBlock Text="Barangay" FontWeight="SemiBold" Foreground="#64748B" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBlock Text="{Binding ResidentBarangay}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="13" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="Family ID" FontWeight="SemiBold" Foreground="#64748B" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBlock Text="{Binding ResidentFamilyId}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="13" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="Household/Resident ID" FontWeight="SemiBold" Foreground="#64748B" FontSize="11" Margin="0,0,0,3"/>
+                                <TextBlock Text="{Binding ResidentId}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="13"/>
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </Border>
+
+                <!-- Section: Insurance Details -->
+                <TextBlock Text="Insurance Registration Details" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+                
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Col 0: Member Type -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Member Type *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding MemberTypeOptions}"
+                                  SelectedItem="{Binding SelectedMemberType, Mode=TwoWay}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  VerticalContentAlignment="Center"
+                                  FontSize="13"/>
+                        <TextBlock Text="New: pending status, payments generated." FontSize="10.5" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Col 2: Date Registered -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Date Registered *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                        <DatePicker SelectedDate="{Binding DateRegistered, Mode=TwoWay}"
+                                    IsEnabled="False"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    VerticalContentAlignment="Center"
+                                    FontSize="13"/>
+                        <TextBlock Text="Set to today (locked for new members)." FontSize="10.5" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Col 4: Assigned Group -->
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Assigned Group *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AssignedGroupOptions}"
+                                  SelectedItem="{Binding SelectedAssignedGroup, Mode=TwoWay}"
+                                  DisplayMemberPath="FundName"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  VerticalContentAlignment="Center"
+                                  FontSize="13"/>
+                        <TextBlock Text="Select the group to assign this member under." FontSize="10.5" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Row 2, Col 0: Payment Plan -->
+                    <StackPanel Grid.Row="2" Grid.Column="0">
+                        <TextBlock Text="Payment Plan *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding PaymentPlanOptions}"
+                                  SelectedItem="{Binding SelectedPaymentPlan, Mode=TwoWay}"
+                                  DisplayMemberPath="PolicyName"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  VerticalContentAlignment="Center"
+                                  FontSize="13"/>
+                    </StackPanel>
+
+                    <!-- Row 2, Col 2: Contact Number -->
+                    <StackPanel Grid.Row="2" Grid.Column="2">
+                        <TextBlock Text="Contact Number *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding ContactNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 materialDesign:HintAssist.Hint="Enter contact number"
+                                 VerticalContentAlignment="Center"
+                                 FontSize="13"/>
+                    </StackPanel>
+
+                    <!-- Row 2, Col 4: Email -->
+                    <StackPanel Grid.Row="2" Grid.Column="4">
+                        <TextBlock Text="Email (optional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding EmailAddress, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 materialDesign:HintAssist.Hint="Enter email address"
+                                 VerticalContentAlignment="Center"
+                                 FontSize="13"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Section: Dependents -->
+                <TextBlock Text="Dependents" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,4"/>
+                <TextBlock Text="Add dependents from the current household or search for other residents." FontSize="12" Foreground="#64748B" Margin="0,0,0,16"/>
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Panel: Family Members -->
+                    <Border Grid.Column="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14" Background="White">
+                        <StackPanel>
+                            <TextBlock Text="Family Members" FontWeight="Bold" Foreground="#0F172A" FontSize="13.5" Margin="0,0,0,4"/>
+                            <TextBlock Text="Choose a family member to add as a dependent." FontSize="11" Foreground="#64748B" Margin="0,0,0,14"/>
+                            
+                            <ScrollViewer MaxHeight="200" MinHeight="60" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
+                                <ItemsControl ItemsSource="{Binding HouseholdDependentRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="8"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <ComboBox ItemsSource="{Binding Options}"
+                                                          SelectedItem="{Binding SelectedMember, Mode=TwoWay}"
+                                                          DisplayMemberPath="FullName"
+                                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                          materialDesign:HintAssist.Hint="-- Select Family Member --"
+                                                          VerticalContentAlignment="Center"
+                                                          FontSize="13"
+                                                          Grid.Column="0"/>
+                                                          
+                                                <Button Command="{Binding DataContext.RemoveHouseholdDependentRowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#EA4335"
+                                                        BorderBrush="#EA4335"
+                                                        Foreground="White"
+                                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                                        Content="Remove"
+                                                        Height="42"
+                                                        Padding="12,0"
+                                                        FontSize="12"
+                                                        VerticalAlignment="Center"
+                                                        Grid.Column="2"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            
+                            <Button Command="{Binding AddHouseholdDependentRowCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#0F9D58"
+                                    BorderBrush="#0F9D58"
+                                    Foreground="White"
+                                    Height="36"
+                                    FontSize="12"
+                                    Content="Add Another"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Right Panel: Other Residents -->
+                    <Border Grid.Column="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14" Background="White">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Other Residents" FontWeight="Bold" Foreground="#0F172A" FontSize="13.5" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding EnableOtherResidents, Mode=TwoWay}"
+                                          Content="Enable"
+                                          FontSize="12"
+                                          VerticalAlignment="Center"/>
+                            </Grid>
+                            <TextBlock Text="Search other residents to add as dependent." FontSize="11" Foreground="#64748B" Margin="0,0,0,14"/>
+                            
+                            <Grid Margin="0,0,0,10" Visibility="{Binding EnableOtherResidents, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBox Text="{Binding OtherResidentsSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Search by name..."
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         VerticalContentAlignment="Center"
+                                         FontSize="13"/>
+                            </Grid>
+
+                            <ListBox ItemsSource="{Binding OtherResidents}"
+                                     SelectedItem="{Binding SelectedOtherResident, Mode=TwoWay}"
+                                     IsEnabled="{Binding EnableOtherResidents}"
+                                     MaxHeight="120" MinHeight="60"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Margin="0,0,0,10"
+                                     Visibility="{Binding EnableOtherResidents, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,2">
+                                            <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="12" Foreground="#334155" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Barangay}" FontSize="10" Foreground="#64748B"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Button Command="{Binding AddOtherDependentCommand}"
+                                    IsEnabled="{Binding EnableOtherResidents}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#0F9D58"
+                                    BorderBrush="#0F9D58"
+                                    Foreground="White"
+                                    Height="36"
+                                    FontSize="12"
+                                    Content="Add Other Resident"
+                                    Visibility="{Binding EnableOtherResidents, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Margin="0,0,0,10"/>
+
+                            <!-- List of Added Other Dependents -->
+                            <TextBlock Text="Added Other Dependents" FontWeight="Bold" FontSize="12" Foreground="#334155" Margin="0,6,0,6"
+                                       Visibility="{Binding EnableOtherResidents, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            <ListBox ItemsSource="{Binding AddedOtherDependents}"
+                                     MaxHeight="120" MinHeight="60"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Visibility="{Binding EnableOtherResidents, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="12" Foreground="#334155"/>
+                                                <TextBlock Text="{Binding Relationship, StringFormat='Relationship: {0}'}" FontSize="10" Foreground="#64748B"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1"
+                                                    Command="{Binding DataContext.RemoveOtherDependentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Foreground="#EA4335"
+                                                    Padding="0" Height="24" Width="40" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16"/>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Footer ── -->
+        <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Background="White" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Total Payment info -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Total Payment: " FontSize="14.5" FontWeight="SemiBold" Foreground="#475569"/>
+                    <TextBlock Text="{Binding TotalPayment, StringFormat={}{0:N2}}" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text=" PHP" FontSize="14.5" FontWeight="SemiBold" Foreground="#475569"/>
+                </StackPanel>
+
+                <!-- Actions -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel"
+                            Click="CancelButton_Click"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Height="40"
+                            Margin="0,0,8,0" Width="100"/>
+                    <Button Command="{Binding RegisterCommand}"
+                            Background="#0F9D58"
+                            BorderBrush="#0F9D58"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="40"
+                            Width="200">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Register for Insurance" VerticalAlignment="Center" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

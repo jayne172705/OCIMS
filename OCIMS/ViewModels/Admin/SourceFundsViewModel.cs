@@ -299,10 +299,12 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand CancelTrackCoverageCommand { get; }
         public RelayCommand<BarangayFundItem> ReleaseBarangayFundCommand { get; }
         public RelayCommand<BarangayFundItem> OpenFamilyHeadsCommand { get; }
+        public RelayCommand<BarangayFundItem> OpenBarangayBeneficiariesCommand { get; }
         public RelayCommand SyncGgmsFundsCommand { get; }
         public RelayCommand<GroupFundItem> ViewBeneficiariesCommand { get; }
         public RelayCommand CloseBeneficiariesCommand { get; }
         public RelayCommand AddGroupBeneficiaryCommand { get; }
+        public RelayCommand AddProgramCommand { get; }
 
         public SourceFundsViewModel()
             : this(SourceFundsLandingMode.Overview)
@@ -317,7 +319,7 @@ namespace eSureHi.ViewModels.Admin
                 SourceFundsLandingMode.BarangayFunds => 0,
                 SourceFundsLandingMode.GroupFunds => 1,
                 SourceFundsLandingMode.AllocatedFunds => 2,
-                _ => 1
+                _ => 0
             };
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
             NewCommand = new RelayCommand(ClearForm, () => CanEditSourceFunds);
@@ -334,10 +336,13 @@ namespace eSureHi.ViewModels.Admin
                 item => item is not null && CanReleaseBarangayFunds);
             OpenFamilyHeadsCommand = new RelayCommand<BarangayFundItem>(OpenFamilyHeadsList,
                 item => item is not null);
+            OpenBarangayBeneficiariesCommand = new RelayCommand<BarangayFundItem>(OpenBarangayBeneficiariesList,
+                item => item is not null);
             SyncGgmsFundsCommand = new RelayCommand(async () => await SyncGgmsFundsAsync(), () => GgmsAllocated > 0);
             ViewBeneficiariesCommand = new RelayCommand<GroupFundItem>(async item => { if (item != null) await ViewBeneficiariesAsync(item); });
             CloseBeneficiariesCommand = new RelayCommand(() => IsGroupBeneficiaryDialogOpen = false);
             AddGroupBeneficiaryCommand = new RelayCommand(async () => await AddGroupBeneficiaryAsync(), () => !string.IsNullOrEmpty(SelectedGroupFundName));
+            AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
 
             _ = LoadAsync();
         }
@@ -613,6 +618,17 @@ namespace eSureHi.ViewModels.Admin
 
             var dialog = new Views.Admin.Dialogs.FamilyHeadsDialog(barangay.Barangay);
             dialog.ShowDialog();
+            _ = LoadAsync();
+        }
+
+        private void OpenBarangayBeneficiariesList(BarangayFundItem? barangay)
+        {
+            if (barangay is null)
+                return;
+
+            var dialog = new Views.Admin.Dialogs.BarangayBeneficiariesDialog(barangay.Barangay);
+            dialog.ShowDialog();
+            _ = LoadAsync();
         }
 
         private void OpenBarangayReleaseDialog(BarangayFundItem? barangay)
@@ -857,13 +873,11 @@ namespace eSureHi.ViewModels.Admin
 
         private async Task LoadTrackCoverageAsync(eSureHiDbContext db)
         {
-            var trackCodes = EmployeeTrackDefinitions.Select(t => t.Code).ToArray();
             var policies = await db.InsurancePolicies
-                .Where(p => trackCodes.Contains(p.PolicyCode))
                 .ToListAsync();
 
             TrackCoverages.Clear();
-            foreach (var policy in policies.OrderBy(p => Array.IndexOf(EmployeeTrackFunds, p.PolicyType)))
+            foreach (var policy in policies.OrderBy(p => p.PolicyName))
                 TrackCoverages.Add(new TrackCoverageItem { Policy = policy });
 
             OnPropertyChanged(nameof(TrackCoverageCount));
@@ -1167,6 +1181,15 @@ namespace eSureHi.ViewModels.Admin
                 return;
 
             var dialog = new Views.Admin.Dialogs.PolicyFormDialog(SelectedTrackCoverage.PolicyId);
+            dialog.SetSaveCallback(async () => await LoadAsync());
+            if (App.ActiveShell is not null && App.ActiveShell != dialog)
+                dialog.Owner = App.ActiveShell;
+            dialog.ShowDialog();
+        }
+
+        private void OpenAddProgramDialog()
+        {
+            var dialog = new Views.Admin.Dialogs.PolicyFormDialog();
             dialog.SetSaveCallback(async () => await LoadAsync());
             if (App.ActiveShell is not null && App.ActiveShell != dialog)
                 dialog.Owner = App.ActiveShell;

@@ -7,6 +7,7 @@ using eSureHi.Services;
 using eSureHi.Views.Admin.Dialogs;
 using MaterialDesignThemes.Wpf;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Claims;
@@ -33,6 +34,29 @@ namespace eSureHi.ViewModels.Admin
         public string FamilyRole => IsHouseholdHead ? "Household Head" : "Dependent Member";
         public string HouseholdStatusBadge => IsHouseholdHead ? "Registered Member" : "Dependent";
         public ObservableCollection<FamilyMemberDisplay> FamilyMembers { get; } = new();
+
+        private decimal _availableFundBalance;
+        public decimal AvailableFundBalance
+        {
+            get => _availableFundBalance;
+            private set => SetProperty(ref _availableFundBalance, value);
+        }
+
+        public string[] Hospitals { get; } =
+        {
+            "-- Select Hospital --",
+            "Sulop Medical Clinic",
+            "Davao del Sur Provincial Hospital",
+            "Medical Center of Digos Cooperative (MCDC)",
+            "Digos Doctor's Hospital Inc.",
+            "South Davao Medical Specialist's Hospital Inc.",
+            "Baron-Yee Hospital",
+            "Gonzales-Maranan Medical Center, Inc.",
+            "St. Dominic Hospital of Digos, Inc."
+        };
+
+        public string HospitalBillFileName => Documents.FirstOrDefault(d => d.DocType == "Hospital Bill")?.FileName ?? "No file chosen";
+        public string OfficialReceiptFileName => Documents.FirstOrDefault(d => d.DocType == "Official Receipt")?.FileName ?? "No file chosen";
 
         // ── Step 1: Employee Selection ─────────────────────────────────
         private ObservableCollection<Employee> _allEmployees = new();
@@ -87,8 +111,17 @@ namespace eSureHi.ViewModels.Admin
             }
         }
         public bool HasPolicies => EmployeePolicies.Count > 0;
-        public decimal MonthlyContribution => SelectedEmployeePolicy?.EmployeeShare ?? 0;
-        public decimal MaxClaimAmount => MonthlyContribution * 100;
+        public decimal MonthlyContribution => SelectedEmployeePolicy?.EmployeeShare ?? GetDefaultMonthlyContribution(SelectedEmployee?.EmploymentType);
+        public decimal MaxClaimAmount => SelectedEmployeePolicy?.CoverageLimit > 0 ? SelectedEmployeePolicy.CoverageLimit : (MonthlyContribution * 100);
+
+        private static decimal GetDefaultMonthlyContribution(string? employmentType) =>
+            employmentType?.Trim() switch
+            {
+                "Job Order" => 50m,
+                "Casual" => 100m,
+                "Regular" => 200m,
+                _ => 0m
+            };
 
         // ── Claim-breakdown rules (reference layout) ───────────────────
         public const decimal DailyAllowancePerDay = 750m;   // PHP 750 / day
@@ -110,9 +143,7 @@ namespace eSureHi.ViewModels.Admin
         public decimal TotalCovered => DailyAllowanceAmount + ExcessBillCovered + DiagnosticsCovered;
 
         public string ClaimLimitText =>
-            SelectedEmployeePolicy is null
-                ? "Select a policy to see the claim limit."
-                : $"Daily allowance: PHP {DailyAllowanceRate:N2}/day (max {MaxAllowanceDays} days) - Excess bill cap: PHP {ExcessBillCap:N0} - Diagnostics: {DiagnosticsCoverageRate:P0} up to PHP {DiagnosticsCap:N0}";
+            $"Daily allowance: PHP {DailyAllowanceRate:N2}/day (max {MaxAllowanceDays} days) - Excess bill cap: PHP {ExcessBillCap:N0} - Diagnostics: {DiagnosticsCoverageRate:P0} up to PHP {DiagnosticsCap:N0} | Policy Max Limit: PHP {MaxClaimAmount:N2}";
 
         private Beneficiary? _selectedBeneficiary;
         public Beneficiary? SelectedBeneficiary
@@ -131,7 +162,7 @@ namespace eSureHi.ViewModels.Admin
         private int _admissionDays;
         private decimal _excessBillAmount;
         private decimal _outsideDiagnosticsAmount;
-        private string _hospitalClinic = string.Empty;
+        private string _hospitalClinic = "-- Select Hospital --";
         private string _attendingPhysician = string.Empty;
         private string _incidentDescription = string.Empty;
         private string _remarks = string.Empty;
@@ -235,6 +266,12 @@ namespace eSureHi.ViewModels.Admin
             RemoveDocumentCommand = new RelayCommand<ClaimDocumentItem>(
                 item => { if (item is not null) Documents.Remove(item); });
 
+            Documents.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(HospitalBillFileName));
+                OnPropertyChanged(nameof(OfficialReceiptFileName));
+            };
+
             _ = LoadEmployeesAsync();
         }
 
@@ -275,7 +312,7 @@ namespace eSureHi.ViewModels.Admin
                 ExcessBillAmount = c.ExcessBillAmount;
                 OutsideDiagnosticsAmount = c.OutsideDiagnosticsAmount;
                 AmountClaimed = c.AmountClaimed;
-                HospitalClinic = c.HospitalClinic ?? string.Empty;
+                HospitalClinic = string.IsNullOrWhiteSpace(c.HospitalClinic) ? "-- Select Hospital --" : c.HospitalClinic;
                 AttendingPhysician = c.AttendingPhysician ?? string.Empty;
                 IncidentDescription = c.IncidentDescription ?? string.Empty;
                 Remarks = c.Remarks ?? string.Empty;
@@ -477,6 +514,8 @@ namespace eSureHi.ViewModels.Admin
                     .ToListAsync();
                 foreach (var b in bens) Beneficiaries.Add(b);
 
+                await LoadAvailableFundAsync(db);
+
                 OnPropertyChanged(nameof(HasPolicies));
                 OnPropertyChanged(nameof(HasBeneficiaries));
                 OnPropertyChanged(nameof(PolicyEmptyMessage));
@@ -487,6 +526,37 @@ namespace eSureHi.ViewModels.Admin
                 ErrorMessage = $"Load employee policies failed: {ex.Message}";
             }
             finally { IsLoadingPolicies = false; }
+        }
+
+        private async Task LoadAvailableFundAsync(eSureHiDbContext db)
+        {
+            if (SelectedEmployee is null)
+            {
+                AvailableFundBalance = 0;
+                return;
+            }
+
+            var groupName = SelectedEmployee.EmploymentType;
+            if (string.IsNullOrWhiteSpace(groupName))
+            {
+                AvailableFundBalance = 0;
+                return;
+            }
+
+            var fund = await db.SourceFunds
+                .FirstOrDefaultAsync(f => f.FundName == groupName);
+
+            if (fund is null)
+            {
+                AvailableFundBalance = 0;
+                return;
+            }
+
+            var contributionSum = await db.Beneficiaries
+                .Where(b => b.SourceOfFunds == groupName && b.IsActive)
+                .SumAsync(b => b.Contribution);
+
+            AvailableFundBalance = fund.AllocatedAmount - (fund.UsedAmount + contributionSum);
         }
 
         // ── Add Document ───────────────────────────────────────────────
@@ -537,18 +607,48 @@ namespace eSureHi.ViewModels.Admin
         {
             if (SelectedEmployee is null)
             { ErrorMessage = "Please select an employee."; return false; }
-            if (SelectedEmployeePolicy is null)
-            { ErrorMessage = "Please select a policy."; return false; }
-            if (AdmissionDate is null || DischargeDate is null)
-            { ErrorMessage = "Enter both admission and discharge dates."; return false; }
-            if (DischargeDate.Value.Date < AdmissionDate.Value.Date)
-            { ErrorMessage = "Discharge date cannot be earlier than the admission date."; return false; }
-            if (TotalCovered <= 0)
-            { ErrorMessage = "The claim breakdown totals zero — enter admitted days, excess bill, or diagnostics."; return false; }
+
+            // Required text fields
+            if (string.IsNullOrWhiteSpace(HospitalClinic) || HospitalClinic == "-- Select Hospital --")
+            { ErrorMessage = "Hospital or clinic name is required."; return false; }
+
+            // Numeric input checks
+            if (AdmissionDays < 0)
+            { ErrorMessage = "Admission days cannot be negative."; return false; }
+            if (ExcessBillAmount < 0)
+            { ErrorMessage = "Excess bill amount cannot be negative."; return false; }
+            if (OutsideDiagnosticsAmount < 0)
+            { ErrorMessage = "Outside diagnostics amount cannot be negative."; return false; }
+
+            // Date validation (No future dates)
             if (ClaimDate is null)
             { ErrorMessage = "Claim date is required."; return false; }
+            if (ClaimDate.Value.Date > DateTime.Today)
+            { ErrorMessage = "Claim date cannot be in the future."; return false; }
+
+            if (IncidentDate.HasValue && IncidentDate.Value.Date > DateTime.Today)
+            { ErrorMessage = "Incident date cannot be in the future."; return false; }
+
+            if (AdmissionDate is null || DischargeDate is null)
+            { ErrorMessage = "Enter both admission and discharge dates."; return false; }
+            
+            if (AdmissionDate.Value.Date > DateTime.Today)
+            { ErrorMessage = "Admission date cannot be in the future."; return false; }
+            if (DischargeDate.Value.Date > DateTime.Today)
+            { ErrorMessage = "Discharge date cannot be in the future."; return false; }
+
+            if (DischargeDate.Value.Date < AdmissionDate.Value.Date)
+            { ErrorMessage = "Discharge date cannot be earlier than the admission date."; return false; }
+
+            if (TotalCovered <= 0)
+            { ErrorMessage = "The claim breakdown totals zero — enter admitted days, excess bill, or diagnostics."; return false; }
             if (Documents.Count == 0)
             { ErrorMessage = "Please attach at least the hospital bill or official receipt."; return false; }
+            if (MaxClaimAmount > 0 && TotalCovered > MaxClaimAmount)
+            {
+                ErrorMessage = $"The claim amount (PHP {TotalCovered:N2}) exceeds the maximum coverage limit for this policy (PHP {MaxClaimAmount:N2}).";
+                return false;
+            }
             ErrorMessage = string.Empty;
             return true;
         }
@@ -562,16 +662,44 @@ namespace eSureHi.ViewModels.Admin
             {
                 using var db = eSureHiDbContextFactory.Create();
 
+                // Find or create matching policy on the fly to satisfy DB constraint
+                var programName = SelectedEmployee?.EmploymentType;
+                if (string.IsNullOrWhiteSpace(programName)) programName = "Job Order";
+
+                // Prefer an Active match — several programs have superseded/Cancelled duplicates.
+                var policy = await db.InsurancePolicies
+                    .Where(p => p.PolicyType == programName || p.PolicyName == programName)
+                    .OrderByDescending(p => p.PolicyStatus == "Active")
+                    .FirstOrDefaultAsync();
+
+                if (policy == null)
+                {
+                    policy = new InsurancePolicy
+                    {
+                        PolicyCode = $"POL-{programName.Replace(" ", "").ToUpper()}",
+                        PolicyName = programName,
+                        PolicyType = programName,
+                        CoverageAmount = 1000000m,
+                        EffectiveDate = DateOnly.FromDateTime(DateTime.Today),
+                        ExpiryDate = DateOnly.FromDateTime(DateTime.Today.AddYears(1)),
+                        PolicyStatus = "Active",
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    db.InsurancePolicies.Add(policy);
+                    await db.SaveChangesAsync();
+                }
+
                 if (IsEditMode)
                 {
                     var c = await db.Claims.FindAsync(_editClaimId);
                     if (c is null) { ErrorMessage = "Claim not found."; return; }
-                    MapToEntity(c);
+                    MapToEntity(c, policy);
                     c.UpdatedAt = DateTime.Now;
                     await db.SaveChangesAsync();
 
                     await AuditService.LogUpdate("claims", c.ClaimId,
-                        $"Claim edited: {c.ClaimNo} — {c.ClaimType}");
+                        $"Beneficiary insurance claim updated: {c.ClaimNo} - {c.ClaimType}");
 
                     await WorkflowService.RecordTransactionAsync(
                         c.ClaimNo,
@@ -590,7 +718,7 @@ namespace eSureHi.ViewModels.Admin
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
                     };
-                    MapToEntity(c);
+                    MapToEntity(c, policy);
                     c.ClaimStatus = "Submitted";
                     c.SubmittedDate = DateTime.Now;
                     db.Claims.Add(c);
@@ -614,16 +742,50 @@ namespace eSureHi.ViewModels.Admin
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Save failed: {ex.Message}";
+                // DbUpdateException.Message is always the generic "See the inner exception"
+                // text — the actual constraint/column error only lives on the inner chain.
+                ErrorMessage = $"Save failed: {GetDetailedErrorMessage(ex)}";
+                System.Diagnostics.Debug.WriteLine("Claim save failed: " + ex);
             }
             finally { IsBusy = false; }
         }
 
-        private void MapToEntity(Claim c)
+        private static string GetDetailedErrorMessage(Exception ex)
+        {
+            var messages = new List<string>();
+            Exception? current = ex;
+
+            while (current is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(current.Message) &&
+                    !messages.Contains(current.Message))
+                {
+                    messages.Add(current.Message);
+                }
+
+                current = current.InnerException;
+            }
+
+            return string.Join(" | ", messages);
+        }
+
+        // fallbackPolicy is the program-matched policy resolved in SaveAsync. claims.policy_id is
+        // NOT NULL with an FK to insurance_policies, so it must never be left at 0 — that happens
+        // for claimants with no active employee_policies row (e.g. the "Unlinked Beneficiary"
+        // placeholder employee) and surfaces only as a generic DbUpdateException.
+        private void MapToEntity(Claim c, InsurancePolicy fallbackPolicy)
         {
             c.EmpId = SelectedEmployee!.EmpId;
-            c.PolicyId = SelectedEmployeePolicy!.PolicyId;
+            if (SelectedEmployeePolicy is not null)
+            {
+                c.PolicyId = SelectedEmployeePolicy.PolicyId;
+            }
+            else if (c.PolicyId == 0)
+            {
+                c.PolicyId = fallbackPolicy.PolicyId;
+            }
             c.BenId = SelectedBeneficiary?.BenId;
+            c.SourceOfFunds = SelectedEmployee?.EmploymentType;
             c.ClaimType = ClaimType;
             c.ClaimDate = ClaimDate.HasValue
                                        ? DateOnly.FromDateTime(ClaimDate.Value) : null;

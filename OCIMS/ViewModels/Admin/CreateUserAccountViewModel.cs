@@ -16,6 +16,7 @@ namespace eSureHi.ViewModels.Admin
         private readonly string _empName;
 
         public string DialogTitle => $"Create User Account — {_empName}";
+        public string TargetName => _empName;
 
         // ── Fields ─────────────────────────────────────────────────────
         private string _username = string.Empty;
@@ -25,7 +26,13 @@ namespace eSureHi.ViewModels.Admin
         public string Username
         {
             get => _username;
-            set => SetProperty(ref _username, value);
+            set
+            {
+                if (SetProperty(ref _username, value))
+                {
+                    ErrorMessage = string.Empty;
+                }
+            }
         }
         public string Password
         {
@@ -90,11 +97,24 @@ namespace eSureHi.ViewModels.Admin
         private async Task SaveAsync()
         {
             var pwd = GetPassword?.Invoke() ?? Password;
+            var trimmedUsername = Username?.Trim() ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(Username))
+            if (string.IsNullOrWhiteSpace(trimmedUsername))
             { ErrorMessage = "Username is required."; return; }
-            if (string.IsNullOrWhiteSpace(pwd) || pwd.Length < 6)
+            if (trimmedUsername.Length < 3)
+            { ErrorMessage = "Username must be at least 3 characters."; return; }
+            if (trimmedUsername.Any(char.IsWhiteSpace))
+            { ErrorMessage = "Username cannot contain spaces."; return; }
+            if (!System.Text.RegularExpressions.Regex.IsMatch(trimmedUsername, "^[a-zA-Z0-9._]+$"))
+            { ErrorMessage = "Username can only contain letters, numbers, periods, and underscores."; return; }
+
+            if (string.IsNullOrWhiteSpace(pwd))
+            { ErrorMessage = "Password is required."; return; }
+            if (pwd.Length < 6)
             { ErrorMessage = "Password must be at least 6 characters."; return; }
+            if (pwd.Contains(" "))
+            { ErrorMessage = "Password cannot contain spaces."; return; }
+
             if (!RoleOptions.Contains(Role))
             { ErrorMessage = "You are not allowed to create this role."; return; }
 
@@ -104,7 +124,7 @@ namespace eSureHi.ViewModels.Admin
                 using var db = eSureHiDbContextFactory.Create();
 
                 bool userExists = await db.SystemUsers
-                    .AnyAsync(u => u.Username == Username.Trim().ToLower());
+                    .AnyAsync(u => u.Username == trimmedUsername.ToLower());
                 if (userExists)
                 { ErrorMessage = "Username already taken. Choose another."; return; }
 
@@ -118,7 +138,7 @@ namespace eSureHi.ViewModels.Admin
                 {
                     EmpId = _benId.HasValue ? null : _empId,
                     BenId = _benId,
-                    Username = Username.Trim().ToLower(),
+                    Username = trimmedUsername.ToLower(),
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(pwd),
                     Role = Role,
                     IsActive = true,
@@ -129,7 +149,7 @@ namespace eSureHi.ViewModels.Admin
 
                 // After save:
                 await AuditService.LogInsert("system_users", user.UserId,
-                    $"User account created: {Username} ({Role})");
+                    $"User account created: {trimmedUsername} ({Role})");
 
                 OnSaveSuccess?.Invoke();
                 CloseAction?.Invoke();

@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:eSureHi.Helpers"
-        Title="Family Heads"
-        Width="700"
+        Title="Beneficiaries"
+        Width="850"
         Height="600"
-        MinWidth="600"
+        MinWidth="700"
         MinHeight="500"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BackgroundBrush}">
@@ -15,44 +15,98 @@
             <RowDefinition Height="64"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <Border Background="{StaticResource PrimaryBrush}" helpers:Adaptive.UseAdaptiveForeground="True">
-            <StackPanel Orientation="Horizontal" Margin="22,0" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="AccountGroup" Width="25" Height="25" Margin="0,0,12,0"/>
-                <StackPanel>
-                    <TextBlock Text="Family Heads" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding BarangayDisplay}" FontSize="12" Opacity="0.86"/>
+ 
+        <Border Background="{StaticResource PrimaryBrush}" helpers:Adaptive.UseAdaptiveForeground="True" Padding="0,8">
+            <Grid Margin="22,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="AccountGroup" Width="25" Height="25" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Beneficiaries" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding BarangayDisplay}" FontSize="12" Opacity="0.86"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+                <Button Grid.Column="1"
+                        Command="{Binding AddBeneficiaryCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="White" Foreground="{StaticResource PrimaryBrush}"
+                        Height="32" Padding="12,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Add Beneficiary" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
         </Border>
+ 
+        <Grid Grid.Row="1" Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding FamilyHeads}"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  IsReadOnly="True"
-                  HeadersVisibility="Column"
-                  Margin="16">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
-                <DataGridTextColumn Header="Employment Type" Binding="{Binding EmploymentType}" Width="150"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding EmploymentStatus}" Width="100"/>
-                <DataGridTemplateColumn Header="Action" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Open Profile"
-                                    Command="{Binding DataContext.OpenProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Foreground="{StaticResource PrimaryBrush}"
-                                    BorderBrush="{StaticResource PrimaryBrush}"
-                                    Height="28"
-                                    Padding="8,0"
-                                    FontSize="11"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+            <TextBox Grid.Row="0"
+                     x:Name="SearchTextBox"
+                     TextChanged="SearchTextBox_TextChanged"
+                     materialDesign:HintAssist.Hint="Search by Name, Relationship, Family Head or Status..."
+                     materialDesign:TextFieldAssist.HasClearButton="True"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,0,12"/>
+
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Beneficiaries}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
+                    <DataGridTextColumn Header="Relationship" Binding="{Binding RelationshipText}" Width="150"/>
+                    <DataGridTextColumn Header="Family Head" Binding="{Binding FamilyHeadName}" Width="*"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                    <DataGridTemplateColumn Header="Action" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <!-- Open Profile Button -->
+                                    <Button x:Name="BtnOpenProfile"
+                                            Content="Open Profile"
+                                            Command="{Binding DataContext.OpenProfileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Foreground="{StaticResource PrimaryBrush}"
+                                            BorderBrush="{StaticResource PrimaryBrush}"
+                                            Height="28"
+                                            Padding="8,0"
+                                            FontSize="11"/>
+                                    <!-- Register Button -->
+                                    <Button x:Name="BtnRegister"
+                                            Content="Register"
+                                            Command="{Binding DataContext.RegisterResidentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Background="#16A34A"
+                                            BorderBrush="#16A34A"
+                                            Foreground="White"
+                                            Height="28"
+                                            Padding="8,0"
+                                            FontSize="11"
+                                            Visibility="Collapsed"/>
+                                </Grid>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="Unregistered">
+                                        <Setter TargetName="BtnOpenProfile" Property="Visibility" Value="Collapsed"/>
+                                        <Setter TargetName="BtnRegister" Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
     </Grid>
 </Window>

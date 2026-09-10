@@ -262,134 +262,37 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#F8FAFC" BorderBrush="#DDE4EF" BorderThickness="1" Padding="20,16">
+                        <Border Background="White" BorderBrush="#DDE4EF" BorderThickness="1" Padding="20,16" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="Add to Insurance Records" Style="{StaticResource SectionTitle}"/>
-                                <UniformGrid Columns="4" Margin="0,0,0,12">
-                                    <TextBox Text="{Binding SelectedRecord.FirstName, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="First Name or Name *"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Height="48"
-                                             Margin="0,0,8,0"/>
-                                    <TextBox Text="{Binding SelectedRecord.LastName, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="Last Name (optional)"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Height="48"
-                                             Margin="0,0,8,0"/>
-                                    <TextBox Text="{Binding SelectedRecord.Sex, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="Sex"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Height="48"
-                                             Margin="0,0,8,0"/>
-                                    <TextBox Text="{Binding SelectedRecord.DateOfBirth, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="Birth Date"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Height="48"/>
-                                </UniformGrid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                                <TextBlock Text="Family Members" FontWeight="SemiBold" FontSize="14" Foreground="#1E293B"/>
-                                                <Border Background="#DCFCE7" CornerRadius="10" Padding="6,2" Margin="8,0,0,0">
-                                                    <TextBlock Text="{Binding FamilyMembers.Count}" FontSize="11" FontWeight="Bold" Foreground="#166534"/>
-                                                </Border>
-                                            </StackPanel>
-                                            <TextBlock FontSize="12" Foreground="#64748B" Margin="0,0,0,8" TextWrapping="Wrap">
-                                                <Run Text="All residents sharing Family ID "/>
-                                                <Run Text="{Binding SelectedRecord.DemographicFamilyId}" FontWeight="SemiBold"/>
-                                            </TextBlock>
-                                            <ListBox ItemsSource="{Binding FamilyMembers}" Height="150" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                                <ListBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid Margin="0,4,0,4">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="13" Foreground="#334155" TextTrimming="CharacterEllipsis"/>
-                                                                <TextBlock Text="{Binding FamilyRole}" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
-                                                            </StackPanel>
-                                                            <Border Grid.Column="1" Background="{Binding RegistrationStatusBackground}" CornerRadius="10" Padding="6,2" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding RegistrationStatus}" Foreground="{Binding RegistrationStatusForeground}" FontSize="10" FontWeight="SemiBold"/>
-                                                            </Border>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ListBox.ItemTemplate>
-                                            </ListBox>
-                                        </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <TextBlock Text="Family Members" Style="{StaticResource SectionTitle}" Margin="0"/>
+                                    <Border Background="#DCFCE7" CornerRadius="10" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FamilyMembers.Count}" FontSize="11" FontWeight="Bold" Foreground="#166534"/>
                                     </Border>
-
-                                    <Grid Grid.Column="2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="10"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <ComboBox ItemsSource="{Binding RelationshipOptions}"
-                                                  SelectedItem="{Binding Relationship}"
-                                                  materialDesign:HintAssist.Hint="Relationship"
-                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                                  Height="48"/>
-                                        <ComboBox Grid.Column="2"
-                                                  ItemsSource="{Binding InsurancePolicies}"
-                                                  SelectedItem="{Binding SelectedPolicy}"
-                                                  DisplayMemberPath="PolicyName"
-                                                  materialDesign:HintAssist.Hint="Insurance Type / Policy"
-                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                                  Height="48"/>
-
-                                        <TextBox Grid.Row="2"
-                                                 Text="{Binding CedulaNo, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="Cedula No (optional)"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                 Height="48"/>
-                                        <ComboBox Grid.Row="2"
-                                                  Grid.Column="2"
-                                                  ItemsSource="{Binding SourceOfFundsOptions}"
-                                                  SelectedItem="{Binding SourceOfFunds}"
-                                                  materialDesign:HintAssist.Hint="Source of Funds"
-                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                                  Height="48"/>
-
-                                        <CheckBox Grid.Row="4"
-                                                  IsChecked="{Binding Received}"
-                                                  Content="Verified for insurance records"
-                                                  VerticalAlignment="Center"/>
-                                        <TextBox Grid.Row="4"
-                                                 Grid.Column="2"
-                                                 Text="{Binding Contribution, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
-                                                 materialDesign:HintAssist.Hint="Initial Balance"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                 Height="48"/>
-                                    </Grid>
-                                </Grid>
-
-                                <TextBlock Text="{Binding QualificationReason}"
-                                           Foreground="#64748B"
-                                           TextWrapping="Wrap"
-                                           Margin="0,12,0,0"/>
-                                <TextBlock Text="{Binding ErrorMessage}"
-                                           Foreground="{StaticResource ErrorBrush}"
-                                           FontWeight="SemiBold"
-                                           TextWrapping="Wrap"
-                                           Margin="0,8,0,0"
-                                           Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                </StackPanel>
+                                <TextBlock FontSize="12" Foreground="#64748B" Margin="0,0,0,8" TextWrapping="Wrap">
+                                    <Run Text="All residents sharing Family ID "/>
+                                    <Run Text="{Binding SelectedRecord.DemographicFamilyId}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                                <ListBox ItemsSource="{Binding FamilyMembers}" SelectedItem="{Binding SelectedFamilyMember, Mode=TwoWay}" Height="150" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,4,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="13" Foreground="#334155" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding FamilyRole}" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" Background="{Binding RegistrationStatusBackground}" CornerRadius="10" Padding="6,2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding RegistrationStatus}" Foreground="{Binding RegistrationStatusForeground}" FontSize="10" FontWeight="SemiBold"/>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -444,19 +347,39 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button Command="{Binding LinkCommand}"
-                                    IsEnabled="{Binding CanAddBeneficiary}"
-                                    Background="{StaticResource SuccessBrush}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    Height="42"
-                                    MinWidth="250"
-                                    Padding="16,0"
-                                    Margin="0">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="AccountPlus" Width="18" Height="18" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{Binding AddMemberButtonText}" FontSize="13" FontWeight="Bold"/>
-                                </StackPanel>
-                            </Button>
+                             <StackPanel Orientation="Horizontal" Visibility="{Binding ShowRegistrationButtons, Converter={StaticResource BoolToVisibilityConverter}}">
+                                 <!-- Button 1: Register as Primary Member -->
+                                 <Button Click="RegisterAsPrimaryBtn_Click"
+                                         Background="#15803D"
+                                         BorderBrush="#15803D"
+                                         Foreground="White"
+                                         Style="{StaticResource MaterialDesignRaisedButton}"
+                                         Height="42"
+                                         MinWidth="220"
+                                         Padding="16,0"
+                                         Margin="0,0,10,0">
+                                     <StackPanel Orientation="Horizontal">
+                                         <materialDesign:PackIcon Kind="AccountCheck" Width="18" Height="18" Margin="0,0,8,0"/>
+                                         <TextBlock Text="REGISTER AS PRIMARY" FontSize="13" FontWeight="Bold"/>
+                                     </StackPanel>
+                                 </Button>
+
+                                 <!-- Button 2: Add as Dependent -->
+                                 <Button Click="AddAsDependentBtn_Click"
+                                         Background="White"
+                                         BorderBrush="#15803D"
+                                         Foreground="#15803D"
+                                         Style="{StaticResource MaterialDesignOutlinedButton}"
+                                         Height="42"
+                                         MinWidth="160"
+                                         Padding="16,0"
+                                         Margin="0">
+                                     <StackPanel Orientation="Horizontal">
+                                         <materialDesign:PackIcon Kind="AccountMultiplePlus" Width="18" Height="18" Margin="0,0,8,0"/>
+                                         <TextBlock Text="ADD AS DEPENDENT" FontSize="13" FontWeight="Bold"/>
+                                     </StackPanel>
+                                 </Button>
+                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>

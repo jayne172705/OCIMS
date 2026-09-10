@@ -78,6 +78,31 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Benefits & Claims -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Benefits &amp; Claims" FontSize="12" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Program Limit" FontSize="10" Foreground="#94A3B8"/>
+                                    <TextBlock Text="{Binding ProgramLimit, StringFormat='₱{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                    <TextBlock Text="Remaining Benefit" FontSize="10" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding ProgramRemaining, StringFormat='₱{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="#166534"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                    <TextBlock Text="Total Claims Filed" FontSize="10" Foreground="#94A3B8"/>
+                                    <TextBlock Text="{Binding TotalClaimed, StringFormat='₱{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                    <TextBlock Text="Approved Claims" FontSize="10" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding TotalApproved, StringFormat='₱{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="#1B5E20"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Family members -->
                     <TextBlock Text="Family members" FontSize="12" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
                     <ItemsControl ItemsSource="{Binding FamilyMembers}">
@@ -111,7 +136,7 @@
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"
                                              Foreground="{Binding StatusBannerColor}"
-                                             Kind="ShieldCheck"/>
+                                             Kind="{Binding StatusBannerIcon}"/>
                     <TextBlock Text="{Binding StatusBanner}" FontSize="13" FontWeight="Bold"
                                Foreground="{Binding StatusBannerColor}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 </StackPanel>
@@ -124,12 +149,6 @@
                             Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
                             CommandParameter="{x:Null}"
                             Style="{StaticResource MaterialDesignFlatButton}"
-                            Margin="0,0,8,0"/>
-                    <Button Content="REJECT"
-                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
-                            CommandParameter="Reject"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Foreground="#B91C1C" BorderBrush="#B91C1C"
                             Margin="0,0,8,0"/>
                     <Button Content="MOVE TO ON HOLD"
                             Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"

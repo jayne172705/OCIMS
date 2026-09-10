@@ -155,5 +155,31 @@ namespace eSureHi.Views.Admin.UserControls
                 await MaterialDesignThemes.Wpf.DialogHost.Show(dialog, "BeneficiariesDialogHost");
             }
         }
+
+        private void RegisterAsPrimaryBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not BeneficiaryStagingViewModel vm || vm.SelectedRecord == null)
+                return;
+
+            var dialog = new RegisterPrimaryDialog(vm.SelectedRecord);
+            dialog.Owner = Window.GetWindow(this);
+            if (dialog.ShowDialog() == true)
+            {
+                _ = vm.RefreshCurrentRecordAsync();
+            }
+        }
+
+        private void AddAsDependentBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not BeneficiaryStagingViewModel vm || vm.SelectedRecord == null)
+                return;
+
+            var dialog = new AddDependentDialog(vm.SelectedRecord);
+            dialog.Owner = Window.GetWindow(this);
+            if (dialog.ShowDialog() == true)
+            {
+                _ = vm.RefreshCurrentRecordAsync();
+            }
+        }
     }
 }

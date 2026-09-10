@@ -36,17 +36,19 @@
                             VerticalAlignment="Center" Margin="20,0">
                     <materialDesign:PackIcon Kind="AccountKey"
                                              Width="20" Height="20"
+                                             Foreground="White"
                                              VerticalAlignment="Center"
                                              Margin="0,0,10,0"/>
                     <TextBlock Text="{Binding DialogTitle}"
                                FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                               Foreground="White"
                                TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
                 <Button Grid.Column="1"
                         Command="{Binding CancelCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}" Width="48" Height="44"
                         WindowChrome.IsHitTestVisibleInChrome="True">
-                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="White"/>
                 </Button>
             </Grid>
         </Border>
@@ -55,16 +57,15 @@
         <StackPanel Grid.Row="1" Margin="20,16">
 
             <!-- Info Card -->
-            <materialDesign:Card Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
+            <materialDesign:Card Background="#E8F5E9"
                                  materialDesign:ElevationAssist.Elevation="Dp0"
                                  Margin="0,0,0,16">
                 <StackPanel Margin="12,10">
                     <TextBlock Text="Creating account for:"
-                               FontSize="10" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding DialogTitle,
-                                   StringFormat={}{0}}"
+                               FontSize="10" Foreground="#2E7D32"/>
+                    <TextBlock Text="{Binding TargetName}"
                                FontSize="13" FontWeight="Bold"
-                               Foreground="#2E7D32"/>
+                               Foreground="#1B5E20"/>
                 </StackPanel>
             </materialDesign:Card>
 
@@ -96,7 +97,9 @@
                 <Run Text="Admin"/>
                 <Run Text=" - confirms pending records. "/>
                 <Run Text="User"/>
-                <Run Text=" - submits records for approval."/>
+                <Run Text=" - submits records for approval. "/>
+                <Run Text="Employee/Beneficiary"/>
+                <Run Text=" - end-user portal access."/>
             </TextBlock>
 
         </StackPanel>
@@ -105,13 +108,19 @@
         <Border Grid.Row="2"
                 BorderBrush="#DDE4EF" BorderThickness="0,1,0,0" Background="White" helpers:Adaptive.UseAdaptiveForeground="True" Padding="16,12">
             <Grid>
-                <TextBlock Text="{Binding ErrorMessage}"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="{Binding ErrorMessage}"
                            Foreground="{StaticResource ErrorBrush}"
                            FontSize="12" TextWrapping="Wrap"
                            VerticalAlignment="Center"
+                           Margin="0,0,12,0"
                            Visibility="{Binding ErrorMessage,
                                Converter={StaticResource StringToVisibilityConverter}}"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="Cancel"
                             Command="{Binding CancelCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"

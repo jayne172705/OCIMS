@@ -136,10 +136,12 @@ namespace eSureHi.ViewModels.Admin
             {
                 using var db = eSureHiDbContextFactory.Create();
 
+                InsurancePolicy p;
                 if (IsEditMode)
                 {
-                    var p = await db.InsurancePolicies.FindAsync(_editPolicyId);
-                    if (p is null) { ErrorMessage = "Policy not found."; return; }
+                    var existing = await db.InsurancePolicies.FindAsync(_editPolicyId);
+                    if (existing is null) { ErrorMessage = "Policy not found."; return; }
+                    p = existing;
                     MapToEntity(p);
                     p.UpdatedAt = DateTime.Now;
                     await db.SaveChangesAsync();
@@ -150,10 +152,10 @@ namespace eSureHi.ViewModels.Admin
                 else
                 {
                     bool codeExists = await db.InsurancePolicies
-                        .AnyAsync(p => p.PolicyCode == PolicyCode.Trim());
+                        .AnyAsync(pol => pol.PolicyCode == PolicyCode.Trim());
                     if (codeExists) PolicyCode = GeneratePolicyCode();
 
-                    var p = new InsurancePolicy
+                    p = new InsurancePolicy
                     {
                         CreatedBy = AuthService.Instance.CurrentUser?.UserId,
                         CreatedAt = DateTime.Now,
@@ -166,6 +168,32 @@ namespace eSureHi.ViewModels.Admin
                     await AuditService.LogInsert("insurance_policies", p.PolicyId,
                         $"New policy created: {PolicyName}");
                 }
+
+                // Sync corresponding SourceFund
+                var fundName = p.PolicyName;
+                var fund = await db.SourceFunds
+                    .FirstOrDefaultAsync(f => f.FundName == fundName);
+                if (fund is null)
+                {
+                    fund = new SourceFund
+                    {
+                        FundName = fundName,
+                        FundType = "Employee Track",
+                        Description = $"Budget allocation for {fundName} employee applicants and assignments.",
+                        Status = p.PolicyStatus == "Active" ? "Active" : "Inactive",
+                        AllocatedAmount = p.CoverageAmount,
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    db.SourceFunds.Add(fund);
+                }
+                else
+                {
+                    fund.AllocatedAmount = p.CoverageAmount;
+                    fund.Status = p.PolicyStatus == "Active" ? "Active" : "Inactive";
+                    fund.UpdatedAt = DateTime.Now;
+                }
+                await db.SaveChangesAsync();
 
                 OnSaveSuccess?.Invoke();
                 CloseAction?.Invoke();

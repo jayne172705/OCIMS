@@ -108,4 +108,33 @@ namespace eSureHi.Models
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
     }
+
+    [Table("project_details")]
+    public class GgmsProjectDetail
+    {
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+
+        [Column("project_details_id")]
+        public string ProjectDetailsId { get; set; } = string.Empty;
+
+        [Column("yearly_budget_id")]
+        public int YearlyBudgetId { get; set; }
+
+        [Column("project")]
+        public string ProjectName { get; set; } = string.Empty;
+
+        [Column("description")]
+        public string? Description { get; set; }
+
+        [Column("office_code")]
+        public string OfficeCode { get; set; } = string.Empty;
+
+        [Column("total_budget")]
+        public decimal TotalBudget { get; set; }
+
+        [Column("status")]
+        public string Status { get; set; } = string.Empty;
+    }
 }

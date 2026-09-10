@@ -336,6 +336,7 @@ namespace eSureHi.ViewModels.Admin
         public RelayCommand QuickBudgetFundsCommand { get; }
         public RelayCommand QuickBarangayFundsCommand { get; }
         public RelayCommand QuickGroupFundsCommand { get; }
+        public RelayCommand QuickAllocatedFundsCommand { get; }
         public RelayCommand QuickCedulasCommand { get; }
         public RelayCommand QuickBeneficiariesCommand { get; }
         public RelayCommand QuickRegisterMemberCommand { get; }
@@ -414,7 +415,7 @@ namespace eSureHi.ViewModels.Admin
                 if (AuthService.Instance.IsEmployee)
                     OpenPage("My Claims", () => new MyClaimsView());
                 else
-                    OpenPage("Claims", () => new ClaimsView());
+                    OpenPage("Claims", () => new ClaimsView(ClaimsListMode.All));
             });
 
             QuickNewPolicyCommand = new RelayCommand(() =>
@@ -470,7 +471,13 @@ namespace eSureHi.ViewModels.Admin
             QuickGroupFundsCommand = new RelayCommand(() =>
             {
                 IsBudgetFundsPopupOpen = false;
-                OpenPage("Source of Funds", () => new SourceFundsView(SourceFundsLandingMode.GroupFunds));
+                OpenPage("Source of Funds", () => new SourceFundsView(SourceFundsLandingMode.BarangayFunds));
+            });
+
+            QuickAllocatedFundsCommand = new RelayCommand(() =>
+            {
+                IsBudgetFundsPopupOpen = false;
+                OpenPage("Source of Funds", () => new SourceFundsView(SourceFundsLandingMode.AllocatedFunds));
             });
 
             QuickCedulasCommand = new RelayCommand(() => OpenPage("Cedulas", () => new CedulaManagementView()));
