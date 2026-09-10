@@ -155,7 +155,8 @@
                         <materialDesign:Card Padding="25" IsEnabled="{Binding CanEditSettings}">
                             <StackPanel>
                                 <TextBlock Text="GGMS Remote Connection" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
-                                <TextBlock Text="Configure the connection to the Government Grants Management System." Foreground="Gray" Margin="0,0,0,25"/>
+                                <TextBlock Text="Configure the connection to the Government Grants Management System." Foreground="Gray" Margin="0,0,0,15"/>
+                                <Button Command="{Binding ApplyGgmsNetworkPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,15" Height="40">NETWORK (192.168.0.47 / ggms_db)</Button>
                                 
                                 <TextBox Text="{Binding GgmsServer, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Server / IP" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
                                 <Grid Margin="0,0,0,15">
@@ -182,7 +183,8 @@
                         <materialDesign:Card Padding="25" IsEnabled="{Binding CanEditSettings}">
                             <StackPanel>
                                 <TextBlock Text="CRS Remote Connection" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
-                                <TextBlock Text="Configure the connection to the Civil Registry System." Foreground="Gray" Margin="0,0,0,25"/>
+                                <TextBlock Text="Configure the connection to the Civil Registry System." Foreground="Gray" Margin="0,0,0,15"/>
+                                <Button Command="{Binding ApplyCrsNetworkPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,15" Height="40">NETWORK (192.168.0.47 / crs_db)</Button>
                                 
                                 <TextBox Text="{Binding CrsServer, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Server / IP" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
                                 <Grid Margin="0,0,0,15">
