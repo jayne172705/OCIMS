@@ -144,15 +144,12 @@ namespace eSureHi.ViewModels.Shared
             OnLoginSuccess?.Invoke();
         }
 
-        // ── Connection Settings ────────────────────────────────────────
+        // ── Connection Settings (no verification) ──────────────────────
         private void OpenSettings()
         {
-            var otpDialog = new Views.Shared.OtpVerificationDialog();
-            if (otpDialog.ShowDialog() == true)
-            {
-                var dialog = new Views.Shared.ConnectionSettingsDialog();
-                dialog.ShowDialog();
-            }
+            var dialog = new Views.Shared.ConnectionSettingsDialog();
+            dialog.ShowDialog();
+            RefreshDatabaseInfo();
         }
     }
 }
