@@ -99,13 +99,11 @@
                                 <TextBlock Text="App Database Presets" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
                                 <TextBlock Text="Choose which preset the app uses for its main storage." Foreground="Gray" Margin="0,0,0,25"/>
 
-                                <UniformGrid Columns="3" Margin="0,0,0,30">
-                                    <Button Command="{Binding ApplyLocalPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Height="50"
-                                            BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">LOCAL</Button>
+                                <UniformGrid Columns="2" Margin="0,0,0,30">
                                     <Button Command="{Binding ApplyNetworkPresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Height="50"
-                                            BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">NETWORK LAN</Button>
+                                            BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">NETWORK</Button>
                                     <Button Command="{Binding ApplyRemotePresetCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="50"
-                                            BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">REMOTE</Button>
+                                            BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}" BorderThickness="2">ONLINE</Button>
                                 </UniformGrid>
 
                                 <StackPanel IsEnabled="{Binding IsAppDbEditable}">
