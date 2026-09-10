@@ -276,7 +276,7 @@ namespace eSureHi.ViewModels.Admin
 
             // Detect current mode; Local hidden. Default to Online.
             IsLocalSelected = false;
-            if (AppDbServer == "192.168.0.42") { IsNetworkSelected = true; IsRemoteSelected = false; }
+            if (AppDbServer == "192.168.0.47") { IsNetworkSelected = true; IsRemoteSelected = false; }
             else { IsNetworkSelected = false; IsRemoteSelected = true; }
 
             var ggms = SharedDatabaseConfiguration.LoadGgms();
@@ -303,7 +303,7 @@ namespace eSureHi.ViewModels.Admin
         private void ApplyNetworkPreset()
         {
             IsLocalSelected = false; IsNetworkSelected = true; IsRemoteSelected = false;
-            AppDbServer = "192.168.0.42"; AppDbPort = "3306"; AppDbDatabase = "ims_db"; AppDbUser = "root"; AppDbPassword = "network@2026";
+            AppDbServer = "192.168.0.47"; AppDbPort = "3306"; AppDbDatabase = "ims_db"; AppDbUser = "root"; AppDbPassword = "network@2026";
             OnPropertyChanged(nameof(IsAppDbEditable));
         }
 
