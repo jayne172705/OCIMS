@@ -6,11 +6,11 @@ namespace eSureHi.Data
 {
     public class DatabaseConfiguration
     {
-        public string Server   { get; set; } = "localhost";
+        public string Server   { get; set; } = "194.59.164.58";
         public int    Port     { get; set; } = 3306;
-        public string Database { get; set; } = "";
-        public string User     { get; set; } = "";
-        public string Password { get; set; } = "";
+        public string Database { get; set; } = "u621755393_ims";
+        public string User     { get; set; } = "u621755393_ims_user";
+        public string Password { get; set; } = "Ims@2026";
 
         private static readonly string ConfigPath =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "eSureHiConfig.txt");
