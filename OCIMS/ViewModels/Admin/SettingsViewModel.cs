@@ -49,7 +49,8 @@ namespace eSureHi.ViewModels.Admin
         public string AppDbUser { get => _appDbUser; set => SetProperty(ref _appDbUser, value); }
         public string AppDbPassword { get => _appDbPassword; set => SetProperty(ref _appDbPassword, value); }
 
-        public bool IsAppDbEditable => IsNetworkSelected;
+        // Both presets are prefilled and fully editable.
+        public bool IsAppDbEditable => true;
 
         // ── Connection Status ──────────────────────────────────────────
         private string _connectionStatus = "Not tested";
@@ -273,10 +274,10 @@ namespace eSureHi.ViewModels.Admin
             AppDbUser = cfg.User;
             AppDbPassword = cfg.Password;
 
-            // Detect current mode
-            if (AppDbServer == "127.0.0.1" || AppDbServer == "localhost") IsLocalSelected = true;
-            else if (AppDbServer == "194.59.164.58") IsRemoteSelected = true;
-            else IsNetworkSelected = true;
+            // Detect current mode; Local hidden. Default to Online.
+            IsLocalSelected = false;
+            if (AppDbServer == "192.168.0.42") { IsNetworkSelected = true; IsRemoteSelected = false; }
+            else { IsNetworkSelected = false; IsRemoteSelected = true; }
 
             var ggms = SharedDatabaseConfiguration.LoadGgms();
             GgmsServer = ggms.Server;
@@ -295,15 +296,14 @@ namespace eSureHi.ViewModels.Admin
 
         private void ApplyLocalPreset()
         {
-            IsLocalSelected = true; IsNetworkSelected = false; IsRemoteSelected = false;
-            AppDbServer = "127.0.0.1"; AppDbPort = "3306"; AppDbDatabase = "ocims"; AppDbUser = "root"; AppDbPassword = "172705";
-            OnPropertyChanged(nameof(IsAppDbEditable));
+            // Local hidden — fall back to Network prefilled credentials.
+            ApplyNetworkPreset();
         }
 
         private void ApplyNetworkPreset()
         {
             IsLocalSelected = false; IsNetworkSelected = true; IsRemoteSelected = false;
-            if (AppDbServer == "127.0.0.1" || AppDbServer == "194.59.164.58") AppDbServer = "";
+            AppDbServer = "192.168.0.42"; AppDbPort = "3306"; AppDbDatabase = "ims_db"; AppDbUser = "root"; AppDbPassword = "network@2026";
             OnPropertyChanged(nameof(IsAppDbEditable));
         }
 
