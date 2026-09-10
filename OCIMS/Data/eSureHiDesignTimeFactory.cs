@@ -19,8 +19,8 @@ namespace eSureHi.Data
             var projectDir = FindProjectRoot();
             var configPath = Path.Combine(projectDir, "eSureHiConfig.txt");
 
-            string server = "localhost", port = "3306", database = "eSureHi",
-                   user = "root", password = "172705";
+            string server = "194.59.164.58", port = "3306", database = "u621755393_ims",
+                   user = "u621755393_ims_user", password = "Ims@2026";
 
             if (File.Exists(configPath))
             {
