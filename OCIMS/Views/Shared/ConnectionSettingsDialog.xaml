@@ -9,13 +9,14 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:ConnectionSettingsViewModel}"
         Title="Connection Settings — eSureHi+"
-        Width="480" SizeToContent="Height"
+        Width="520" Height="720"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BackgroundBrush}"
         FontFamily="{materialDesign:MaterialDesignFont}"
         Loaded="Window_Loaded">
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="28,24,28,24">
 
         <!-- Header -->
@@ -23,10 +24,10 @@
                    FontSize="18" FontWeight="Bold"
                    Foreground="{StaticResource PrimaryBrush}"
                    Margin="0,0,0,4"/>
-        <TextBlock Text="Network = office LAN database, Online = cloud database"
+        <TextBlock Text="Network = 3 connections on office LAN (192.168.0.47), Online = IMS_DB only on cloud"
                    FontSize="12" Foreground="Gray"
                    Margin="0,0,0,4"/>
-        <TextBlock Text="Choose Network for the office LAN server or Online for the cloud database. Credentials are prefilled and editable."
+        <TextBlock Text="Network shows IMS_DB / GGMS_DB / CRS_DB. Online shows IMS_DB only. All prefilled and editable. Test each separately."
                    FontSize="11"
                    Foreground="{StaticResource MutedTextBrush}"
                    TextWrapping="Wrap"
@@ -34,54 +35,132 @@
 
         <!-- Presets (Local hidden) -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-            <Button Content="Network"
+            <Button Content="Network (all 3)"
                     Command="{Binding PresetNetworkCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
-                    Margin="0,0,10,0" Width="200" Height="40"/>
-            <Button Content="Online"
+                    Margin="0,0,10,0" Width="220" Height="40"/>
+            <Button Content="Online (IMS)"
                     Command="{Binding PresetRemoteCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
-                    Width="200" Height="40"/>
+                    Width="220" Height="40"/>
         </StackPanel>
 
-        <!-- Credentials View (all fields editable for Network and Online) -->
-        <StackPanel Margin="0,0,0,10">
-            <TextBox Text="{Binding eSureHiServer, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                     materialDesign:HintAssist.Hint="Server / IP"
-                     IsEnabled="{Binding IsCredentialsEditable}"
-                     Margin="0,0,0,12"/>
-            <Grid Margin="0,0,0,12">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Text="{Binding eSureHiPort, UpdateSourceTrigger=PropertyChanged}"
+        <!-- ── 1. IMS_DB ── -->
+        <GroupBox Header="1. IMS_DB (main)" Margin="0,0,0,12" Padding="12">
+            <StackPanel>
+                <TextBox Text="{Binding eSureHiServer, UpdateSourceTrigger=PropertyChanged}"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         materialDesign:HintAssist.Hint="Port"
-                         IsEnabled="{Binding IsCredentialsEditable}"/>
-                <TextBox Grid.Column="2" Text="{Binding eSureHiDatabase, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Server / IP"
+                         IsEnabled="{Binding IsCredentialsEditable}"
+                         Margin="0,0,0,10"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding eSureHiPort, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Port"
+                             IsEnabled="{Binding IsCredentialsEditable}"/>
+                    <TextBox Grid.Column="2" Text="{Binding eSureHiDatabase, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Database Name"
+                             IsEnabled="{Binding IsCredentialsEditable}"/>
+                </Grid>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding eSureHiUser, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Username"
+                             IsEnabled="{Binding IsCredentialsEditable}"/>
+                    <TextBox Grid.Column="2" Text="{Binding eSureHiPassword, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Password"
+                             IsEnabled="{Binding IsCredentialsEditable}"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Test IMS_DB"
+                            Command="{Binding TestConnectionCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    <TextBlock Text="{Binding ImsTestMessage}" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="11" TextWrapping="Wrap" Width="250"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- ── 2. GGMS_DB (network only) ── -->
+        <GroupBox Header="2. GGMS_DB (network only)" Margin="0,0,0,12" Padding="12"
+                  Visibility="{Binding IsNetworkSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel>
+                <TextBox Text="{Binding GgmsServer, UpdateSourceTrigger=PropertyChanged}"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         materialDesign:HintAssist.Hint="Database Name"
-                         IsEnabled="{Binding IsCredentialsEditable}"/>
-            </Grid>
-            <Grid Margin="0,0,0,12">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Text="{Binding eSureHiUser, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Server / IP"
+                         Margin="0,0,0,10"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding GgmsPort, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Port"/>
+                    <TextBox Grid.Column="2" Text="{Binding GgmsDatabase, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Database Name"/>
+                </Grid>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding GgmsUser, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Username"/>
+                    <TextBox Grid.Column="2" Text="{Binding GgmsPassword, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Password"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Test GGMS_DB"
+                            Command="{Binding TestGgmsConnectionCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    <TextBlock Text="{Binding GgmsTestMessage}" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="11" TextWrapping="Wrap" Width="250"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- ── 3. CRS_DB (network only) ── -->
+        <GroupBox Header="3. CRS_DB (network only)" Margin="0,0,0,12" Padding="12"
+                  Visibility="{Binding IsNetworkSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel>
+                <TextBox Text="{Binding CrsServer, UpdateSourceTrigger=PropertyChanged}"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         materialDesign:HintAssist.Hint="Username"
-                         IsEnabled="{Binding IsCredentialsEditable}"/>
-                <TextBox Grid.Column="2" Text="{Binding eSureHiPassword, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         materialDesign:HintAssist.Hint="Password"
-                         IsEnabled="{Binding IsCredentialsEditable}"/>
-            </Grid>
-        </StackPanel>
+                         materialDesign:HintAssist.Hint="Server / IP"
+                         Margin="0,0,0,10"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding CrsPort, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Port"/>
+                    <TextBox Grid.Column="2" Text="{Binding CrsDatabase, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Database Name"/>
+                </Grid>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding CrsUser, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Username"/>
+                    <TextBox Grid.Column="2" Text="{Binding CrsPassword, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Password"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Test CRS_DB"
+                            Command="{Binding TestCrsConnectionCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    <TextBlock Text="{Binding CrsTestMessage}" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="11" TextWrapping="Wrap" Width="250"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
 
         <!-- Status Message -->
         <TextBlock Text="{Binding StatusMessage}"
-                   FontSize="12" Margin="0,12,0,0"
+                   FontSize="12" Margin="0,4,0,0"
                    TextWrapping="Wrap">
             <TextBlock.Style>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -99,17 +178,16 @@
 
         <!-- Buttons -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Test Connection"
-                    Command="{Binding TestConnectionCommand}"
-                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+            <Button Content="Test All"
+                    Command="{Binding TestAllCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Margin="0,0,8,0"/>
-            <Button Content="Save"
+            <Button Content="Save All"
                     Command="{Binding SaveCommand}"
-                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
                     Background="{StaticResource PrimaryBrush}"
                     Style="{StaticResource MaterialDesignRaisedButton}"/>
         </StackPanel>
 
     </StackPanel>
+    </ScrollViewer>
 </Window>
