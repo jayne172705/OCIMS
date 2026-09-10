@@ -8,14 +8,24 @@ namespace eSureHi.ViewModels.Shared
 {
     public class ConnectionSettingsViewModel : ObservableObject
     {
-        private string _eSureHiServer = "localhost";
+        private string _eSureHiServer = "194.59.164.58";
         private string _eSureHiPort = "3306";
-        private string _eSureHiDatabase = "";
-        private string _eSureHiUser = "";
-        private string _eSureHiPassword = "";
-        private const string CrsDatabaseName = "u621755393_crs";
-        private const string CrsUserName = "u621755393_crs_user";
-        private const string CrsPasswordValue = "Crs@2026";
+        private string _eSureHiDatabase = "u621755393_ims";
+        private string _eSureHiUser = "u621755393_ims_user";
+        private string _eSureHiPassword = "Ims@2026";
+        // Prefilled presets: Network = office LAN, Online = Hostinger cloud.
+        // Local preset is hidden per requirements.
+        private const string NetworkServer = "192.168.0.42";
+        private const string NetworkPort = "3306";
+        private const string NetworkDatabase = "ims_db";
+        private const string NetworkUser = "root";
+        private const string NetworkPassword = "network@2026";
+
+        private const string OnlineServer = "194.59.164.58";
+        private const string OnlinePort = "3306";
+        private const string OnlineDatabase = "u621755393_ims";
+        private const string OnlineUser = "u621755393_ims_user";
+        private const string OnlinePassword = "Ims@2026";
 
         public string eSureHiServer { get => _eSureHiServer; set => SetProperty(ref _eSureHiServer, value); }
         public string eSureHiPort { get => _eSureHiPort; set => SetProperty(ref _eSureHiPort, value); }
@@ -73,10 +83,10 @@ namespace eSureHi.ViewModels.Shared
             set => SetProperty(ref _isRemoteSelected, value);
         }
 
-        public bool IsCredentialsEditable => IsNetworkSelected;
+        // Both presets are prefilled and fully editable.
+        public bool IsCredentialsEditable => true;
 
-        public bool IsNetworkServerPlaceholderVisible =>
-            IsNetworkSelected && string.IsNullOrWhiteSpace(NetworkIp);
+        public bool IsNetworkServerPlaceholderVisible => false;
         public bool IsBusy
         {
             get => _isBusy;
@@ -114,46 +124,60 @@ namespace eSureHi.ViewModels.Shared
         private void LoadCurrent()
         {
             var cfg = App.DbConfig;
-            eSureHiServer = cfg.Server;
-            eSureHiPort = cfg.Port.ToString();
-            eSureHiDatabase = cfg.Database;
-            eSureHiUser = cfg.User;
-            eSureHiPassword = cfg.Password;
+            eSureHiServer = string.IsNullOrWhiteSpace(cfg.Server) ? OnlineServer : cfg.Server;
+            eSureHiPort = cfg.Port == 0 ? OnlinePort : cfg.Port.ToString();
+            eSureHiDatabase = string.IsNullOrWhiteSpace(cfg.Database) ? OnlineDatabase : cfg.Database;
+            eSureHiUser = string.IsNullOrWhiteSpace(cfg.User) ? OnlineUser : cfg.User;
+            eSureHiPassword = string.IsNullOrWhiteSpace(cfg.Password) ? OnlinePassword : cfg.Password;
+
+            // Detect current mode for highlight; default to Online.
+            if (string.Equals(eSureHiServer.Trim(), OnlineServer, StringComparison.OrdinalIgnoreCase))
+            {
+                IsNetworkSelected = false;
+                IsRemoteSelected = true;
+            }
+            else
+            {
+                IsNetworkSelected = true;
+                IsRemoteSelected = false;
+            }
+            IsLocalSelected = false;
         }
 
         private void ApplyLocal()
         {
-            IsNetworkSelected = false;
-            eSureHiServer = "127.0.0.1";
-            eSureHiPort = "3306";
-            eSureHiDatabase = "ocims";
-            eSureHiUser = "root";
-            eSureHiPassword = "172705";
-            StatusMessage = "Local offline database selected. Click Test Connection or Save.";
+            // Local preset hidden — default to Network prefilled credentials.
+            ApplyNetwork();
         }
 
         private void ApplyNetwork()
         {
             IsNetworkSelected = true;
-            if (!string.IsNullOrWhiteSpace(NetworkIp))
-                eSureHiServer = NetworkIp.Trim();
-
-            eSureHiPort = "3306";
-            eSureHiDatabase = CrsDatabaseName;
-            eSureHiUser = CrsUserName;
-            eSureHiPassword = CrsPasswordValue;
-            StatusMessage = "Network CRS selected. Enter the CRS server/IP, then test or save. Login still uses your saved eSureHi database; Beneficiaries will use this CRS source.";
+            IsLocalSelected = false;
+            IsRemoteSelected = false;
+            NetworkIp = string.Empty;
+            eSureHiServer = NetworkServer;
+            eSureHiPort = NetworkPort;
+            eSureHiDatabase = NetworkDatabase;
+            eSureHiUser = NetworkUser;
+            eSureHiPassword = NetworkPassword;
+            UpdatePasswordBox?.Invoke(eSureHiPassword);
+            StatusMessage = "Network database selected. Click Test Connection or Save.";
         }
 
         private void ApplyRemote()
         {
             IsNetworkSelected = false;
-            eSureHiServer = "194.59.164.58";
-            eSureHiPort = "3306";
-            eSureHiDatabase = "u621755393_ims";
-            eSureHiUser = "u621755393_ims_user";
-            eSureHiPassword = "Ims@2026";
-            StatusMessage = "Remote online database selected. Click Test Connection or Save.";
+            IsLocalSelected = false;
+            IsRemoteSelected = true;
+            NetworkIp = string.Empty;
+            eSureHiServer = OnlineServer;
+            eSureHiPort = OnlinePort;
+            eSureHiDatabase = OnlineDatabase;
+            eSureHiUser = OnlineUser;
+            eSureHiPassword = OnlinePassword;
+            UpdatePasswordBox?.Invoke(eSureHiPassword);
+            StatusMessage = "Online database selected. Click Test Connection or Save.";
         }
 
         private int ParsePort()
@@ -165,17 +189,6 @@ namespace eSureHi.ViewModels.Shared
 
         private async Task TestConnectionAsync()
         {
-            if (IsNetworkSelected)
-            {
-                if (string.IsNullOrWhiteSpace(NetworkIp))
-                {
-                    StatusMessage = "Please enter the network server/IP before testing.";
-                    return;
-                }
-
-                eSureHiServer = NetworkIp.Trim();
-            }
-
             if (string.IsNullOrWhiteSpace(eSureHiServer) ||
                 string.IsNullOrWhiteSpace(eSureHiDatabase) ||
                 string.IsNullOrWhiteSpace(eSureHiUser))
@@ -206,18 +219,8 @@ namespace eSureHi.ViewModels.Shared
                 using var conn = new MySqlConnection(connStr);
                 await conn.OpenAsync();
 
-                if (IsNetworkSelected)
-                {
-                    using var cmd = new MySqlCommand(
-                        "SELECT COUNT(*) FROM val_beneficiaries LIMIT 1",
-                        conn);
-                    await cmd.ExecuteScalarAsync();
-                }
-
                 TestSuccess = true;
-                StatusMessage = IsNetworkSelected
-                    ? "CRS connection successful. Beneficiaries can load the CRS master list."
-                    : "Connection successful!";
+                StatusMessage = "Connection successful!";
             }
             catch (Exception ex)
             {
@@ -233,39 +236,11 @@ namespace eSureHi.ViewModels.Shared
 
         private void Save()
         {
-            if (IsNetworkSelected)
-            {
-                if (string.IsNullOrWhiteSpace(NetworkIp))
-                {
-                    StatusMessage = "Please enter the network server/IP before saving.";
-                    return;
-                }
-
-                eSureHiServer = NetworkIp.Trim();
-            }
-
             if (string.IsNullOrWhiteSpace(eSureHiServer) ||
                 string.IsNullOrWhiteSpace(eSureHiDatabase) ||
                 string.IsNullOrWhiteSpace(eSureHiUser))
             {
                 StatusMessage = "Server, Database, and User fields are required.";
-                return;
-            }
-
-            if (IsNetworkSelected)
-            {
-                var crsConfig = new SharedDatabaseConfiguration
-                {
-                    Server = eSureHiServer.Trim(),
-                    Port = ParsePort().ToString(),
-                    Database = eSureHiDatabase.Trim(),
-                    User = eSureHiUser.Trim(),
-                    Password = eSureHiPassword.Trim()
-                };
-
-                SharedDatabaseConfiguration.SaveCrs(crsConfig);
-                StatusMessage = "Network CRS settings saved. Beneficiaries will load from this CRS source after login.";
-                CloseAction?.Invoke();
                 return;
             }
 
