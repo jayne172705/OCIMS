@@ -10,17 +10,44 @@ namespace eSureHi.Data
     /// </summary>
     public class SharedDatabaseConfiguration
     {
+        // ── Remote network prefilled credentials (office LAN) ──
+        // Same host/user/pass, different database per connection.
+        public const string NetworkServer = "192.168.0.47";
+        public const string NetworkPort = "3306";
+        public const string NetworkUser = "root";
+        public const string NetworkPassword = "network@2026";
+        public const string NetworkGgmsDatabase = "ggms_db";
+        public const string NetworkCrsDatabase = "crs_db";
+
         public string Server { get; set; } = string.Empty;
         public string Port { get; set; } = "3306";
         public string Database { get; set; } = string.Empty;
         public string User { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
+        public static SharedDatabaseConfiguration NetworkGgmsPreset() => new()
+        {
+            Server = NetworkServer,
+            Port = NetworkPort,
+            Database = NetworkGgmsDatabase,
+            User = NetworkUser,
+            Password = NetworkPassword
+        };
+
+        public static SharedDatabaseConfiguration NetworkCrsPreset() => new()
+        {
+            Server = NetworkServer,
+            Port = NetworkPort,
+            Database = NetworkCrsDatabase,
+            User = NetworkUser,
+            Password = NetworkPassword
+        };
+
         public static SharedDatabaseConfiguration LoadGgms() =>
-            LoadFrom("GgmsConfig.txt");
+            LoadFrom("GgmsConfig.txt", NetworkGgmsPreset());
 
         public static SharedDatabaseConfiguration LoadCrs() =>
-            LoadFrom("CrsConfig.txt");
+            LoadFrom("CrsConfig.txt", NetworkCrsPreset());
 
         public static void SaveGgms(SharedDatabaseConfiguration config) =>
             config.SaveTo("GgmsConfig.txt");
@@ -28,9 +55,9 @@ namespace eSureHi.Data
         public static void SaveCrs(SharedDatabaseConfiguration config) =>
             config.SaveTo("CrsConfig.txt");
 
-        private static SharedDatabaseConfiguration LoadFrom(string fileName)
+        private static SharedDatabaseConfiguration LoadFrom(string fileName, SharedDatabaseConfiguration defaults)
         {
-            var config = new SharedDatabaseConfiguration();
+            var config = defaults;
 
             var path = GetConfigPath(fileName);
 
