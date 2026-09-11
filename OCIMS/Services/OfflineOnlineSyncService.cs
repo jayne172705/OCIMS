@@ -214,7 +214,7 @@ namespace eSureHi.Services
 
                 await EnsureCloudSyncColumnsAsync();
 
-                await using var local = eSureHiDbContextFactory.Create();
+                await using var local = eSureHiDbContextFactory.CreateLocal();
                 await using var cloud = eSureHiDbContextFactory.CreateCloud();
 
                 var result = new SyncResult();
@@ -271,7 +271,7 @@ namespace eSureHi.Services
         {
             try
             {
-                await using var db = eSureHiDbContextFactory.Create();
+                await using var db = eSureHiDbContextFactory.CreateLocal();
                 return await db.Database.CanConnectAsync();
             }
             catch
@@ -366,7 +366,7 @@ namespace eSureHi.Services
                     }
                 }
 
-                await using var modelDb = eSureHiDbContextFactory.Create();
+                await using var modelDb = eSureHiDbContextFactory.CreateLocal();
                 foreach (var clrType in eSureHiDbContext.SyncEntityTypes)
                 {
                     var entityType = modelDb.Model.FindEntityType(clrType);
