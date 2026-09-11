@@ -10,6 +10,18 @@ if (!eSureHi.App.DbConfig.IsConfigured)
     return 1;
 }
 
+var syncLocalToOnline = args.Contains("--sync-local-to-online", StringComparer.OrdinalIgnoreCase);
+var syncTwoWay = args.Contains("--sync-two-way", StringComparer.OrdinalIgnoreCase);
+if (syncLocalToOnline || syncTwoWay)
+{
+    var direction = syncTwoWay ? SyncDirection.TwoWay : SyncDirection.OfflineToOnline;
+    var result = await OfflineOnlineSyncService.SyncAsync(direction);
+    Console.WriteLine($"{direction} sync complete. Inserted: {result.Inserted}; Updated: {result.Updated}; Skipped: {result.Skipped}; Failed: {result.Failed}.");
+    if (!string.IsNullOrWhiteSpace(result.Details))
+        Console.WriteLine(result.Details);
+    return result.Failed == 0 ? 0 : 1;
+}
+
 try
 {
     using var db = eSureHiDbContextFactory.CreateCloud();
