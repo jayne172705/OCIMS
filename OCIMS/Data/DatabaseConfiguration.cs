@@ -4,6 +4,13 @@ using MySqlConnector;
 
 namespace eSureHi.Data
 {
+    public enum MainDatabaseMode
+    {
+        Local,
+        Network,
+        Online
+    }
+
     public class DatabaseConfiguration
     {
         public string Server   { get; set; } = "192.168.0.47";
@@ -11,6 +18,10 @@ namespace eSureHi.Data
         public string Database { get; set; } = "ims_db";
         public string User     { get; set; } = "root";
         public string Password { get; set; } = "network@2026";
+        // The main application data source selected from the login connection dialog.
+        // Older configuration files do not contain this setting, so they continue to
+        // use the original SQLite-first behavior.
+        public MainDatabaseMode ActiveMode { get; set; } = MainDatabaseMode.Local;
 
         private static readonly string ConfigPath =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "eSureHiConfig.txt");
@@ -45,6 +56,10 @@ namespace eSureHi.Data
                     case "Database": config.Database = value; break;
                     case "User":     config.User     = value; break;
                     case "Password": config.Password = value; break;
+                    case "ActiveMode":
+                        if (Enum.TryParse<MainDatabaseMode>(value, true, out var mode))
+                            config.ActiveMode = mode;
+                        break;
                 }
             }
 
@@ -59,9 +74,13 @@ namespace eSureHi.Data
                 $"Port={Port}",
                 $"Database={Database}",
                 $"User={User}",
-                $"Password={Password}"
+                $"Password={Password}",
+                $"ActiveMode={ActiveMode}"
             });
         }
+
+        public bool UsesRemoteDatabase =>
+            ActiveMode is MainDatabaseMode.Network or MainDatabaseMode.Online;
 
         public bool IsConfigured =>
             !string.IsNullOrWhiteSpace(Server)   &&
@@ -100,6 +119,12 @@ namespace eSureHi.Data
                 AllowZeroDateTime = true,
                 ConvertZeroDateTime = true
             };
+
+            // SyncId is stored as CHAR(36) in the existing MySQL schemas and
+            // represented as a string by the EF model. Without this setting,
+            // newer MySqlConnector versions materialize CHAR(36) GUID values as
+            // System.Guid, causing remote login and sync queries to fail.
+            builder["GuidFormat"] = "None";
 
             return builder.ConnectionString;
         }
