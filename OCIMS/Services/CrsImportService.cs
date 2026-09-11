@@ -63,7 +63,7 @@ namespace eSureHi.Services
             List<BeneficiaryStaging> rows,
             CancellationToken cancellationToken = default)
         {
-            await using var db = eSureHiDbContextFactory.Create();
+            await using var db = eSureHiDbContextFactory.CreateLocal();
             db.CrsBeneficiaryCache.RemoveRange(db.CrsBeneficiaryCache);
             await db.SaveChangesAsync(cancellationToken);
 
@@ -255,7 +255,7 @@ namespace eSureHi.Services
 
         private static async Task<List<BeneficiaryStaging>> LoadRowsFromCacheAsync(CancellationToken cancellationToken)
         {
-            await using var db = eSureHiDbContextFactory.Create();
+            await using var db = eSureHiDbContextFactory.CreateLocal();
             var cached = await db.CrsBeneficiaryCache
                 .AsNoTracking()
                 .OrderBy(c => c.BeneficiaryId)
@@ -299,7 +299,7 @@ namespace eSureHi.Services
             IProgress<CrsImportProgress>? progress,
             CancellationToken cancellationToken)
         {
-            await using var db = eSureHiDbContextFactory.Create();
+            await using var db = eSureHiDbContextFactory.CreateLocal();
             var existingIds = new HashSet<string>(
                 await db.BeneficiaryStaging
                     .Select(b => b.BeneficiaryId)
