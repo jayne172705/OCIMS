@@ -420,9 +420,10 @@ namespace eSureHi.Views.Admin.Dialogs
             };
         }
 
-        private BeneficiaryStaging GetOrCreateStagingRecordForFamilyMember(FamilyMemberDisplay member)
+        private BeneficiaryStaging GetOrCreateStagingRecordForFamilyMember(
+            eSureHiDbContext db,
+            FamilyMemberDisplay member)
         {
-            using var db = eSureHiDbContextFactory.Create();
             var existing = db.BeneficiaryStaging.FirstOrDefault(s =>
                 (!string.IsNullOrEmpty(member.BeneficiaryId) && s.BeneficiaryId == member.BeneficiaryId) ||
                 (!string.IsNullOrEmpty(member.CivilRegistryId) && s.CivilRegistryId == member.CivilRegistryId));
@@ -464,7 +465,9 @@ namespace eSureHi.Views.Admin.Dialogs
 
             try
             {
-                using var db = eSureHiDbContextFactory.Create();
+                // Explicit registration transactions cannot use the MySQL retry
+                // strategy configured for ordinary remote reads/writes.
+                using var db = eSureHiDbContextFactory.CreateWithoutRetry();
                 using var transaction = await db.Database.BeginTransactionAsync();
 
                 DateOnly? dob = null;
@@ -480,20 +483,28 @@ namespace eSureHi.Views.Admin.Dialogs
                 int? deptId = defaultDept?.DeptId;
 
                 // 1. Create the Employee (Primary member)
+                var employeeNo = _resident.BeneficiaryId ?? $"IMS-EMP-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                var email = string.IsNullOrWhiteSpace(EmailAddress)
+                    ? CreatePendingEmailAddress(employeeNo)
+                    : EmailAddress.Trim();
+
                 var employee = new Employee
                 {
-                    EmployeeNo = _resident.BeneficiaryId ?? $"IMS-EMP-{Guid.NewGuid().ToString().Substring(0, 8)}",
+                    EmployeeNo = employeeNo,
                     FirstName = _resident.FirstName ?? _resident.DisplayName ?? "N/A",
                     LastName = _resident.LastName ?? "N/A",
                     DateOfBirth = dob,
-                    Gender = _resident.Sex ?? "Male",
+                    Gender = NormalizeGender(_resident.Sex),
                     PhoneMobile = ContactNumber.Trim(),
-                    Email = string.IsNullOrWhiteSpace(EmailAddress) ? null : EmailAddress.Trim(),
+                    // The IMS employee table requires a unique email even though this
+                    // form permits a blank value.  Keep the member registered by using
+                    // a unique internal placeholder until a real email is provided.
+                    Email = email,
                     Barangay = ResidentBarangay,
                     City = "Sulop",
                     Province = "Davao del Sur",
                     DeptId = deptId,
-                    EmploymentType = SelectedAssignedGroup.FundName ?? "Job Order",
+                    EmploymentType = MapEmploymentType(SelectedAssignedGroup.FundName),
                     DateHired = DateOnly.FromDateTime(DateTime.Today),
                     EmploymentStatus = "Active",
                     CreatedAt = DateTime.Now,
@@ -521,7 +532,8 @@ namespace eSureHi.Views.Admin.Dialogs
                 };
                 db.EmployeePolicies.Add(ep);
 
-                // 3. Create the Primary member as a Beneficiary record ("Self")
+                // 3. Create the primary member.  The remote IMS relationship enum
+                // does not include "Self"; IsPrimary is the authoritative marker.
                 var primaryBen = new Beneficiary
                 {
                     EmpId = employee.EmpId,
@@ -529,7 +541,7 @@ namespace eSureHi.Views.Admin.Dialogs
                     CivilRegistryId = _resident.CivilRegistryId,
                     FirstName = employee.FirstName,
                     LastName = employee.LastName,
-                    Relationship = "Self",
+                    Relationship = "Other",
                     DateOfBirth = employee.DateOfBirth,
                     Gender = employee.Gender,
                     IsPrimary = true,
@@ -562,7 +574,7 @@ namespace eSureHi.Views.Admin.Dialogs
                 {
                     if (row.SelectedMember != null)
                     {
-                        var staging = GetOrCreateStagingRecordForFamilyMember(row.SelectedMember);
+                        var staging = GetOrCreateStagingRecordForFamilyMember(db, row.SelectedMember);
                         dependentsToSave.Add(new DependentRow
                         {
                             FullName = row.SelectedMember.FullName,
@@ -603,7 +615,7 @@ namespace eSureHi.Views.Admin.Dialogs
                         LastName = dep.StagingRecord.LastName ?? "N/A",
                         Relationship = dep.Relationship,
                         DateOfBirth = depDob,
-                        Gender = dep.StagingRecord.Sex ?? "Other",
+                        Gender = NormalizeGender(dep.StagingRecord.Sex),
                         IsPrimary = false,
                         Received = true,
                         Contribution = dep.Contribution,
@@ -640,7 +652,7 @@ namespace eSureHi.Views.Admin.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to register: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to register: {GetErrorDetails(ex)}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -656,13 +668,51 @@ namespace eSureHi.Views.Admin.Dialogs
             return role.ToUpperInvariant() switch
             {
                 "SPOUSE" => "Spouse",
-                "SON" => "Son",
-                "DAUGHTER" => "Daughter",
+                "SON" or "DAUGHTER" => "Child",
                 "CHILD" or "CHILDREN" => "Child",
                 "FATHER" or "MOTHER" or "PARENT" => "Parent",
                 "BROTHER" or "SISTER" or "SIBLING" => "Sibling",
                 _ => "Other"
             };
+        }
+
+        private static string NormalizeGender(string? gender) => gender?.Trim().ToUpperInvariant() switch
+        {
+            "M" or "MALE" => "Male",
+            "F" or "FEMALE" => "Female",
+            "O" or "OTHER" => "Other",
+            _ => "Other"
+        };
+
+        private static string MapEmploymentType(string? groupName) => groupName?.Trim().ToUpperInvariant() switch
+        {
+            "REGULAR" => "Regular",
+            "PART-TIME" or "PART TIME" => "Part-time",
+            "PROBATIONARY" => "Probationary",
+            "CONTRACTUAL" or "CONTRACT" or "JOB ORDER" or "CASUAL" => "Contractual",
+            _ => "Regular"
+        };
+
+        private static string CreatePendingEmailAddress(string employeeNo)
+        {
+            var safeId = new string(employeeNo
+                .ToLowerInvariant()
+                .Select(ch => char.IsLetterOrDigit(ch) ? ch : '-')
+                .ToArray())
+                .Trim('-');
+            return $"{safeId}@pending.esurehi.local";
+        }
+
+        private static string GetErrorDetails(Exception exception)
+        {
+            var messages = new List<string>();
+            for (Exception? current = exception; current is not null; current = current.InnerException)
+            {
+                if (!string.IsNullOrWhiteSpace(current.Message) && !messages.Contains(current.Message))
+                    messages.Add(current.Message);
+            }
+
+            return string.Join(Environment.NewLine, messages);
         }
 
         protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
