@@ -226,7 +226,7 @@ namespace eSureHi.Services
                 if (!connectionTest.IsOnline)
                     return; // GGMS is offline, do nothing.
 
-                await using var localDb = eSureHiDbContextFactory.Create();
+                await using var localDb = eSureHiDbContextFactory.CreateLocal();
                 var pendingItems = await localDb.GgmsQueueItems
                     .Where(q => q.Status == "Pending" || q.Status == "Failed")
                     .OrderBy(q => q.CreatedAt)
@@ -519,7 +519,7 @@ namespace eSureHi.Services
                 // Queue the transaction locally!
                 try
                 {
-                    await using var localDb = eSureHiDbContextFactory.Create();
+                await using var localDb = eSureHiDbContextFactory.CreateLocal();
                     var queueItem = new GgmsQueueItem
                     {
                         ProjectCode = projectCode,
@@ -600,7 +600,7 @@ namespace eSureHi.Services
 
         private static async Task SaveAllocationCacheAsync(GgmsFundSummary summary)
         {
-            await using var db = eSureHiDbContextFactory.Create();
+            await using var db = eSureHiDbContextFactory.CreateLocal();
             var existing = await db.GgmsAllocationCache
                 .FirstOrDefaultAsync(c => c.OfficeCode == OfficeCode && c.Year == summary.Year);
 
@@ -625,7 +625,7 @@ namespace eSureHi.Services
         {
             try
             {
-                await using var db = eSureHiDbContextFactory.Create();
+                await using var db = eSureHiDbContextFactory.CreateLocal();
                 var cached = await db.GgmsAllocationCache
                     .AsNoTracking()
                     .Where(c => c.OfficeCode == OfficeCode)
