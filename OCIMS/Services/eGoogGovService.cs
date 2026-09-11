@@ -139,7 +139,7 @@ namespace eSureHi.Services
         {
             try
             {
-                await using var localDb = eSureHiDbContextFactory.Create();
+                await using var localDb = eSureHiDbContextFactory.CreateLocal();
                 foreach (var t in transactions)
                 {
                     // Check if already queued to avoid local duplicates
