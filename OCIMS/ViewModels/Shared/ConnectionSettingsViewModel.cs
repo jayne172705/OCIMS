@@ -113,6 +113,7 @@ namespace eSureHi.ViewModels.Shared
                 {
                     OnPropertyChanged(nameof(IsNetworkServerPlaceholderVisible));
                     OnPropertyChanged(nameof(IsCredentialsEditable));
+                    OnPropertyChanged(nameof(IsRemoteConnectionSelected));
                 }
             }
         }
@@ -121,17 +122,27 @@ namespace eSureHi.ViewModels.Shared
         public bool IsLocalSelected
         {
             get => _isLocalSelected;
-            set => SetProperty(ref _isLocalSelected, value);
+            set
+            {
+                if (SetProperty(ref _isLocalSelected, value))
+                    OnPropertyChanged(nameof(IsRemoteConnectionSelected));
+            }
         }
 
         private bool _isRemoteSelected = false;
         public bool IsRemoteSelected
         {
             get => _isRemoteSelected;
-            set => SetProperty(ref _isRemoteSelected, value);
+            set
+            {
+                if (SetProperty(ref _isRemoteSelected, value))
+                    OnPropertyChanged(nameof(IsRemoteConnectionSelected));
+            }
         }
 
-        // All presets are prefilled and fully editable.
+        public bool IsRemoteConnectionSelected => !IsLocalSelected;
+
+        // All remote presets are prefilled and fully editable.
         public bool IsCredentialsEditable => true;
 
         public bool IsNetworkServerPlaceholderVisible => false;
@@ -210,24 +221,34 @@ namespace eSureHi.ViewModels.Shared
             CrsUser = string.IsNullOrWhiteSpace(crs.User) ? NetworkUser : crs.User;
             CrsPassword = string.IsNullOrWhiteSpace(crs.Password) ? NetworkPassword : crs.Password;
 
-            // Detect current mode for highlight; default to Network.
-            if (string.Equals(eSureHiServer.Trim(), OnlineServer, StringComparison.OrdinalIgnoreCase))
+            // Honor the saved choice. Existing configuration files default to Local.
+            if (cfg.ActiveMode == MainDatabaseMode.Local)
             {
+                IsLocalSelected = true;
+                IsNetworkSelected = false;
+                IsRemoteSelected = false;
+            }
+            else if (cfg.ActiveMode == MainDatabaseMode.Online)
+            {
+                IsLocalSelected = false;
                 IsNetworkSelected = false;
                 IsRemoteSelected = true;
             }
             else
             {
+                IsLocalSelected = false;
                 IsNetworkSelected = true;
                 IsRemoteSelected = false;
             }
-            IsLocalSelected = false;
         }
 
         private void ApplyLocal()
         {
             // Local preset hidden — default to Network prefilled credentials.
-            ApplyNetwork();
+            IsLocalSelected = true;
+            IsNetworkSelected = false;
+            IsRemoteSelected = false;
+            StatusMessage = "Local SQLite selected. The app will use ims.db on this computer.";
         }
 
         private void ApplyNetwork()
@@ -370,6 +391,31 @@ namespace eSureHi.ViewModels.Shared
 
         private async Task TestAllAsync()
         {
+            if (IsLocalSelected)
+            {
+                ImsTestMessage = "Testing local SQLite...";
+                ImsTestSuccess = false;
+                TestSuccess = false;
+                StatusMessage = "Testing local SQLite...";
+                IsBusy = true;
+                try
+                {
+                    await using var db = eSureHiDbContextFactory.CreateLocal();
+                    await db.Database.EnsureCreatedAsync();
+                    ImsTestSuccess = true;
+                    TestSuccess = true;
+                    ImsTestMessage = "Local SQLite is ready.";
+                    StatusMessage = "Local SQLite selected and ready.";
+                }
+                catch (Exception ex)
+                {
+                    ImsTestMessage = $"Local SQLite failed: {ex.GetBaseException().Message}";
+                    StatusMessage = ImsTestMessage;
+                }
+                finally { IsBusy = false; }
+                return;
+            }
+
             await TestImsAsync();
             if (IsBusy) return;
             // Online = IMS only. Network = all 3.
@@ -389,14 +435,20 @@ namespace eSureHi.ViewModels.Shared
 
         private async Task TestConnectionAsync()
         {
+            if (IsLocalSelected)
+            {
+                await TestAllAsync();
+                return;
+            }
+
             await TestImsAsync();
         }
 
         private void Save()
         {
-            if (string.IsNullOrWhiteSpace(eSureHiServer) ||
+            if (!IsLocalSelected && (string.IsNullOrWhiteSpace(eSureHiServer) ||
                 string.IsNullOrWhiteSpace(eSureHiDatabase) ||
-                string.IsNullOrWhiteSpace(eSureHiUser))
+                string.IsNullOrWhiteSpace(eSureHiUser)))
             {
                 StatusMessage = "IMS_DB: Server, Database, and User fields are required.";
                 return;
@@ -409,7 +461,12 @@ namespace eSureHi.ViewModels.Shared
                 Port = ParsePort(eSureHiPort),
                 Database = eSureHiDatabase.Trim(),
                 User = eSureHiUser.Trim(),
-                Password = eSureHiPassword.Trim()
+                Password = eSureHiPassword.Trim(),
+                ActiveMode = IsLocalSelected
+                    ? MainDatabaseMode.Local
+                    : IsNetworkSelected
+                        ? MainDatabaseMode.Network
+                        : MainDatabaseMode.Online
             };
             cfg.Save();
             App.DbConfig = cfg;
@@ -431,7 +488,9 @@ namespace eSureHi.ViewModels.Shared
                 Password = CrsPassword.Trim()
             });
 
-            StatusMessage = "All 3 settings saved (ims_db / ggms_db / crs_db).";
+            StatusMessage = cfg.ActiveMode == MainDatabaseMode.Local
+                ? "Local SQLite selected and saved."
+                : $"{cfg.ActiveMode} IMS database selected and saved.";
             CloseAction?.Invoke();
         }
     }
