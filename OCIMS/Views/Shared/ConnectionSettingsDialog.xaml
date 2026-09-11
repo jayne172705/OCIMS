@@ -24,33 +24,46 @@
                    FontSize="18" FontWeight="Bold"
                    Foreground="{StaticResource PrimaryBrush}"
                    Margin="0,0,0,4"/>
-        <TextBlock Text="Network = 3 connections on office LAN (192.168.0.47), Online = IMS_DB only on cloud"
+        <TextBlock Text="Choose the database the app will use: Local SQLite, office Network, or Online cloud."
                    FontSize="12" Foreground="Gray"
                    Margin="0,0,0,4"/>
-        <TextBlock Text="Network shows IMS_DB / GGMS_DB / CRS_DB. Online shows IMS_DB only. All prefilled and editable. Test each separately."
+        <TextBlock Text="Network shows IMS_DB / GGMS_DB / CRS_DB. Online shows IMS_DB only. Local uses ims.db on this computer. Test before saving."
                    FontSize="11"
                    Foreground="{StaticResource MutedTextBrush}"
                    TextWrapping="Wrap"
                    Margin="0,0,0,18"/>
 
-        <!-- Presets (Local hidden) -->
+        <!-- Main application database choice -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+            <Button Content="Local (SQLite)"
+                    Command="{Binding PresetLocalCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    BorderBrush="{Binding IsLocalSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
+                    BorderThickness="2"
+                    Margin="0,0,8,0" Width="140" Height="40"/>
             <Button Content="Network (all 3)"
                     Command="{Binding PresetNetworkCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="{Binding IsNetworkSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
-                    Margin="0,0,10,0" Width="220" Height="40"/>
+                    Margin="0,0,8,0" Width="140" Height="40"/>
             <Button Content="Online (IMS)"
                     Command="{Binding PresetRemoteCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="{Binding IsRemoteSelected, Converter={StaticResource HexToBrushConverter}, ConverterParameter='#2E7D32'}"
                     BorderThickness="2"
-                    Width="220" Height="40"/>
+                    Width="140" Height="40"/>
         </StackPanel>
 
+        <GroupBox Header="Local SQLite (main connection)" Margin="0,0,0,12" Padding="12"
+                  Visibility="{Binding IsLocalSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Text="The app will read and write ims.db on this computer. No remote database is used for normal app operations."
+                       TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}"/>
+        </GroupBox>
+
         <!-- ── 1. IMS_DB ── -->
-        <GroupBox Header="1. IMS_DB (main)" Margin="0,0,0,12" Padding="12">
+        <GroupBox Header="1. IMS_DB (main remote connection)" Margin="0,0,0,12" Padding="12"
+                  Visibility="{Binding IsRemoteConnectionSelected, Converter={StaticResource BoolToVisibilityConverter}}">
             <StackPanel>
                 <TextBox Text="{Binding eSureHiServer, UpdateSourceTrigger=PropertyChanged}"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
