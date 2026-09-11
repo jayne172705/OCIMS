@@ -28,71 +28,91 @@ namespace eSureHi.Services
             string? address = null;
             bool isHouseholdHead = false;
 
-            if (!string.IsNullOrWhiteSpace(beneficiary.CivilRegistryId))
+            // The CRS cache belongs to the device-local SQLite database. When the
+            // main data source is Online IMS, use that local cache for household
+            // details while retaining the supplied context for IMS beneficiaries.
+            eSureHiDbContext? ownedCacheDb = null;
+            var cacheDb = db;
+            if (!db.Database.IsSqlite())
             {
-                var cacheRow = await db.CrsBeneficiaryCache
-                    .FirstOrDefaultAsync(c => c.CivilRegistryId == beneficiary.CivilRegistryId);
-                if (cacheRow != null)
-                {
-                    familyId = cacheRow.FamilyId;
-                    address = string.IsNullOrWhiteSpace(cacheRow.Address) ? null : cacheRow.Address;
-                    isHouseholdHead = cacheRow.IsHouseholdHead;
-                }
+                ownedCacheDb = eSureHiDbContextFactory.CreateLocal();
+                cacheDb = ownedCacheDb;
             }
 
-            var members = new List<FamilyMemberDisplay>();
-            if (!string.IsNullOrWhiteSpace(familyId))
+            try
             {
-                var familyMembers = await db.CrsBeneficiaryCache
-                    .Where(c => c.FamilyId == familyId)
-                    .ToListAsync();
 
-                var civilRegistryIds = familyMembers
-                    .Where(m => !string.IsNullOrWhiteSpace(m.CivilRegistryId))
-                    .Select(m => m.CivilRegistryId)
-                    .ToList();
-
-                var activeBeneficiaries = await db.Beneficiaries
-                    .Where(b => b.IsActive && civilRegistryIds.Contains(b.CivilRegistryId))
-                    .Select(b => new { b.CivilRegistryId, b.IsPrimary })
-                    .ToListAsync();
-
-                foreach (var member in familyMembers
-                             .OrderBy(m => m.IsHouseholdHead ? 0 : 1)
-                             .ThenBy(m => m.FullName))
+                if (!string.IsNullOrWhiteSpace(beneficiary.CivilRegistryId))
                 {
-                    var status = "Not Registered";
-                    var bg = "#F1F5F9";
-                    var fg = "#64748B";
-
-                    if (!string.IsNullOrWhiteSpace(member.CivilRegistryId))
+                    var cacheRow = await cacheDb.CrsBeneficiaryCache
+                        .FirstOrDefaultAsync(c => c.CivilRegistryId == beneficiary.CivilRegistryId);
+                    if (cacheRow != null)
                     {
-                        var ben = activeBeneficiaries.FirstOrDefault(b => b.CivilRegistryId == member.CivilRegistryId);
-                        if (ben != null)
-                        {
-                            if (ben.IsPrimary) { status = "Registered Member"; bg = "#DCFCE7"; fg = "#166534"; }
-                            else { status = "Dependent"; bg = "#DBEAFE"; fg = "#1E40AF"; }
-                        }
+                        familyId = cacheRow.FamilyId;
+                        address = string.IsNullOrWhiteSpace(cacheRow.Address) ? null : cacheRow.Address;
+                        isHouseholdHead = cacheRow.IsHouseholdHead;
                     }
-
-                    members.Add(new FamilyMemberDisplay
-                    {
-                        FullName = member.FullName ?? "Unknown",
-                        FamilyRole = string.IsNullOrWhiteSpace(member.FamilyRole) ? "MEMBER" : member.FamilyRole!.ToUpper(),
-                        RegistrationStatus = status,
-                        RegistrationStatusBackground = bg,
-                        RegistrationStatusForeground = fg
-                    });
                 }
-            }
 
-            return new HouseholdSnapshot
+                var members = new List<FamilyMemberDisplay>();
+                if (!string.IsNullOrWhiteSpace(familyId))
+                {
+                    var familyMembers = await cacheDb.CrsBeneficiaryCache
+                        .Where(c => c.FamilyId == familyId)
+                        .ToListAsync();
+
+                    var civilRegistryIds = familyMembers
+                        .Where(m => !string.IsNullOrWhiteSpace(m.CivilRegistryId))
+                        .Select(m => m.CivilRegistryId)
+                        .ToList();
+
+                    var activeBeneficiaries = await db.Beneficiaries
+                        .Where(b => b.IsActive && civilRegistryIds.Contains(b.CivilRegistryId))
+                        .Select(b => new { b.CivilRegistryId, b.IsPrimary })
+                        .ToListAsync();
+
+                    foreach (var member in familyMembers
+                                 .OrderBy(m => m.IsHouseholdHead ? 0 : 1)
+                                 .ThenBy(m => m.FullName))
+                    {
+                        var status = "Not Registered";
+                        var bg = "#F1F5F9";
+                        var fg = "#64748B";
+
+                        if (!string.IsNullOrWhiteSpace(member.CivilRegistryId))
+                        {
+                            var ben = activeBeneficiaries.FirstOrDefault(b => b.CivilRegistryId == member.CivilRegistryId);
+                            if (ben != null)
+                            {
+                                if (ben.IsPrimary) { status = "Registered Member"; bg = "#DCFCE7"; fg = "#166534"; }
+                                else { status = "Dependent"; bg = "#DBEAFE"; fg = "#1E40AF"; }
+                            }
+                        }
+
+                        members.Add(new FamilyMemberDisplay
+                        {
+                            FullName = member.FullName ?? "Unknown",
+                            FamilyRole = string.IsNullOrWhiteSpace(member.FamilyRole) ? "MEMBER" : member.FamilyRole!.ToUpper(),
+                            RegistrationStatus = status,
+                            RegistrationStatusBackground = bg,
+                            RegistrationStatusForeground = fg
+                        });
+                    }
+                }
+
+                return new HouseholdSnapshot
+                {
+                    Address = address,
+                    FamilyId = familyId,
+                    IsHouseholdHead = isHouseholdHead,
+                    Members = members
+                };
+            }
+            finally
             {
-                Address = address,
-                FamilyId = familyId,
-                IsHouseholdHead = isHouseholdHead,
-                Members = members
-            };
+                if (ownedCacheDb is not null)
+                    await ownedCacheDb.DisposeAsync();
+            }
         }
     }
 }
