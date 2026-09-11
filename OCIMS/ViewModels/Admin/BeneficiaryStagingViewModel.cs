@@ -603,6 +603,9 @@ namespace eSureHi.ViewModels.Admin
         /// thread; FilteredCount still reports the true match count, so nothing is hidden.
         /// </summary>
         private const int MaxDisplayedRows = 80;
+        // The selection dialog stays compact and useful before the user begins
+        // typing by showing only the first ten CRS records.
+        private const int MaxSelectionRows = 10;
 
         // ── Constructor ────────────────────────────────────────────────
         public BeneficiaryStagingViewModel(bool selectionOnly = false)
@@ -876,7 +879,7 @@ namespace eSureHi.ViewModels.Admin
                     .ThenBy(b => b.FirstName)
                     .ToListAsync();
 
-                await EnrichWithDemographicsAsync(db, records);
+                await EnrichWithDemographicsAsync(records);
 
                 _allRecords.Clear();
                 foreach (var r in records) _allRecords.Add(r);
@@ -909,14 +912,18 @@ namespace eSureHi.ViewModels.Admin
         private const int ScopedEnrichmentLimit = 500;
 
         private static async Task EnrichWithDemographicsAsync(
-            eSureHiDbContext db,
             System.Collections.Generic.IReadOnlyList<BeneficiaryStaging> records,
             CancellationToken cancellationToken = default)
         {
             if (records.Count == 0)
                 return;
 
-            var cacheQuery = db.CrsBeneficiaryCache.AsNoTracking();
+            // CRS cache data is deliberately device-local. The configured Online
+            // IMS database stores the staging records but does not own this cache.
+            // Using the active remote context here caused the selector to fail after
+            // fetching its rows whenever the remote schema had no cache table.
+            await using var cacheDb = eSureHiDbContextFactory.CreateLocal();
+            var cacheQuery = cacheDb.CrsBeneficiaryCache.AsNoTracking();
 
             // Reading the whole cache to decorate a handful of rows is the dominant cost
             // on the search path — 40k rows fetched to enrich 80. Scope the read to the
@@ -1060,12 +1067,12 @@ namespace eSureHi.ViewModels.Admin
                     var records = await query
                         .OrderBy(r => r.LastName)
                         .ThenBy(r => r.FirstName)
-                        .Take(80)
+                        .Take(MaxSelectionRows)
                         .ToListAsync(cancellationToken);
                     sw.Stop();
                     System.Diagnostics.Debug.WriteLine($"[LoadSelectionRecordsAsync - CRS] DB Query took {sw.ElapsedMilliseconds} ms for SearchText='{search}'");
 
-                    await EnrichWithDemographicsAsync(db, records, cancellationToken);
+                    await EnrichWithDemographicsAsync(records, cancellationToken);
 
                     DisplayedRecords.Clear();
                     foreach (var record in records)
