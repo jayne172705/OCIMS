@@ -8,7 +8,7 @@ namespace eSureHi.Data
     {
         public static async Task InitializeAsync()
         {
-            await using var db = eSureHiDbContextFactory.Create();
+            await using var db = eSureHiDbContextFactory.CreateLocal();
             await db.Database.EnsureCreatedAsync();
             await EnsureResidentDemographicsTableAsync(db);
             await EnsureCrsBeneficiaryCacheTableAsync(db);
