@@ -60,6 +60,7 @@ namespace eSureHi.ViewModels.Admin
 
         // ── Step 1: Employee Selection ─────────────────────────────────
         private ObservableCollection<Employee> _allEmployees = new();
+        private readonly Task _initialEmployeesLoadTask;
         public ObservableCollection<Employee> FilteredEmployees { get; } = new();
 
         private string _employeeSearch = string.Empty;
@@ -272,7 +273,7 @@ namespace eSureHi.ViewModels.Admin
                 OnPropertyChanged(nameof(OfficialReceiptFileName));
             };
 
-            _ = LoadEmployeesAsync();
+            _initialEmployeesLoadTask = LoadEmployeesAsync();
         }
 
         // ── Init Edit ──────────────────────────────────────────────────
@@ -342,7 +343,7 @@ namespace eSureHi.ViewModels.Admin
             _lockedBeneficiaryId = beneficiaryId;
             OnPropertyChanged(nameof(IsBeneficiaryLocked));
             OnPropertyChanged(nameof(CanChangeClaimant));
-            await LoadEmployeesAsync();
+            await _initialEmployeesLoadTask;
             await ApplyLockedBeneficiaryAsync();
         }
 
@@ -360,8 +361,6 @@ namespace eSureHi.ViewModels.Admin
                 _allEmployees.Clear();
                 foreach (var e in list) _allEmployees.Add(e);
                 FilterEmployees();
-                if (_lockedBeneficiaryId.HasValue)
-                    await ApplyLockedBeneficiaryAsync();
             }
             catch (Exception ex)
             {
@@ -660,34 +659,49 @@ namespace eSureHi.ViewModels.Admin
             IsBusy = true;
             try
             {
-                using var db = eSureHiDbContextFactory.Create();
+                // Save the claim and its attachments atomically. The retry-enabled
+                // remote context cannot participate in a user-started transaction.
+                using var db = eSureHiDbContextFactory.CreateWithoutRetry();
+                using var transaction = await db.Database.BeginTransactionAsync();
 
                 // Find or create matching policy on the fly to satisfy DB constraint
                 var programName = SelectedEmployee?.EmploymentType;
                 if (string.IsNullOrWhiteSpace(programName)) programName = "Job Order";
 
                 // Prefer an Active match — several programs have superseded/Cancelled duplicates.
-                var policy = await db.InsurancePolicies
-                    .Where(p => p.PolicyType == programName || p.PolicyName == programName)
-                    .OrderByDescending(p => p.PolicyStatus == "Active")
-                    .FirstOrDefaultAsync();
+                var policy = SelectedEmployeePolicy is null
+                    ? null
+                    : await db.InsurancePolicies.FindAsync(SelectedEmployeePolicy.PolicyId);
 
-                if (policy == null)
+                if (policy is null)
                 {
-                    policy = new InsurancePolicy
+                    // policy_type is an enum in the remote IMS database. Employment
+                    // labels such as "Contractual" are not valid policy types.
+                    var fallbackPolicyType = NormalizePolicyType(programName);
+                    policy = await db.InsurancePolicies
+                        .Where(p => p.PolicyType == fallbackPolicyType ||
+                                    p.PolicyName == programName ||
+                                    p.PolicyName == fallbackPolicyType)
+                        .OrderByDescending(p => p.PolicyStatus == "Active")
+                        .FirstOrDefaultAsync();
+
+                    if (policy is null)
                     {
-                        PolicyCode = $"POL-{programName.Replace(" ", "").ToUpper()}",
-                        PolicyName = programName,
-                        PolicyType = programName,
-                        CoverageAmount = 1000000m,
-                        EffectiveDate = DateOnly.FromDateTime(DateTime.Today),
-                        ExpiryDate = DateOnly.FromDateTime(DateTime.Today.AddYears(1)),
-                        PolicyStatus = "Active",
-                        CreatedAt = DateTime.Now,
-                        UpdatedAt = DateTime.Now
-                    };
-                    db.InsurancePolicies.Add(policy);
-                    await db.SaveChangesAsync();
+                        policy = new InsurancePolicy
+                        {
+                            PolicyCode = $"POL-{fallbackPolicyType.Replace(" ", "").ToUpperInvariant()}",
+                            PolicyName = fallbackPolicyType,
+                            PolicyType = fallbackPolicyType,
+                            CoverageAmount = 1000000m,
+                            EffectiveDate = DateOnly.FromDateTime(DateTime.Today),
+                            ExpiryDate = DateOnly.FromDateTime(DateTime.Today.AddYears(1)),
+                            PolicyStatus = "Active",
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = DateTime.Now
+                        };
+                        db.InsurancePolicies.Add(policy);
+                        await db.SaveChangesAsync();
+                    }
                 }
 
                 if (IsEditMode)
@@ -697,6 +711,8 @@ namespace eSureHi.ViewModels.Admin
                     MapToEntity(c, policy);
                     c.UpdatedAt = DateTime.Now;
                     await db.SaveChangesAsync();
+                    await SaveDocumentsAsync(db, c.ClaimId);
+                    await transaction.CommitAsync();
 
                     await AuditService.LogUpdate("claims", c.ClaimId,
                         $"Beneficiary insurance claim updated: {c.ClaimNo} - {c.ClaimType}");
@@ -707,8 +723,6 @@ namespace eSureHi.ViewModels.Admin
                         BuildClaimTransactionSubject(c, "Updated"),
                         c.ClaimStatus,
                         c.Remarks);
-
-                    await SaveDocumentsAsync(db, c.ClaimId);
                 }
                 else
                 {
@@ -723,6 +737,8 @@ namespace eSureHi.ViewModels.Admin
                     c.SubmittedDate = DateTime.Now;
                     db.Claims.Add(c);
                     await db.SaveChangesAsync();
+                    await SaveDocumentsAsync(db, c.ClaimId);
+                    await transaction.CommitAsync();
 
                     await AuditService.LogInsert("claims", c.ClaimId,
                         $"Beneficiary insurance claim submitted: {c.ClaimNo} - {c.ClaimType}");
@@ -733,8 +749,6 @@ namespace eSureHi.ViewModels.Admin
                         BuildClaimTransactionSubject(c, "Submitted"),
                         c.ClaimStatus,
                         c.Remarks);
-
-                    await SaveDocumentsAsync(db, c.ClaimId);
                 }
 
                 OnSaveSuccess?.Invoke();
@@ -768,6 +782,36 @@ namespace eSureHi.ViewModels.Admin
 
             return string.Join(" | ", messages);
         }
+
+        private static string NormalizePolicyType(string? value) => value?.Trim().ToUpperInvariant() switch
+        {
+            "JOB ORDER" => "Job Order",
+            "CASUAL" or "CONTRACTUAL" or "PART-TIME" or "PART TIME" or "PROBATIONARY" => "Casual",
+            "REGULAR" => "Regular",
+            "HEALTH" => "Health",
+            "LIFE" => "Life",
+            "ACCIDENT" => "Accident",
+            "DISABILITY" => "Disability",
+            "RETIREMENT" => "Retirement",
+            "DENTAL" => "Dental",
+            "VISION" => "Vision",
+            "SAVINGS" => "Savings",
+            _ => "Job Order"
+        };
+
+        private static string NormalizeDocumentType(string? value) => value?.Trim().ToUpperInvariant() switch
+        {
+            "MEDICAL REPORT" => "Medical Report",
+            "HOSPITAL BILL" => "Hospital Bill",
+            "PRESCRIPTION" => "Prescription",
+            "DEATH CERTIFICATE" => "Death Certificate",
+            "INCIDENT REPORT" => "Incident Report",
+            "LAB RESULT" => "Lab Result",
+            // The UI calls this Official Receipt, while the remote IMS enum stores
+            // it as a generic supporting attachment.
+            "OFFICIAL RECEIPT" or "OTHER" => "Other",
+            _ => "Other"
+        };
 
         // fallbackPolicy is the program-matched policy resolved in SaveAsync. claims.policy_id is
         // NOT NULL with an FK to insurance_policies, so it must never be left at 0 — that happens
@@ -824,7 +868,7 @@ namespace eSureHi.ViewModels.Admin
                 db.ClaimDocuments.Add(new ClaimDocument
                 {
                     ClaimId = claimId,
-                    DocType = doc.DocType,
+                    DocType = NormalizeDocumentType(doc.DocType),
                     FileName = doc.FileName,
                     FilePath = doc.FilePath,
                     FileSizeKb = doc.SizeKb,
