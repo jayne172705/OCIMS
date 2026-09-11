@@ -7,8 +7,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
-$projectPath = Join-Path $repoRoot 'OCIMS-master\OCIMS\eSureHi.csproj'
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
+$projectPath = Join-Path $repoRoot 'OCIMS\eSureHi.csproj'
 $releaseRoot = Join-Path $repoRoot 'release'
 $publishDir = Join-Path $releaseRoot 'eSureHi-publish'
 $stageDir = Join-Path $releaseRoot 'eSureHi-installer-staging'
@@ -20,6 +20,32 @@ $sedPath = Join-Path $releaseRoot 'eSureHi_Setup_Sulop.sed'
 
 Write-Host "Publishing eSureHi ($Configuration, $Runtime)..."
 dotnet publish $projectPath -c $Configuration -r $Runtime --self-contained true -o $publishDir
+
+# ── Inject prefilled DB configs in sync with app + installer dialog ──
+# KEEP IN SYNC with Install-eSureHi.ps1 and
+# OCIMS/ViewModels/Shared/ConnectionSettingsViewModel.cs (Network/Online presets).
+@(
+    'Server=192.168.0.47'
+    'Port=3306'
+    'Database=ims_db'
+    'User=root'
+    'Password=network@2026'
+) | Set-Content -LiteralPath (Join-Path $publishDir 'eSureHiConfig.txt') -Encoding UTF8
+@(
+    'Server=192.168.0.47'
+    'Port=3306'
+    'Database=ggms_db'
+    'User=root'
+    'Password=network@2026'
+) | Set-Content -LiteralPath (Join-Path $publishDir 'GgmsConfig.txt') -Encoding UTF8
+@(
+    'Server=192.168.0.47'
+    'Port=3306'
+    'Database=crs_db'
+    'User=root'
+    'Password=network@2026'
+) | Set-Content -LiteralPath (Join-Path $publishDir 'CrsConfig.txt') -Encoding UTF8
+Write-Host 'Prefilled Network configs injected into publish output.'
 
 if (Test-Path -LiteralPath $stageDir) {
     Remove-Item -LiteralPath $stageDir -Recurse -Force
