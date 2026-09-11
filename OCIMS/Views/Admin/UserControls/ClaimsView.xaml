@@ -375,6 +375,14 @@
                                                         <TextBlock Text="CLAIM IN PROGRESS" FontSize="10"
                                                                    FontWeight="Bold" Foreground="#E65100"/>
                                                     </Border>
+                                                    <Border Visibility="{Binding ShowRegistrationRequired,
+                                                                Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1"
+                                                            CornerRadius="10" Padding="10,3"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                        <TextBlock Text="REGISTER FIRST" FontSize="10"
+                                                                   FontWeight="Bold" Foreground="#1D4ED8"/>
+                                                    </Border>
                                                     <Button Command="{Binding DataContext.ViewClaimCommand,
                                                                 RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                             CommandParameter="{Binding}"
@@ -661,11 +669,11 @@
                                                                  Width="16" Height="16"/>
                                     </Button>
 
-                                    <!-- Edit (Draft only) -->
+                                    <!-- Edit (Draft or Submitted before review) -->
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Command="{Binding DataContext.EditCommand,
                                                 RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            ToolTip="Edit (Draft only)"
+                                            ToolTip="Edit draft or submitted claim"
                                             Width="32" Height="32"
                                             Foreground="{StaticResource WarningBrush}">
                                         <materialDesign:PackIcon Kind="Pencil"
