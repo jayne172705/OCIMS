@@ -98,15 +98,12 @@
                 </Grid>
             </Grid>
 
-            <!-- Results. Hidden until something has been typed, and hidden again when
-                 that search matches nothing, so the dialog never reserves an empty
-                 white box. MaxHeight keeps the card inside its 640 ceiling and hands
-                 overflow to each ListBox's own scroll viewer. -->
+            <!-- Results. The first ten CRS records are shown immediately; searches
+                 replace those with up to ten matching records. The row collapses only
+                 when no results are available. -->
             <Grid Grid.Row="2" MaxHeight="392">
                 <Grid.Style>
                     <Style TargetType="Grid">
-                        <Setter Property="Visibility"
-                                Value="{Binding SearchText, Converter={StaticResource StringToVisibilityConverter}}"/>
                         <Style.Triggers>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
