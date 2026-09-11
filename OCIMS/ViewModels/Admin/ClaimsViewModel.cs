@@ -21,6 +21,8 @@ namespace eSureHi.ViewModels.Admin
 
     public class ClaimsViewModel : ObservableObject
     {
+        private const int MaxClaimantRows = 10;
+
         // ── Collections ────────────────────────────────────────────────
         private ObservableCollection<Claim> _allClaims = new();
         public ObservableCollection<Claim> DisplayedClaims { get; } = new();
@@ -39,9 +41,19 @@ namespace eSureHi.ViewModels.Admin
             get => _selectedClaimantProgram;
             set
             {
+                // WPF temporarily reports null while an ItemsSource refreshes.
+                // Keep the active program instead of treating that transient value
+                // as a user selection and reloading the list with no filter.
+                if (string.IsNullOrWhiteSpace(value))
+                    return;
+
                 if (SetProperty(ref _selectedClaimantProgram, value))
                 {
                     _groupedClaimants?.Refresh();
+                    // The picker keeps a ten-row cap. Reloading when the source
+                    // changes lets the CRS filter use all ten slots for CRS rows
+                    // instead of sharing them with the registered-member rows.
+                    _ = LoadAsync();
                 }
             }
         }
@@ -232,8 +244,10 @@ namespace eSureHi.ViewModels.Admin
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
             ViewCommand = new RelayCommand(OpenDetailDialog,
                                      () => SelectedClaim is not null);
+            // Submitted claims may still need a missing attachment corrected before
+            // review begins.  Claims already under review or beyond remain locked.
             EditCommand = new RelayCommand(OpenEditDialog,
-                                     () => SelectedClaim?.ClaimStatus == "Draft");
+                                     () => SelectedClaim?.ClaimStatus is "Draft" or "Submitted");
             ClearFilterCommand = new RelayCommand(ClearFilters);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
             PrintVoucherCommand = new RelayCommand<Claim>(PrintVoucher);
@@ -471,7 +485,7 @@ namespace eSureHi.ViewModels.Admin
                 .Distinct()
                 .ToList();
 
-            var progList = new System.Collections.Generic.List<string> { "All", "Job Order", "Casual", "Regular", "Captain" };
+            var progList = new System.Collections.Generic.List<string> { "All", "Job Order", "Casual", "Regular", "Captain", "CRS Master List" };
             foreach (var fund in distinctFunds)
             {
                 if (!progList.Contains(fund, StringComparer.OrdinalIgnoreCase))
@@ -480,10 +494,10 @@ namespace eSureHi.ViewModels.Admin
                 }
             }
 
-            _claimantPrograms.Clear();
             foreach (var prog in progList)
             {
-                _claimantPrograms.Add(prog);
+                if (!_claimantPrograms.Contains(prog, StringComparer.OrdinalIgnoreCase))
+                    _claimantPrograms.Add(prog);
             }
 
             var benefitsList = await db.Benefits
@@ -496,8 +510,10 @@ namespace eSureHi.ViewModels.Admin
                 .GroupBy(x => x.EmployeePolicy!.EmpId)
                 .ToDictionary(g => g.Key, g => g.First());
 
+            var showCrsOnly = string.Equals(SelectedClaimantProgram, "CRS Master List", StringComparison.OrdinalIgnoreCase);
+
             _claimants.Clear();
-            foreach (var b in beneficiaries)
+            foreach (var b in showCrsOnly ? Enumerable.Empty<Beneficiary>() : beneficiaries.Take(MaxClaimantRows))
             {
                 var claimsForBen = _allClaims
                     .Where(c => c.BenId == b.BenId || (c.BenId == null && c.EmpId == b.EmpId))
@@ -536,6 +552,55 @@ namespace eSureHi.ViewModels.Admin
                     TotalApproved = totalApproved
                 };
                 _claimants.Add(row);
+            }
+
+            // Add CRS master-list people after the registered insurance members.
+            // CRS-only records are useful for discovery, but cannot file a claim
+            // until they are registered in the insurance-beneficiary table.
+            if (_claimants.Count < MaxClaimantRows)
+            {
+                var registeredIdentifiers = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var beneficiary in beneficiaries)
+                {
+                    if (!string.IsNullOrWhiteSpace(beneficiary.BeneficiaryId))
+                        registeredIdentifiers.Add(beneficiary.BeneficiaryId.Trim());
+                    if (!string.IsNullOrWhiteSpace(beneficiary.CivilRegistryId))
+                        registeredIdentifiers.Add(beneficiary.CivilRegistryId.Trim());
+                }
+
+                var crsRows = await db.BeneficiaryStaging
+                    .AsNoTracking()
+                    .Where(row => row.BeneficiaryId != null && row.BeneficiaryId != string.Empty)
+                    .OrderBy(row => row.LastName)
+                    .ThenBy(row => row.FirstName)
+                    .Take(MaxClaimantRows * 3)
+                    .ToListAsync();
+
+                foreach (var crs in crsRows)
+                {
+                    if (_claimants.Count >= MaxClaimantRows)
+                        break;
+
+                    var isAlreadyRegistered =
+                        (!string.IsNullOrWhiteSpace(crs.BeneficiaryId) && registeredIdentifiers.Contains(crs.BeneficiaryId.Trim())) ||
+                        (!string.IsNullOrWhiteSpace(crs.CivilRegistryId) && registeredIdentifiers.Contains(crs.CivilRegistryId.Trim()));
+                    if (isAlreadyRegistered)
+                        continue;
+
+                    _claimants.Add(new ClaimBeneficiaryRow
+                    {
+                        BenId = 0,
+                        BeneficiaryId = FirstNonPlaceholder(crs.BeneficiaryId, crs.CivilRegistryId),
+                        FullName = FirstNonPlaceholder(crs.FullName, $"{crs.LastName}, {crs.FirstName}".Trim(',', ' ')),
+                        Relationship = "CRS Member",
+                        Program = "CRS Master List",
+                        IsCrsOnly = true,
+                        ProgramLimit = 0,
+                        ProgramRemaining = 0,
+                        TotalClaimed = 0,
+                        TotalApproved = 0
+                    });
+                }
             }
 
             _groupedClaimants.Refresh();
@@ -632,9 +697,11 @@ namespace eSureHi.ViewModels.Admin
         public bool HasOpenClaim { get; init; }
         public bool IsReleased { get; init; }
         public bool IsReleasedInDistribution { get; init; }
-        public bool CanFile => !HasOpenClaim || IsReleasedInDistribution;
+        public bool IsCrsOnly { get; init; }
+        public bool CanFile => !IsCrsOnly && (!HasOpenClaim || IsReleasedInDistribution);
         public bool ShowClaimInProgress => HasOpenClaim && !IsReleasedInDistribution;
         public bool ShowViewTransaction => IsReleasedInDistribution;
+        public bool ShowRegistrationRequired => IsCrsOnly;
 
         public decimal ProgramLimit { get; init; }
         public decimal ProgramRemaining { get; init; }
