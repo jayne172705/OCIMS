@@ -4,8 +4,8 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:eSureHi.Helpers"
         Title="Claim"
-        Width="780" Height="680"
-        MinWidth="720" MinHeight="600"
+        Width="860" Height="700"
+        MinWidth="780" MinHeight="620"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         AllowsTransparency="False"
@@ -53,27 +53,31 @@
         <!-- Tabs -->
         <TabControl Grid.Row="1"
                     Style="{StaticResource MaterialDesignTabControl}"
-                    Margin="16,12,16,0">
+                    Margin="20,10,20,0">
 
             <!-- ================================================== -->
             <!-- TAB 1 — Employee & Policy                        -->
             <!-- ================================================== -->
-            <TabItem Header="Beneficiary Claim">
-                <Grid Margin="4,8">
+            <TabItem Header="1. Member &amp; Coverage">
+                <Grid Margin="0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="16"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
                     <!-- Digital ID Scanner -->
-                    <Border Grid.Column="0" Grid.ColumnSpan="3"
-                            BorderBrush="#DDE4EF" BorderThickness="1"
-                            CornerRadius="4" Background="White" Margin="0,0,0,12"
-                            helpers:Adaptive.UseAdaptiveForeground="True">
-                        <StackPanel Margin="12,10">
-                            <TextBlock Text="Digital ID Scanner"
-                                       FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <Expander Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                              Header="Have a digital ID? Scan or enter it"
+                              Foreground="#475569"
+                              FontSize="12"
+                              Padding="4,0">
+                        <StackPanel Margin="0,8,0,0">
                             <TextBox Text="{Binding DigitalIdCode, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="Scan ID here or enter code..."
                                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
@@ -85,10 +89,10 @@
                                 </TextBox.InputBindings>
                             </TextBox>
                         </StackPanel>
-                    </Border>
+                    </Expander>
 
                     <!-- Employee Picker -->
-                    <Border Grid.Column="0"
+                    <Border Grid.Row="2" Grid.Column="0"
                             BorderBrush="#DDE4EF" BorderThickness="1"
                             CornerRadius="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
                         <Grid>
@@ -96,14 +100,14 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <Border Grid.Row="0" Padding="12,10"
+                            <Border Grid.Row="0" Padding="14,12"
                                     BorderBrush="#DDE4EF" BorderThickness="0,0,0,1">
                                 <StackPanel>
-                                    <TextBlock Text="Select Employee / Covered Member *"
-                                               FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBlock Text="1. Select covered employee *"
+                                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
                                     <TextBox Text="{Binding EmployeeSearch,
                                                  UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="Search name or employee no..."
+                                             materialDesign:HintAssist.Hint="Search by name or employee number"
                                              materialDesign:TextFieldAssist.HasLeadingIcon="True"
                                              materialDesign:TextFieldAssist.LeadingIcon="Magnify"
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -114,10 +118,11 @@
                                      ItemsSource="{Binding FilteredEmployees}"
                                      SelectedItem="{Binding SelectedEmployee}"
                                      IsEnabled="{Binding CanChangeClaimant}"
-                                     BorderThickness="0" Background="Transparent">
+                                     BorderThickness="0" Background="Transparent"
+                                     Padding="10,6">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Margin="4">
+                                        <StackPanel Margin="4,6">
                                             <TextBlock Text="{Binding FullName, Mode=OneWay}"
                                                        FontSize="13" FontWeight="Medium"
                                                        />
@@ -134,9 +139,11 @@
                     </Border>
 
                     <!-- Policy + Beneficiary -->
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Policy Assignment *"
-                                   FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <StackPanel Grid.Row="2" Grid.Column="2">
+                        <TextBlock Text="2. Confirm coverage"
+                                   FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Choose the employee policy and, if applicable, the covered family member."
+                                   FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                         <!-- Loading indicator -->
                         <ProgressBar IsIndeterminate="True" Height="2"
@@ -155,7 +162,7 @@
 
                         <ComboBox ItemsSource="{Binding EmployeePolicies}"
                                   SelectedItem="{Binding SelectedEmployeePolicy}"
-                                  materialDesign:HintAssist.Hint="Select Policy"
+                                  materialDesign:HintAssist.Hint="Policy *"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                   Margin="0,0,0,12" FontSize="13"
                                   IsEnabled="{Binding HasPolicies}">
@@ -175,23 +182,26 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <Border Background="#F8FAFC"
-                                BorderBrush="#DDE4EF"
+                        <Border Background="#F3F8F4"
+                                BorderBrush="#C8DFC9"
                                 BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="10,7"
+                                CornerRadius="6"
+                                Padding="12,9"
                                 Margin="0,0,0,12">
-                            <TextBlock Text="{Binding ClaimLimitText}"
-                                       FontSize="11"
-                                       TextWrapping="Wrap"/>
+                            <StackPanel>
+                                <TextBlock Text="Coverage summary" FontSize="11" FontWeight="SemiBold" Foreground="#166534"/>
+                                <TextBlock Text="{Binding ClaimLimitText}"
+                                           FontSize="11" Margin="0,3,0,0"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Beneficiary Claimant (optional)"
-                                   FontSize="13" FontWeight="SemiBold" Margin="0,8,0,8"/>
+                        <TextBlock Text="Claiming family member (optional)"
+                                   FontSize="12" FontWeight="SemiBold" Margin="0,4,0,8"/>
 
                         <ComboBox ItemsSource="{Binding Beneficiaries}"
                                   SelectedItem="{Binding SelectedBeneficiary}"
-                                  materialDesign:HintAssist.Hint="Leave blank if employee will claim"
+                                  materialDesign:HintAssist.Hint="Employee is claiming"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                   FontSize="13"
                                   IsEnabled="{Binding CanChangeClaimant}">
@@ -215,17 +225,17 @@
                                        ConverterParameter=Invert}"/>
 
                         <!-- Selected Employee Preview -->
-                        <materialDesign:Card Margin="0,16,0,0" Background="#1B5E20" helpers:Adaptive.UseAdaptiveForeground="True"
+                        <materialDesign:Card Margin="0,14,0,0" Background="#EAF6EC" helpers:Adaptive.UseAdaptiveForeground="True"
                                              materialDesign:ElevationAssist.Elevation="Dp0"
                                              Visibility="{Binding HasEmployee,
                                                  Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel Margin="12,10">
                                 <TextBlock Text="Covered through employee:"
-                                           FontSize="10" Foreground="#64748B"/>
+                                           FontSize="10" Foreground="#477653"/>
                                 <TextBlock Text="{Binding SelectedEmployee.FullName, Mode=OneWay}"
                                            FontSize="14" FontWeight="Bold"
                                            Foreground="#2E7D32"/>
-                                <TextBlock FontSize="11" Foreground="#64748B">
+                                <TextBlock FontSize="11" Foreground="#477653">
                                     <Run Text="{Binding SelectedEmployee.EmployeeNo}"/>
                                     <Run Text=" · "/>
                                     <Run Text="{Binding SelectedEmployee.Department.DeptName}"/>
@@ -240,12 +250,15 @@
             <!-- ================================================== -->
             <!-- TAB 2 — Claim Details                            -->
             <!-- ================================================== -->
-            <TabItem Header="Claim Request">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+            <TabItem Header="2. Claim Details">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8">
                     <StackPanel>
 
+                        <TextBlock Text="Enter the treatment details. The covered amount is calculated automatically from the selected policy."
+                                   FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,10"/>
+
                         <!-- Claim Type + Total Covered -->
-                        <Grid Margin="0,12,0,12">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -269,13 +282,15 @@
                                      FontSize="13"/>
                         </Grid>
 
-                        <TextBlock Text="{Binding ClaimLimitText}"
-                                   FontSize="11"
-                                   Margin="0,0,0,12"
-                                   TextWrapping="Wrap"/>
+                        <Border Background="#F8FAFC" BorderBrush="#DDE4EF" BorderThickness="1"
+                                CornerRadius="6" Padding="10,7" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding ClaimLimitText}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"/>
+                        </Border>
 
                         <!-- Admission + Discharge dates (auto-computes covered days) -->
-                        <Grid Margin="0,0,0,12">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -295,9 +310,18 @@
 
                         <!-- Claim breakdown table -->
                         <Border Background="#F8FAFC" BorderBrush="#DDE4EF" BorderThickness="1"
-                                CornerRadius="4" Padding="14,12" Margin="0,0,0,12">
+                                CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
                             <StackPanel>
-                                <TextBlock Text="Claim Breakdown" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="94"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Coverage breakdown" FontSize="13" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="Entered" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="Covered" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                </Grid>
 
                                 <!-- Daily allowance -->
                                 <Grid Margin="0,0,0,8">
@@ -368,7 +392,7 @@
                         </Border>
 
                         <!-- Claim Date + Incident Date -->
-                        <Grid Margin="0,0,0,12">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -376,18 +400,18 @@
                             </Grid.ColumnDefinitions>
                             <DatePicker Grid.Column="0"
                                         SelectedDate="{Binding ClaimDate}"
-                                        materialDesign:HintAssist.Hint="Claim Date *"
+                                        materialDesign:HintAssist.Hint="Date filed *"
                                         Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                                         FontSize="13"/>
                             <DatePicker Grid.Column="2"
                                         SelectedDate="{Binding IncidentDate}"
-                                        materialDesign:HintAssist.Hint="Incident Date"
+                                        materialDesign:HintAssist.Hint="Date of incident"
                                         Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                                         FontSize="13"/>
                         </Grid>
 
                         <!-- Hospital + Physician -->
-                        <Grid Margin="0,0,0,12">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -396,13 +420,13 @@
                             <TextBox Grid.Column="0"
                                      Text="{Binding HospitalClinic,
                                          UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Hospital / Clinic"
+                                 materialDesign:HintAssist.Hint="Hospital / clinic *"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      FontSize="13"/>
                             <TextBox Grid.Column="2"
                                      Text="{Binding AttendingPhysician,
                                          UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Attending Physician"
+                                 materialDesign:HintAssist.Hint="Physician (optional)"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      FontSize="13"/>
                         </Grid>
@@ -413,7 +437,7 @@
                                  materialDesign:HintAssist.Hint="Claim reason / incident description"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  TextWrapping="Wrap" AcceptsReturn="True"
-                                 Height="100" VerticalContentAlignment="Top"
+                                 Height="76" VerticalContentAlignment="Top"
                                  VerticalScrollBarVisibility="Auto"
                                  Margin="0,0,0,12" FontSize="13"/>
 
@@ -423,7 +447,7 @@
                                  materialDesign:HintAssist.Hint="Remarks (optional)"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  TextWrapping="Wrap" AcceptsReturn="True"
-                                 Height="80" VerticalContentAlignment="Top"
+                                 Height="60" VerticalContentAlignment="Top"
                                  VerticalScrollBarVisibility="Auto"
                                  FontSize="13"/>
 
@@ -434,14 +458,18 @@
             <!-- ================================================== -->
             <!-- TAB 3 — Documents                                -->
             <!-- ================================================== -->
-            <TabItem Header="Proof / Requirements">
-                <Grid Margin="4,8">
+            <TabItem Header="3. Documents">
+                <Grid Margin="0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Margin="0,8,0,12">
+                    <StackPanel Grid.Row="0" Margin="0,4,0,10">
+                        <TextBlock Text="Attach the documents that support this claim."
+                                   FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="Hospital bill and official receipt are required. Images or PDF only; up to 5 MB each."
+                                   FontSize="11" Foreground="#64748B" Margin="0,2,0,8"/>
                         <StackPanel Orientation="Horizontal">
                             <Button Command="{Binding AddHospitalBillCommand}"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -453,7 +481,7 @@
                                                              Width="16" Height="16"
                                                              Margin="0,0,6,0"
                                                              VerticalAlignment="Center"/>
-                                    <TextBlock Text="Hospital Bill" FontSize="12"
+                                    <TextBlock Text="Add hospital bill" FontSize="12"
                                                VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
@@ -467,7 +495,7 @@
                                                              Width="16" Height="16"
                                                              Margin="0,0,6,0"
                                                              VerticalAlignment="Center"/>
-                                    <TextBlock Text="Official Receipt" FontSize="12"
+                                    <TextBlock Text="Add receipt" FontSize="12"
                                                VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
@@ -479,31 +507,28 @@
                                                              Width="16" Height="16"
                                                              Margin="0,0,6,0"
                                                              VerticalAlignment="Center"/>
-                                    <TextBlock Text="Other" FontSize="12"
+                                    <TextBlock Text="Other file" FontSize="12"
                                                VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                        <TextBlock Text="Attach the hospital bill and official receipt. Images or PDF only, 5 MB max per file."
-                                   FontSize="11"
-                                   Margin="0,8,0,0"/>
                     </StackPanel>
 
                     <Border Grid.Row="1"
                             BorderBrush="#DDE4EF" BorderThickness="1"
-                            CornerRadius="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
+                            CornerRadius="6" Background="White" helpers:Adaptive.UseAdaptiveForeground="True">
                         <ItemsControl ItemsSource="{Binding Documents}"
-                                      Margin="8">
+                                      Margin="10,4">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="#DDE4EF"
                                             BorderThickness="0,0,0,1"
-                                            Padding="8,10">
+                                            Padding="8,9">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="140"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
