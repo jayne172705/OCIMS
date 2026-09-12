@@ -590,18 +590,17 @@ namespace eSureHi.ViewModels.Admin
             NavigationService.Instance.NavigateTo(new MemberDetailView(row.Beneficiary));
         }
 
-        private static void OpenMemberForEdit(ManageMemberRow? row)
+        private void OpenMemberForEdit(ManageMemberRow? row)
         {
             if (row is null)
                 return;
 
-            var viewModel = new BeneficiaryStagingViewModel
+            var dialog = new Views.Admin.Dialogs.MemberEditDialog(row.Beneficiary)
             {
-                SelectedSource = "Insurance Beneficiaries",
-                SelectedSystemBeneficiary = row.Beneficiary
+                Owner = App.ActiveShell,
+                OnSaveSuccess = () => _ = LoadAsync()
             };
-
-            NavigationService.Instance.NavigateTo(new BeneficiariesView(viewModel, openInitialSearch: false));
+            dialog.ShowDialog();
         }
     }
 }
