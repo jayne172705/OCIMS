@@ -765,7 +765,7 @@
                     Margin="4"
                     Style="{StaticResource DashboardTileButton}"
                     Background="{StaticResource TileClaimsBrush}"
-                    Command="{Binding QuickNewClaimCommand}">
+                    Command="{Binding ToggleClaimsManagementCommand}">
                 <StackPanel VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="ClipboardCheck"
                                              Width="38"
@@ -777,21 +777,20 @@
                 </StackPanel>
             </Button>
 
-            <Border Grid.Row="0"
-                    Grid.Column="2"
-                    Grid.ColumnSpan="2"
-                    Panel.ZIndex="99"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Left"
-                    Width="290"
-                    Background="White"
-                    BorderBrush="#DDE4EF"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="8"
-                    helpers:Adaptive.UseAdaptiveForeground="True"
-                    Visibility="{Binding IsClaimsManagementPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}"
-                    Margin="4,0,0,92">
+            <Popup IsOpen="{Binding IsClaimsManagementPopupOpen, Mode=TwoWay}"
+                   PlacementTarget="{Binding ElementName=AdminClaimsTile}"
+                   Placement="Bottom"
+                   StaysOpen="False"
+                   AllowsTransparency="True"
+                   HorizontalOffset="0"
+                   VerticalOffset="6">
+                <Border Width="290"
+                        Background="White"
+                        BorderBrush="#DDE4EF"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="8"
+                        helpers:Adaptive.UseAdaptiveForeground="True">
                 <Border.Effect>
                      <DropShadowEffect BlurRadius="14"
                                        ShadowDepth="3"
@@ -840,7 +839,8 @@
                         </Grid>
                     </Button>
                 </StackPanel>
-            </Border>
+                </Border>
+            </Popup>
 
             <Border Grid.Row="0"
                     Grid.Column="3"
