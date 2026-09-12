@@ -34,7 +34,7 @@ namespace eSureHi.ViewModels.Admin
                 else
                     NavigationService.Instance.NavigateTo(new ManageMembersView());
             });
-            UpdateCommand = new RelayCommand(OpenForEdit, () => CanUpdateMember);
+            UpdateCommand = new RelayCommand(async () => await OpenForEditAsync(), () => CanUpdateMember);
 
             _ = LoadAsync();
         }
@@ -189,7 +189,7 @@ namespace eSureHi.ViewModels.Admin
             }
         }
 
-        private void OpenForEdit()
+        private async Task OpenForEditAsync()
         {
             if (!CanUpdateMember)
                 return;
@@ -205,13 +205,12 @@ namespace eSureHi.ViewModels.Admin
                 return;
             }
 
-            var systemVm = new BeneficiaryStagingViewModel
+            var dialog = new Views.Admin.Dialogs.MemberEditDialog(Member)
             {
-                SelectedSource = "Insurance Beneficiaries",
-                SelectedSystemBeneficiary = Member
+                Owner = App.ActiveShell,
+                OnSaveSuccess = async () => await LoadAsync()
             };
-
-            NavigationService.Instance.NavigateTo(new BeneficiariesView(systemVm, openInitialSearch: false));
+            dialog.ShowDialog();
         }
 
         private string BuildAddress()
