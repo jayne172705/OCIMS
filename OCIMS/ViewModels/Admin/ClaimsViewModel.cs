@@ -208,8 +208,8 @@ namespace eSureHi.ViewModels.Admin
         // ── Commands ───────────────────────────────────────────────────
         public RelayCommand NewCommand { get; }
         public RelayCommand RefreshCommand { get; }
-        public RelayCommand ViewCommand { get; }
-        public RelayCommand EditCommand { get; }
+        public RelayCommand<Claim> ViewCommand { get; }
+        public RelayCommand<Claim> EditCommand { get; }
         public RelayCommand ClearFilterCommand { get; }
         public RelayCommand BackToDashboardCommand { get; }
         public RelayCommand<Claim> PrintVoucherCommand { get; }
@@ -242,12 +242,12 @@ namespace eSureHi.ViewModels.Admin
 
             NewCommand = new RelayCommand(OpenNewDialog);
             RefreshCommand = new RelayCommand(async () => await LoadAsync());
-            ViewCommand = new RelayCommand(OpenDetailDialog,
-                                     () => SelectedClaim is not null);
+            ViewCommand = new RelayCommand<Claim>(OpenDetailDialog,
+                                     claim => claim is not null);
             // Submitted claims may still need a missing attachment corrected before
             // review begins.  Claims already under review or beyond remain locked.
-            EditCommand = new RelayCommand(OpenEditDialog,
-                                     () => SelectedClaim?.ClaimStatus is "Draft" or "Submitted");
+            EditCommand = new RelayCommand<Claim>(OpenEditDialog,
+                                     claim => claim?.ClaimStatus is "Draft" or "Submitted");
             ClearFilterCommand = new RelayCommand(ClearFilters);
             BackToDashboardCommand = new RelayCommand(NavigateToDashboard);
             PrintVoucherCommand = new RelayCommand<Claim>(PrintVoucher);
@@ -364,20 +364,22 @@ namespace eSureHi.ViewModels.Admin
         }
 
         // ── Edit ───────────────────────────────────────────────────────
-        private void OpenEditDialog()
+        private void OpenEditDialog(Claim? claim)
         {
-            if (SelectedClaim is null) return;
-            var dialog = new Views.Admin.Dialogs.ClaimFormDialog(SelectedClaim.ClaimId);
+            if (claim is null) return;
+            SelectedClaim = claim;
+            var dialog = new Views.Admin.Dialogs.ClaimFormDialog(claim.ClaimId);
             dialog.SetSaveCallback(async () => await LoadAsync());
             if (App.ActiveShell != null && App.ActiveShell != dialog) dialog.Owner = App.ActiveShell;
             dialog.ShowDialog();
         }
 
         // ── View Detail ────────────────────────────────────────────────
-        private void OpenDetailDialog()
+        private void OpenDetailDialog(Claim? claim)
         {
-            if (SelectedClaim is null) return;
-            var dialog = new Views.Admin.Dialogs.ClaimDetailDialog(SelectedClaim.ClaimId);
+            if (claim is null) return;
+            SelectedClaim = claim;
+            var dialog = new Views.Admin.Dialogs.ClaimDetailDialog(claim.ClaimId);
             dialog.SetStatusChangedCallback(async () => await LoadAsync());
             if (App.ActiveShell != null && App.ActiveShell != dialog) dialog.Owner = App.ActiveShell;
             dialog.ShowDialog();
