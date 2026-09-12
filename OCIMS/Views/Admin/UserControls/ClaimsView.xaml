@@ -13,8 +13,9 @@
                 <RowDefinition Height="64"/>
                 <RowDefinition Height="3"/>
                 <RowDefinition Height="Auto"/> <!-- Filters -->
-                <RowDefinition Height="*"/>    <!-- Beneficiary Picker in All Mode -->
-                <RowDefinition Height="*"/>    <!-- DataGrid in standard Mode -->
+                <!-- The picker and claims grid share this row; their visibility is
+                     mutually exclusive, so the active table receives full height. -->
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/> <!-- Status Bar -->
             </Grid.RowDefinitions>
 
@@ -425,7 +426,7 @@
             </Border>
 
             <!-- ── DataGrid ── -->
-            <DataGrid Grid.Row="4"
+            <DataGrid Grid.Row="3"
                       ItemsSource="{Binding DisplayedClaims}"
                       SelectedItem="{Binding SelectedClaim}"
                       AutoGenerateColumns="False"
@@ -433,23 +434,73 @@
                       CanUserAddRows="False"
                       CanUserDeleteRows="False"
                       SelectionMode="Single"
-                      GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E5EAF2"
-                      RowHeight="48"
-                      BorderThickness="0"
+                      GridLinesVisibility="None"
+                      RowHeight="54"
+                      Margin="16,12,16,12"
+                      BorderBrush="#E2E8F0"
+                      BorderThickness="1"
+                      RowHeaderWidth="0"
                       Background="White"
                       RowBackground="White"
-                      AlternatingRowBackground="#F8FAFC"
+                      AlternatingRowBackground="#FAFCFE"
                       MouseDoubleClick="DataGrid_MouseDoubleClick"
-                      materialDesign:DataGridAssist.ColumnHeaderPadding="12,8"
+                      materialDesign:DataGridAssist.ColumnHeaderPadding="8,8"
                       Style="{StaticResource ReadableDataGrid}"
                       Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Height" Value="42"/>
+                        <Setter Property="Padding" Value="8,0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="Background" Value="#F8FAFC"/>
+                        <Setter Property="Foreground" Value="#475569"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Padding" Value="8,0"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="#0F172A"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Foreground" Value="#0F172A"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="BorderBrush" Value="#EDF1F5"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="Background" Value="White"/>
+                        <Setter Property="Foreground" Value="#0F172A"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F8FAFC"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#EFF6FF"/>
+                                <Setter Property="Foreground" Value="#0F172A"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
 
                 <DataGrid.Columns>
 
                     <!-- Beneficiary ID -->
                     <DataGridTextColumn Header="Beneficiary ID"
-                                        Binding="{Binding DisplayBeneficiaryId}" Width="160">
+                                        Binding="{Binding DisplayBeneficiaryId}" Width="145">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -457,38 +508,45 @@
                                 <Setter Property="FontWeight" Value="Medium"/>
                                 <Setter Property="Foreground"
                                         Value="{StaticResource PrimaryBrush}"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding DisplayBeneficiaryId}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Claimant -->
                     <DataGridTextColumn Header="Claimant"
-                                        Binding="{Binding Beneficiary.FullName}" Width="200">
+                                        Binding="{Binding Beneficiary.FullName}" Width="220">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="Foreground" Value="#0F172A"/>
+                                <Setter Property="TextTrimming" Value="WordEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding Beneficiary.FullName}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Barangay -->
                     <DataGridTextColumn Header="Barangay"
-                                        Binding="{Binding Employee.Barangay}" Width="170">
+                                        Binding="{Binding Employee.Barangay}" Width="130">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="Margin" Value="0,0"/>
                                 <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
+                                <Setter Property="TextTrimming" Value="WordEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding Employee.Barangay}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Employment Type -->
                     <DataGridTextColumn Header="Employment Type"
-                                        Binding="{Binding Employee.EmploymentType}" Width="160">
+                                        Binding="{Binding Employee.EmploymentType}" Width="145">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -499,7 +557,7 @@
                     </DataGridTextColumn>
 
                     <!-- For -->
-                    <DataGridTemplateColumn Header="For" Width="120">
+                    <DataGridTemplateColumn Header="For" Width="105">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border CornerRadius="10"
@@ -521,7 +579,7 @@
                     <DataGridTextColumn Header="Total"
                                         Binding="{Binding AmountClaimed,
                                             StringFormat=₱{0:N2}}"
-                                        Width="120">
+                                        Width="100">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -534,7 +592,7 @@
 
                     <!-- Budget Source -->
                     <DataGridTextColumn Header="Budget Source"
-                                        Binding="{Binding SourceOfFunds}" Width="160">
+                                        Binding="{Binding SourceOfFunds}" Width="145">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -545,7 +603,7 @@
                     </DataGridTextColumn>
 
                     <!-- Status Badge -->
-                    <DataGridTemplateColumn Header="Status" Width="130">
+                    <DataGridTemplateColumn Header="Status" Width="105">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border CornerRadius="10"
@@ -634,13 +692,13 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="Margin" Value="0,0"/>
-                                
+                                <Setter Property="Foreground" Value="#1E293B"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Actions -->
-                    <DataGridTemplateColumn Header="Actions" Width="120">
+                    <DataGridTemplateColumn Header="Actions" Width="84">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal"
@@ -662,22 +720,23 @@
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Command="{Binding DataContext.ViewCommand,
                                                 RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
                                             ToolTip="View / Process Claim"
                                             Width="32" Height="32"
                                             Foreground="{StaticResource PrimaryBrush}">
-                                        <materialDesign:PackIcon Kind="Eye"
-                                                                 Width="16" Height="16"/>
+                                        <materialDesign:PackIcon Kind="Eye" Width="16" Height="16"/>
                                     </Button>
 
                                     <!-- Edit (Draft or Submitted before review) -->
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Command="{Binding DataContext.EditCommand,
                                                 RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
                                             ToolTip="Edit draft or submitted claim"
                                             Width="32" Height="32"
+                                            Margin="4,0,0,0"
                                             Foreground="{StaticResource WarningBrush}">
-                                        <materialDesign:PackIcon Kind="Pencil"
-                                                                 Width="16" Height="16"/>
+                                        <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16"/>
                                     </Button>
 
                                     <!-- Print Voucher (Group Claim mode only) -->
@@ -704,9 +763,9 @@
             </DataGrid>
 
             <!-- ── Empty State ── -->
-            <Border Grid.Row="4" Background="Transparent"
+            <Border Grid.Row="3" Background="Transparent" IsHitTestVisible="False"
                     Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
-                <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
                             Visibility="{Binding NoResults, Converter={StaticResource BoolToVisibilityConverter}}">
                     <materialDesign:PackIcon Kind="ClipboardTextOffOutline" Width="48" Height="48"
                                              Foreground="#CBD5E1" HorizontalAlignment="Center"/>
@@ -716,7 +775,7 @@
             </Border>
 
             <!-- ── Status Bar ── -->
-            <Border Grid.Row="5" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
+            <Border Grid.Row="4" Background="White" helpers:Adaptive.UseAdaptiveForeground="True"
                     BorderBrush="#DDE4EF" BorderThickness="0,1,0,0"
                     Padding="16,8"
                     Visibility="{Binding IsAllMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
